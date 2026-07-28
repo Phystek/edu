@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ELEC2005 — Diode Logic Gate Explorer</title>
+<style>
+  :root{
+    --ink:#1a1512;
+    --paper:#faf7f2;
+    --panel:#ffffff;
+    --maroon:#7a1730;
+    --focus:#1c5f7a;
+    --grid:#e4ddd2;
+    --muted:#6b6156;
+    --on-color:#2f7d4f;
+    --off-color:#b6ada0;
+    --low-color:#a3372c;
+    --mid-color:#c98a2c;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:#e6e6e4;
+    color:var(--ink);
+    font-family: "Iowan Old Style","Georgia",serif;
+    padding:20px 16px 40px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .wrap{max-width:1000px;margin:0 auto;}
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:8px;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:12px;
+    margin-bottom:14px;
+  }
+  h1{
+    font-size:clamp(20px,3.6vw,28px);
+    margin:0;
+    letter-spacing:-0.01em;
+    font-weight:700;
+  }
+  .eyebrow{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+    font-size:11px;
+    color:var(--maroon);
+    font-weight:600;
+    margin:0 0 4px;
+  }
+  .unit-tag{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12px;
+    color:var(--muted);
+  }
+  .intro{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:14px;
+    line-height:1.55;
+    color:#3a332c;
+    max-width:85ch;
+    margin-bottom:18px;
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--grid);
+    border-radius:4px;
+    padding:14px;
+    margin-bottom:18px;
+  }
+  .plot-title{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--ink);
+    margin:0 0 8px;
+  }
+  .controls-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap:20px;
+    align-items:end;
+  }
+  @media (max-width:700px){
+    .controls-grid{grid-template-columns:1fr;}
+  }
+  .control-row{margin-bottom:4px;}
+  .control-label{
+    display:flex;
+    justify-content:space-between;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:13.5px;
+    margin-bottom:6px;
+  }
+  .control-label b{font-weight:600;}
+  .control-value{
+    font-variant-numeric: tabular-nums;
+    color:var(--maroon);
+    font-weight:700;
+  }
+  input[type=range]{
+    width:100%;
+    accent-color:var(--maroon);
+    height:22px;
+    cursor:pointer;
+  }
+  .range-ends{
+    display:flex;justify-content:space-between;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:10.5px;color:var(--muted);margin-top:2px;
+  }
+  .mode-toggle{
+    display:flex;
+    border:1px solid var(--ink);
+    border-radius:3px;
+    overflow:hidden;
+  }
+  .mode-btn{
+    flex:1;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    background:var(--panel);
+    color:var(--ink);
+    border:none;
+    padding:7px 10px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .mode-btn + .mode-btn{border-left:1px solid var(--ink);}
+  .mode-btn.active{background:var(--ink);color:var(--paper);}
+  .mode-btn:focus-visible{outline:2px solid var(--focus);outline-offset:-2px;}
+  .preset-row{
+    display:flex;
+    margin-top:14px;
+    padding-top:14px;
+    border-top:1px solid var(--grid);
+  }
+  .reset-btn{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    background:none;
+    border:1px solid var(--ink);
+    color:var(--ink);
+    padding:6px 12px;
+    border-radius:3px;
+    cursor:pointer;
+  }
+  .reset-btn:hover{background:var(--ink);color:var(--paper);}
+  .reset-btn:focus-visible, input:focus-visible{
+    outline:2px solid var(--focus);
+    outline-offset:2px;
+  }
+  .gates-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:18px;
+  }
+  @media (max-width:760px){
+    .gates-grid{grid-template-columns:1fr;}
+  }
+  svg{width:100%;height:auto;display:block;}
+  .circuit-label{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12px;
+    fill:var(--ink);
+  }
+  .circuit-value{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12px;
+    font-weight:700;
+    fill:var(--maroon);
+  }
+  .state-badge{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:0.04em;
+  }
+  .readout-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:10px;
+    margin-top:12px;
+  }
+  .stat{
+    background:var(--paper);
+    border:1px solid var(--grid);
+    border-radius:4px;
+    padding:9px 12px;
+  }
+  .stat .k{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--muted);
+    margin-bottom:3px;
+  }
+  .stat .v{
+    font-size:20px;
+    font-weight:700;
+    color:var(--maroon);
+    font-variant-numeric: tabular-nums;
+  }
+  .stat .v small{font-size:11px;font-weight:500;color:var(--muted);}
+  .stat.level-high{background:#e5f3ea;border-color:#bfe0cb;}
+  .stat.level-high .v{color:var(--on-color);}
+  .stat.level-low{background:#f7e9e7;border-color:#e3bdb7;}
+  .stat.level-low .v{color:var(--low-color);}
+  .stat.level-mid{background:#fbf1de;border-color:#e8cfa0;}
+  .stat.level-mid .v{color:var(--mid-color);}
+  .legend{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:11.5px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    margin-top:10px;
+    color:var(--muted);
+  }
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+  footer{
+    margin-top:10px;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:11.5px;
+    color:var(--muted);
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <p class="eyebrow">Diode logic</p>
+      <h1>Logic Gate Explorer</h1>
+    </div>
+    <div class="unit-tag">ELEC2005 · Week 2 companion</div>
+  </header>
+
+  <p class="intro">
+    Both gates use the same two diodes and the same idea — only the diode direction and which rail the resistor pulls toward differ. The OR gate's diodes point <b>toward</b> the output and its resistor pulls <b>down</b> to 0 V; the AND gate's diodes point <b>toward</b> the inputs and its resistor pulls <b>up</b> to 5 V. Adjust the inputs and watch which diode actually conducts.
+  </p>
+
+  <div class="panel">
+    <p class="plot-title">Circuit conditions</p>
+    <div class="controls-grid">
+      <div>
+        <div class="control-label"><b>Input A</b></div>
+        <div class="mode-toggle" id="vaToggle">
+          <button type="button" class="mode-btn active" data-v="0">0 V</button>
+          <button type="button" class="mode-btn" data-v="5">5 V</button>
+        </div>
+      </div>
+      <div>
+        <div class="control-label"><b>Input B</b></div>
+        <div class="mode-toggle" id="vbToggle">
+          <button type="button" class="mode-btn" data-v="0">0 V</button>
+          <button type="button" class="mode-btn active" data-v="5">5 V</button>
+        </div>
+      </div>
+      <div>
+        <div class="control-label"><b>Diode turn-on</b></div>
+        <div class="mode-toggle" id="vfToggle">
+          <button type="button" class="mode-btn active" data-vf="0.7">0.7 V</button>
+          <button type="button" class="mode-btn" data-vf="0">Idealised</button>
+        </div>
+      </div>
+    </div>
+    <div class="preset-row">
+      <button class="reset-btn" id="resetBtn" style="margin-left:auto;">Reset</button>
+    </div>
+  </div>
+
+  <div class="gates-grid">
+    <div class="panel">
+      <p class="plot-title">OR gate — resistor pulls down to 0 V</p>
+      <svg id="orSvg" viewBox="0 0 300 210" role="img" aria-label="Diode OR gate circuit with two inputs and a pull-down resistor"></svg>
+      <div class="readout-grid">
+        <div class="stat">
+          <div class="k">Output V<sub>OR</sub></div>
+          <div class="v" id="orOut">— <small>V</small></div>
+        </div>
+        <div class="stat" id="orLevelStat">
+          <div class="k">Logic level</div>
+          <div class="v" id="orLevel" style="font-size:16px;">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <p class="plot-title">AND gate — resistor pulls up to 5 V</p>
+      <svg id="andSvg" viewBox="0 0 300 210" role="img" aria-label="Diode AND gate circuit with two inputs and a pull-up resistor"></svg>
+      <div class="readout-grid">
+        <div class="stat">
+          <div class="k">Output V<sub>AND</sub></div>
+          <div class="v" id="andOut">— <small>V</small></div>
+        </div>
+        <div class="stat" id="andLevelStat">
+          <div class="k">Logic level</div>
+          <div class="v" id="andLevel" style="font-size:16px;">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><i class="dot" style="background:var(--on-color)"></i>Diode conducting (ON)</span>
+    <span><i class="dot" style="background:var(--off-color)"></i>Diode reverse-biased (off)</span>
+  </div>
+
+  <footer>Built for ELEC2005 — Electrical and Electronic Systems · not for assessment, for concept exploration only</footer>
+</div>
+
+<script>
+(function(){
+  const NS = "http://www.w3.org/2000/svg";
+  const orSvg = document.getElementById('orSvg');
+  const andSvg = document.getElementById('andSvg');
+  const vaToggle = document.getElementById('vaToggle');
+  const vbToggle = document.getElementById('vbToggle');
+  const vfToggle = document.getElementById('vfToggle');
+  const resetBtn = document.getElementById('resetBtn');
+  const orOutEl = document.getElementById('orOut');
+  const orLevelEl = document.getElementById('orLevel');
+  const orLevelStat = document.getElementById('orLevelStat');
+  const andOutEl = document.getElementById('andOut');
+  const andLevelEl = document.getElementById('andLevel');
+  const andLevelStat = document.getElementById('andLevelStat');
+
+  const VCC = 5.0;
+  let Vf = 0.7;
+  let VA = 0, VB = 5;
+
+  function el(tag, attrs){
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function txt(nodes, cls, x, y, s, anchor){
+    const t = el('text',{class:cls, x:x, y:y, 'text-anchor':anchor||'start'});
+    t.textContent = s;
+    nodes.push(t);
+  }
+  function line(nodes, x1,y1,x2,y2, stroke){
+    nodes.push(el('line',{x1:x1,y1:y1,x2:x2,y2:y2,stroke:stroke||'#1a1512','stroke-width':2,'stroke-linecap':'round'}));
+  }
+  function drawGround(nodes, x, y){
+    nodes.push(el('line',{stroke:'#1a1512','stroke-width':1.8,x1:x,y1:y,x2:x,y2:y+10}));
+    [14,9,4].forEach((w,k)=>{
+      const gy = y+10+k*5;
+      nodes.push(el('line',{stroke:'#1a1512','stroke-width':1.5,x1:x-w/2,y1:gy,x2:x+w/2,y2:gy}));
+    });
+  }
+  function resistorV(x, y1, y2, teeth, amp){
+    teeth = teeth || 5; amp = amp || 7;
+    let path = `M${x},${y1} `;
+    for(let t=0;t<teeth;t++){
+      const y = y1 + (t+0.5)*(y2-y1)/teeth;
+      const xx = x + (t%2===0 ? -amp : amp);
+      path += `L${xx.toFixed(1)},${y.toFixed(1)} `;
+    }
+    path += `L${x},${y2}`;
+    return path;
+  }
+
+  // ---- Diode-logic math (closed form: exact for ideal & constant-voltage-drop models) ----
+  function computeOR(VA, VB, vf){
+    const rawA = VA - vf, rawB = VB - vf;
+    const Vout = Math.max(0, rawA, rawB);
+    const onA = rawA >= 0 && rawA >= rawB - 1e-9;
+    const onB = rawB >= 0 && rawB >= rawA - 1e-9;
+    return {Vout, onA, onB};
+  }
+  function computeAND(VA, VB, vf){
+    const rawA = VA + vf, rawB = VB + vf;
+    const Vout = Math.min(VCC, rawA, rawB);
+    const onA = rawA <= VCC && rawA <= rawB + 1e-9;
+    const onB = rawB <= VCC && rawB <= rawA + 1e-9;
+    return {Vout, onA, onB};
+  }
+
+  // ---- Diode symbol: triangle + bar. dir=+1 points right (anode left), dir=-1 points left (anode right) ----
+  function drawDiode(nodes, cx, cy, dir, on){
+    const halfH = 11, len = 11;
+    const baseX = cx - dir*len/2;
+    const tipX = cx + dir*len/2;
+    const barX = tipX;
+    const color = on ? 'var(--on-color)' : 'var(--off-color)';
+    nodes.push(el('polygon',{points:`${baseX},${cy-halfH} ${baseX},${cy+halfH} ${tipX},${cy}`,
+      fill:'none', stroke:color, 'stroke-width':2.2, 'stroke-linejoin':'round'}));
+    nodes.push(el('line',{x1:barX,y1:cy-halfH,x2:barX,y2:cy+halfH,stroke:color,'stroke-width':3}));
+    const badge = el('text',{class:'state-badge', x:cx, y: cy + (dir>0?26:-20), 'text-anchor':'middle', fill:color});
+    badge.textContent = on ? 'ON' : 'OFF';
+    nodes.push(badge);
+  }
+
+  function drawGateSource(nodes, cx, cy, label, valueLabel){
+    nodes.push(el('circle',{cx:cx,cy:cy,r:12,fill:'none',stroke:'#1a1512','stroke-width':2}));
+    const plus = el('text',{x:cx,y:cy-1,'text-anchor':'middle','font-size':'11',fill:'#1a1512'}); plus.textContent='+'; nodes.push(plus);
+    const minus = el('text',{x:cx,y:cy+10,'text-anchor':'middle','font-size':'13',fill:'#1a1512'}); minus.textContent='\u2212'; nodes.push(minus);
+    txt(nodes,'circuit-label', cx-18, cy-19, label, 'end');
+    txt(nodes,'circuit-value', cx-18, cy-3, valueLabel, 'end');
+  }
+
+  // type: 'or' (diodes point toward output, pull-down) or 'and' (diodes point toward inputs, pull-up)
+  function renderGate(svg, type, VA, VB, vf, state){
+    const nodes = [];
+    const yA = 55, yB = 145, railX = 150, outX = 210, srcX = 60, diodeX = 110;
+
+    // input sources
+    drawGateSource(nodes, srcX, yA, 'A', VA.toFixed(1)+'V');
+    drawGateSource(nodes, srcX, yB, 'B', VB.toFixed(1)+'V');
+
+    // wires from source to diode
+    line(nodes, srcX+12, yA, diodeX-11, yA);
+    line(nodes, srcX+12, yB, diodeX-11, yB);
+
+    const dir = type === 'or' ? 1 : -1;
+    drawDiode(nodes, diodeX, yA, dir, state.onA);
+    drawDiode(nodes, diodeX, yB, dir, state.onB);
+
+    // wires from diode to common rail
+    line(nodes, diodeX+11, yA, railX, yA);
+    line(nodes, diodeX+11, yB, railX, yB);
+    // common rail (vertical)
+    line(nodes, railX, yA, railX, yB);
+    // tap to output node
+    const midY = (yA+yB)/2;
+    line(nodes, railX, midY, outX, midY);
+    nodes.push(el('circle',{cx:railX,cy:midY,r:2.6,fill:'#1a1512'}));
+
+    // output terminal + label
+    line(nodes, outX, midY, outX+30, midY);
+    nodes.push(el('circle',{cx:outX+30,cy:midY,r:3,fill:'none',stroke:'#1a1512','stroke-width':2}));
+    const voutLabel = el('text',{class:'circuit-label', x:outX+38, y:midY-6});
+    const voutV = document.createElementNS(NS,'tspan'); voutV.textContent = 'V';
+    const voutSub = document.createElementNS(NS,'tspan'); voutSub.textContent = 'out';
+    voutSub.setAttribute('dy','3'); voutSub.setAttribute('font-size','75%');
+    voutLabel.appendChild(voutV); voutLabel.appendChild(voutSub);
+    nodes.push(voutLabel);
+    txt(nodes,'circuit-value', outX+38, midY+10, state.Vout.toFixed(2)+'V');
+    const level = state.Vout >= 3.5 ? 'HIGH' : (state.Vout <= 1.5 ? 'LOW' : 'MID');
+    const levelColor = level==='HIGH' ? 'var(--on-color)' : (level==='LOW' ? 'var(--low-color)' : 'var(--mid-color)');
+    const levelBadge = el('text',{class:'state-badge', x:outX+38, y:midY+27, fill:levelColor});
+    levelBadge.textContent = level;
+    nodes.push(levelBadge);
+
+    if (type === 'or'){
+      // resistor pulls DOWN to ground
+      nodes.push(el('path',{d:resistorV(outX,midY,midY+55), fill:'none', stroke:'#1a1512','stroke-width':2}));
+      drawGround(nodes, outX, midY+55);
+      txt(nodes,'circuit-label', outX+10, midY+30, 'R');
+    } else {
+      // resistor pulls UP to Vcc
+      nodes.push(el('path',{d:resistorV(outX,midY,midY-55), fill:'none', stroke:'#1a1512','stroke-width':2}));
+      line(nodes, outX-14, midY-55, outX+14, midY-55);
+      const vccLabel = el('text',{class:'circuit-label', x:outX+18, y:midY-52});
+      const vccMain = document.createElementNS(NS,'tspan'); vccMain.textContent = 'V';
+      const vccSub = document.createElementNS(NS,'tspan'); vccSub.textContent = 'CC';
+      vccSub.setAttribute('dy','2'); vccSub.setAttribute('font-size','75%');
+      const vccRest = document.createElementNS(NS,'tspan'); vccRest.textContent = ' = 5V';
+      vccRest.setAttribute('dy','-2');
+      vccLabel.appendChild(vccMain); vccLabel.appendChild(vccSub); vccLabel.appendChild(vccRest);
+      nodes.push(vccLabel);
+      txt(nodes,'circuit-label', outX+10, midY-25, 'R');
+    }
+
+    svg.innerHTML = '';
+    svg.setAttribute('viewBox','0 0 300 210');
+    nodes.forEach(n=>svg.appendChild(n));
+  }
+
+  function formatLevel(v){
+    if (v >= 3.5) return 'HIGH';
+    if (v <= 1.5) return 'LOW';
+    return 'mid';
+  }
+
+  function render(){
+    // VA and VB are set by the toggle buttons (module-level state)
+
+    const orState = computeOR(VA, VB, Vf);
+    const andState = computeAND(VA, VB, Vf);
+
+    orOutEl.innerHTML = orState.Vout.toFixed(2) + ' <small>V</small>';
+    const orLevel = formatLevel(orState.Vout);
+    orLevelEl.textContent = orLevel;
+    orLevelStat.classList.remove('level-high','level-low','level-mid');
+    orLevelStat.classList.add('level-'+orLevel.toLowerCase());
+
+    andOutEl.innerHTML = andState.Vout.toFixed(2) + ' <small>V</small>';
+    const andLevel = formatLevel(andState.Vout);
+    andLevelEl.textContent = andLevel;
+    andLevelStat.classList.remove('level-high','level-low','level-mid');
+    andLevelStat.classList.add('level-'+andLevel.toLowerCase());
+
+    renderGate(orSvg, 'or', VA, VB, Vf, orState);
+    renderGate(andSvg, 'and', VA, VB, Vf, andState);
+  }
+
+  vaToggle.querySelectorAll('.mode-btn').forEach(btn=>{
+    btn.addEventListener('click', function(){
+      VA = parseFloat(btn.dataset.v);
+      vaToggle.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active', b===btn));
+      render();
+    });
+  });
+  vbToggle.querySelectorAll('.mode-btn').forEach(btn=>{
+    btn.addEventListener('click', function(){
+      VB = parseFloat(btn.dataset.v);
+      vbToggle.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active', b===btn));
+      render();
+    });
+  });
+  vfToggle.querySelectorAll('.mode-btn').forEach(btn=>{
+    btn.addEventListener('click', function(){
+      Vf = parseFloat(btn.dataset.vf);
+      vfToggle.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active', b===btn));
+      render();
+    });
+  });
+  resetBtn.addEventListener('click', function(){
+    VA = 0; VB = 5; Vf = 0.7;
+    vaToggle.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active', b.dataset.v==='0'));
+    vbToggle.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active', b.dataset.v==='5'));
+    vfToggle.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active', b.dataset.vf==='0.7'));
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
