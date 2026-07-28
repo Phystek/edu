@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ELEC2005 — DC Power Supply Explorer</title>
+<style>
+  :root{
+    --ink:#1a1512;
+    --paper:#faf7f2;
+    --panel:#ffffff;
+    --maroon:#7a1730;
+    --focus:#1c5f7a;
+    --grid:#e4ddd2;
+    --muted:#6b6156;
+    --amber:#c98a2c;
+    --on-color:#2f7d4f;
+    --off-color:#b6ada0;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:#e6e6e4;
+    color:var(--ink);
+    font-family: "Iowan Old Style","Georgia",serif;
+    padding:20px 16px 40px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .wrap{max-width:1060px;margin:0 auto;}
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:8px;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:12px;
+    margin-bottom:14px;
+  }
+  h1{
+    font-size:clamp(20px,3.6vw,28px);
+    margin:0;
+    letter-spacing:-0.01em;
+    font-weight:700;
+  }
+  .eyebrow{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+    font-size:11px;
+    color:var(--maroon);
+    font-weight:600;
+    margin:0 0 4px;
+  }
+  .unit-tag{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12px;
+    color:var(--muted);
+  }
+  .intro{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:14px;
+    line-height:1.55;
+    color:#3a332c;
+    max-width:88ch;
+    margin-bottom:18px;
+  }
+  .caveat{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12px;
+    line-height:1.5;
+    background:#fbe9c6;
+    border:1px solid #e0be6f;
+    border-radius:4px;
+    padding:9px 12px;
+    margin-bottom:18px;
+    color:#5c4a12;
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--grid);
+    border-radius:4px;
+    padding:14px;
+    margin-bottom:18px;
+  }
+  .plot-title{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--ink);
+    margin:0 0 8px;
+  }
+  svg{width:100%;height:auto;display:block;}
+  .block-label{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:14px;
+    font-weight:700;
+    fill:var(--ink);
+    text-anchor:middle;
+  }
+  .block-sub{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:10.5px;
+    fill:var(--muted);
+    text-anchor:middle;
+  }
+  .axis-label{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:11px;
+    fill:var(--muted);
+  }
+  .grid-line{stroke:var(--grid);stroke-width:1;}
+  .controls-grid{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap:16px;
+  }
+  @media (max-width:700px){
+    .controls-grid{grid-template-columns:1fr;}
+  }
+  .control-label{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:13px;
+    font-weight:600;
+    margin-bottom:6px;
+  }
+  .mode-toggle{
+    display:flex;
+    border:1px solid var(--ink);
+    border-radius:3px;
+    overflow:hidden;
+  }
+  .mode-btn{
+    flex:1;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    background:var(--panel);
+    color:var(--ink);
+    border:none;
+    padding:7px 10px;
+    cursor:pointer;
+  }
+  .mode-btn + .mode-btn{border-left:1px solid var(--ink);}
+  .mode-btn.active{background:var(--ink);color:var(--paper);}
+  .mode-btn.active.on{background:var(--on-color);border-color:var(--on-color);}
+  .mode-btn:focus-visible{outline:2px solid var(--focus);outline-offset:-2px;}
+  .reset-btn{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    background:none;
+    border:1px solid var(--ink);
+    color:var(--ink);
+    padding:7px 14px;
+    border-radius:3px;
+    cursor:pointer;
+    margin-top:14px;
+  }
+  .reset-btn:hover{background:var(--ink);color:var(--paper);}
+  .reset-btn:focus-visible, input:focus-visible{
+    outline:2px solid var(--focus);
+    outline-offset:2px;
+  }
+  .legend{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    margin-top:8px;
+    color:var(--muted);
+  }
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .swatch{width:16px;height:3px;display:inline-block;border-radius:2px;}
+  .readout-grid{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap:10px;
+  }
+  @media (max-width:700px){
+    .readout-grid{grid-template-columns:repeat(2,1fr);}
+  }
+  .stat{
+    background:var(--paper);
+    border:1px solid var(--grid);
+    border-radius:4px;
+    padding:9px 12px;
+  }
+  .stat .k{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--muted);
+    margin-bottom:3px;
+  }
+  .stat .v{
+    font-size:17px;
+    font-weight:700;
+    color:var(--maroon);
+    font-variant-numeric: tabular-nums;
+  }
+  .stat .v small{font-size:11px;font-weight:500;color:var(--muted);}
+  footer{
+    margin-top:10px;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:11.5px;
+    color:var(--muted);
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <p class="eyebrow">DC power supplies</p>
+      <h1>DC Power Supply Explorer</h1>
+    </div>
+    <div class="unit-tag">ELEC2005 · Week 2 companion</div>
+  </header>
+
+  <p class="intro">
+    Toggle the rectifier, filter, and regulator on or off and watch the waveform reshape at each stage. Try switching the <b>filter off while the regulator stays on</b> — the regulator can't hold a steady output when its input dips to 0 V between pulses, which is exactly why the filter has to come first.
+  </p>
+  <p class="caveat">
+    <b>Illustrative values.</b> Component values (12 V transformer peak, 60 Hz, 5 V regulated output) and diode drops (assumed ideal) are chosen to make the waveform shapes clear, not to model a specific real supply.
+  </p>
+
+  <div class="panel">
+    <p class="plot-title">Signal chain — greyed, dashed blocks are bypassed</p>
+    <svg id="blockSvg" viewBox="0 0 1240 220" role="img" aria-label="Block diagram of transformer, rectifier, filter, regulator and load"></svg>
+  </div>
+
+  <div class="panel">
+    <p class="plot-title">Stage controls</p>
+    <div class="controls-grid">
+      <div>
+        <div class="control-label">Rectifier</div>
+        <div class="mode-toggle" id="rectToggle">
+          <button type="button" class="mode-btn" data-on="1">Enabled</button>
+          <button type="button" class="mode-btn active" data-on="0">Bypassed</button>
+        </div>
+      </div>
+      <div>
+        <div class="control-label">Filter</div>
+        <div class="mode-toggle" id="filtToggle">
+          <button type="button" class="mode-btn" data-on="1">Enabled</button>
+          <button type="button" class="mode-btn active" data-on="0">Bypassed</button>
+        </div>
+      </div>
+      <div>
+        <div class="control-label">Regulator</div>
+        <div class="mode-toggle" id="regToggle">
+          <button type="button" class="mode-btn" data-on="1">Enabled</button>
+          <button type="button" class="mode-btn active" data-on="0">Bypassed</button>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button class="reset-btn" id="enableAllBtn">Enable all</button>
+      <button class="reset-btn" id="bypassAllBtn">Bypass all</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <p class="plot-title">Waveform at each stage</p>
+    <svg id="waveSvg" viewBox="0 0 900 380" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Voltage versus time at each stage of the power supply"></svg>
+    <div class="legend" id="legendRow"></div>
+  </div>
+
+  <div class="panel">
+    <p class="plot-title">Output summary</p>
+    <div class="readout-grid">
+      <div class="stat">
+        <div class="k">Output min</div>
+        <div class="v" id="outMin">— <small>V</small></div>
+      </div>
+      <div class="stat">
+        <div class="k">Output max</div>
+        <div class="v" id="outMax">— <small>V</small></div>
+      </div>
+      <div class="stat">
+        <div class="k">Ripple (pk-pk)</div>
+        <div class="v" id="outRipple">— <small>V</small></div>
+      </div>
+      <div class="stat">
+        <div class="k">Regulation</div>
+        <div class="v" id="regStatus" style="font-size:15px;">—</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Built for ELEC2005 — Electrical and Electronic Systems · not for assessment, for concept exploration only</footer>
+</div>
+
+<script>
+(function(){
+  const NS = "http://www.w3.org/2000/svg";
+  const blockSvg = document.getElementById('blockSvg');
+  const waveSvg = document.getElementById('waveSvg');
+  const legendRow = document.getElementById('legendRow');
+  const rectToggle = document.getElementById('rectToggle');
+  const filtToggle = document.getElementById('filtToggle');
+  const regToggle = document.getElementById('regToggle');
+  const enableAllBtn = document.getElementById('enableAllBtn');
+  const bypassAllBtn = document.getElementById('bypassAllBtn');
+  const outMinEl = document.getElementById('outMin');
+  const outMaxEl = document.getElementById('outMax');
+  const outRippleEl = document.getElementById('outRipple');
+  const regStatusEl = document.getElementById('regStatus');
+
+  let rectOn = false, filtOn = false, regOn = false;
+
+  // ---- Fixed illustrative component values ----
+  const VPEAK = 12;      // transformer secondary peak (V)
+  const FREQ = 60;       // line frequency (Hz)
+  const TAU = 0.020;     // filter time constant (s) -- chosen so ripple is clearly visible
+  const VREG = 5;        // regulated output target (V)
+  const VDROP = 2;       // regulator dropout headroom (V)
+  const T_TOTAL = 0.05;  // 3 cycles at 60Hz
+  const N = 500;         // simulation samples
+
+  function el(tag, attrs){
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function txt(nodes, cls, x, y, s, anchor){
+    const t = el('text',{class:cls, x:x, y:y, 'text-anchor':anchor||'start'});
+    t.textContent = s;
+    nodes.push(t);
+  }
+
+  // ---- Signal chain simulation ----
+  function simulate(){
+    const dt = T_TOTAL / N;
+    const t = new Array(N), vS = new Array(N), vRect = new Array(N), vFilt = new Array(N), vOut = new Array(N);
+    let capV = 0;
+    for(let i=0;i<N;i++){
+      t[i] = i*dt;
+      vS[i] = VPEAK*Math.sin(2*Math.PI*FREQ*t[i]);
+      vRect[i] = rectOn ? Math.abs(vS[i]) : vS[i];
+      if (filtOn){
+        if (i===0) capV = vRect[0];
+        else capV = (vRect[i] >= capV) ? vRect[i] : capV*Math.exp(-dt/TAU);
+        vFilt[i] = capV;
+      } else {
+        vFilt[i] = vRect[i];
+      }
+      vOut[i] = regOn ? Math.max(0, Math.min(VREG, vFilt[i]-VDROP)) : vFilt[i];
+    }
+    return {t, vS, vRect, vFilt, vOut};
+  }
+
+  // ---- Block diagram ----
+  function renderBlocks(){
+    const nodes = [];
+    const boxW=180, boxH=90, gap=35, y0=60, marginLeft=120;
+    const centerY = y0+boxH/2;
+    const names = ['Transformer','Rectifier','Filter','Regulator','Load'];
+    const toggles = [null, rectOn, filtOn, regOn, null];
+    const xs = names.map((_,i)=> marginLeft + i*(boxW+gap));
+
+    // AC line label + stub wire
+    txt(nodes,'block-sub', 15, centerY-14, 'AC line');
+    txt(nodes,'block-sub', 15, centerY-2, '120V rms, 60Hz');
+    nodes.push(el('line',{x1:15,y1:centerY,x2:xs[0],y2:centerY,stroke:'#1a1512','stroke-width':2}));
+
+    xs.forEach((x,i)=>{
+      const enabled = toggles[i]===null || toggles[i]===true;
+      const fill = enabled ? '#e3eef1' : '#eeece7';
+      const stroke = enabled ? 'var(--focus)' : '#b6ada0';
+      nodes.push(el('rect',{x:x,y:y0,width:boxW,height:boxH,rx:4,fill:fill,stroke:stroke,'stroke-width':1.5,
+        'stroke-dasharray': enabled? 'none':'5 4'}));
+      txt(nodes,'block-label', x+boxW/2, centerY-2, names[i], 'middle');
+      if (toggles[i]===false){
+        txt(nodes,'block-sub', x+boxW/2, centerY+16, '(bypassed)', 'middle');
+        // bypass through-line
+        nodes.push(el('line',{x1:x+14,y1:centerY+30,x2:x+boxW-14,y2:centerY+30,stroke:'#8a8175','stroke-width':1.5,'stroke-dasharray':'4 3'}));
+      }
+      // connecting arrow to next box
+      if (i < xs.length-1){
+        const x1 = x+boxW, x2 = x+boxW+gap;
+        nodes.push(el('line',{x1:x1,y1:centerY,x2:x2-8,y2:centerY,stroke:'#1a1512','stroke-width':2}));
+        nodes.push(el('polygon',{points:`${x2-8},${centerY-4} ${x2-8},${centerY+4} ${x2},${centerY}`,fill:'#1a1512'}));
+      }
+    });
+
+    // output stub + VO label after Load
+    const lastX = xs[xs.length-1]+boxW;
+    nodes.push(el('line',{x1:lastX,y1:centerY,x2:lastX+30,y2:centerY,stroke:'#1a1512','stroke-width':2}));
+    txt(nodes,'block-sub', lastX+34, centerY-2, 'V\u2092', 'start');
+
+    blockSvg.innerHTML='';
+    blockSvg.setAttribute('viewBox','0 0 1240 220');
+    nodes.forEach(n=>blockSvg.appendChild(n));
+  }
+
+  // ---- Waveform plot ----
+  function renderWave(sim){
+    const nodes = [];
+    const W=900, H=380;
+    const margin = {top:16, right:20, bottom:40, left:56};
+    const plotW = W-margin.left-margin.right, plotH = H-margin.top-margin.bottom;
+    const V_MIN=-13, V_MAX=13;
+
+    function xS(t){ return margin.left + (t/T_TOTAL)*plotW; }
+    function yS(v){ return margin.top + plotH - ((v-V_MIN)/(V_MAX-V_MIN))*plotH; }
+
+    waveSvg.innerHTML='';
+    waveSvg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+
+    // gridlines + axis labels
+    for(let k=0;k<=6;k++){
+      const tt = (k/6)*T_TOTAL;
+      const x = xS(tt);
+      nodes.push(el('line',{class:'grid-line',x1:x,y1:margin.top,x2:x,y2:margin.top+plotH}));
+      const lbl = el('text',{class:'axis-label',x:x,y:margin.top+plotH+16,'text-anchor':'middle'});
+      lbl.textContent = (tt*1000).toFixed(0);
+      nodes.push(lbl);
+    }
+    for(let v=-12; v<=12; v+=4){
+      const y = yS(v);
+      nodes.push(el('line',{class:'grid-line',x1:margin.left,y1:y,x2:margin.left+plotW,y2:y}));
+      const lbl = el('text',{class:'axis-label',x:margin.left-8,y:y+4,'text-anchor':'end'});
+      lbl.textContent = v;
+      nodes.push(lbl);
+    }
+    // zero line, emphasized
+    nodes.push(el('line',{x1:margin.left,y1:yS(0),x2:margin.left+plotW,y2:yS(0),stroke:'#1a1512','stroke-width':1}));
+    const xt = el('text',{class:'axis-label',x:margin.left+plotW/2,y:H-6,'text-anchor':'middle'});
+    xt.textContent = 'Time (ms)';
+    nodes.push(xt);
+    nodes.push(el('line',{x1:margin.left,y1:margin.top,x2:margin.left,y2:margin.top+plotH,stroke:'#1a1512','stroke-width':1.4}));
+
+    function pathFor(arr){
+      let d = '';
+      for(let i=0;i<arr.length;i++){
+        const x = xS(sim.t[i]), y = yS(arr[i]);
+        d += (i===0?'M':'L') + x.toFixed(2) + ',' + y.toFixed(2) + ' ';
+      }
+      return d;
+    }
+
+    const legendItems = [];
+
+    // vS: always shown, dashed muted reference
+    nodes.push(el('path',{d:pathFor(sim.vS), fill:'none', stroke:'#8a8175','stroke-width':1.6,'stroke-dasharray':'5 4'}));
+    legendItems.push({color:'#8a8175', label:'Transformer output v\u209B (reference)', dash:true});
+
+    // vRect: only meaningfully different from vS if rectifier is on
+    if (rectOn){
+      nodes.push(el('path',{d:pathFor(sim.vRect), fill:'none', stroke:'var(--amber)','stroke-width':1.8}));
+      legendItems.push({color:'#c98a2c', label:'Rectifier output'});
+    }
+    // vFilt: only meaningfully different from vRect if filter is on
+    if (filtOn){
+      nodes.push(el('path',{d:pathFor(sim.vFilt), fill:'none', stroke:'var(--focus)','stroke-width':1.8}));
+      legendItems.push({color:'#1c5f7a', label:'Filter output'});
+    }
+    // vOut: always the hero trace
+    nodes.push(el('path',{d:pathFor(sim.vOut), fill:'none', stroke:'var(--maroon)','stroke-width':2.6}));
+    legendItems.push({color:'#7a1730', label:'Final output (load voltage)'});
+
+    waveSvg.appendChild(el('rect',{x:0,y:0,width:W,height:H,fill:'none'})); // ensure viewBox area registers
+    nodes.forEach(n=>waveSvg.appendChild(n));
+
+    legendRow.innerHTML = '';
+    legendItems.forEach(item=>{
+      const span = document.createElement('span');
+      const sw = document.createElement('i');
+      sw.className = 'swatch';
+      sw.style.background = item.color;
+      if (item.dash) sw.style.backgroundImage = 'none';
+      span.appendChild(sw);
+      span.appendChild(document.createTextNode(item.label));
+      legendRow.appendChild(span);
+    });
+  }
+
+  function render(){
+    const sim = simulate();
+    renderBlocks();
+    renderWave(sim);
+
+    const steady = sim.vOut.slice(Math.floor(N/3)); // skip initial transient
+    const outMin = Math.min(...steady), outMax = Math.max(...steady);
+    outMinEl.innerHTML = outMin.toFixed(2) + ' <small>V</small>';
+    outMaxEl.innerHTML = outMax.toFixed(2) + ' <small>V</small>';
+    outRippleEl.innerHTML = (outMax-outMin).toFixed(2) + ' <small>V</small>';
+
+    let status;
+    if (!regOn){ status = 'n/a (bypassed)'; }
+    else if (outMax-outMin < 0.05){ status = 'Regulating'; }
+    else { status = 'Dropout'; }
+    regStatusEl.textContent = status;
+  }
+
+  function wireToggle(toggle, setter){
+    toggle.querySelectorAll('.mode-btn').forEach(btn=>{
+      btn.addEventListener('click', function(){
+        setter(btn.dataset.on === '1');
+        toggle.querySelectorAll('.mode-btn').forEach(b=>{
+          const active = b===btn;
+          b.classList.toggle('active', active);
+          b.classList.toggle('on', active && b.dataset.on==='1');
+        });
+        render();
+      });
+    });
+  }
+  wireToggle(rectToggle, v=>rectOn=v);
+  wireToggle(filtToggle, v=>filtOn=v);
+  wireToggle(regToggle, v=>regOn=v);
+
+  function setAll(state){
+    rectOn = filtOn = regOn = state;
+    [rectToggle, filtToggle, regToggle].forEach(toggle=>{
+      toggle.querySelectorAll('.mode-btn').forEach(b=>{
+        const active = (b.dataset.on==='1') === state;
+        b.classList.toggle('active', active);
+        b.classList.toggle('on', active && b.dataset.on==='1');
+      });
+    });
+    render();
+  }
+  enableAllBtn.addEventListener('click', function(){ setAll(true); });
+  bypassAllBtn.addEventListener('click', function(){ setAll(false); });
+
+  render();
+})();
+</script>
+</body>
+</html>
