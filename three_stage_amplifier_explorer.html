@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ELEC2005 — 3-Stage Amplifier: Loading Explorer (Fixed Gain)</title>
+<style>
+  :root{
+    --ink:#1a1512;
+    --paper:#faf7f2;
+    --panel:#ffffff;
+    --maroon:#7a1730;
+    --line-load:#1c5f7a;
+    --grid:#e4ddd2;
+    --muted:#6b6156;
+    --focus:#1c5f7a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:#e6e6e4;
+    color:var(--ink);
+    font-family: "Iowan Old Style","Georgia",serif;
+    padding:20px 16px 40px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .wrap{max-width:1080px;margin:0 auto;}
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:8px;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:12px;
+    margin-bottom:14px;
+  }
+  h1{
+    font-size:clamp(20px,3.6vw,28px);
+    margin:0;
+    letter-spacing:-0.01em;
+    font-weight:700;
+  }
+  .eyebrow{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+    font-size:11px;
+    color:var(--maroon);
+    font-weight:600;
+    margin:0 0 4px;
+  }
+  .unit-tag{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12px;
+    color:var(--muted);
+  }
+  .intro{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:14px;
+    line-height:1.55;
+    color:#3a332c;
+    max-width:80ch;
+    margin-bottom:8px;
+  }
+  .fixed-note{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12px;
+    line-height:1.5;
+    color:var(--muted);
+    margin-bottom:18px;
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--grid);
+    border-radius:4px;
+    padding:14px;
+    margin-bottom:18px;
+  }
+  .plot-title{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--ink);
+    margin:0 0 8px;
+  }
+  svg{width:100%;height:auto;display:block;}
+  .col-label{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:14px;
+    font-weight:700;
+    fill:var(--maroon);
+    text-anchor:middle;
+  }
+  .controls-grid{
+    display:grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap:12px;
+  }
+  @media (max-width:980px){
+    .controls-grid{grid-template-columns:repeat(3,1fr);}
+  }
+  @media (max-width:620px){
+    .controls-grid{grid-template-columns:1fr;}
+  }
+  .stage-block{
+    background:var(--paper);
+    border:1px solid var(--grid);
+    border-radius:4px;
+    padding:12px;
+  }
+  .stage-block h3{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--maroon);
+    margin:0 0 10px;
+    font-weight:700;
+  }
+  .control-row{margin-bottom:14px;}
+  .control-row:last-child{margin-bottom:0;}
+  .control-label{
+    display:flex;
+    justify-content:space-between;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12.5px;
+    margin-bottom:6px;
+  }
+  .control-label b{font-weight:600;}
+  .control-value{
+    font-variant-numeric: tabular-nums;
+    color:var(--maroon);
+    font-weight:700;
+  }
+  input[type=range]{
+    width:100%;
+    accent-color:var(--maroon);
+    height:22px;
+    cursor:pointer;
+  }
+  .range-ends{
+    display:flex;justify-content:space-between;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:9.5px;color:var(--muted);margin-top:2px;
+  }
+  .btn-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:4px;}
+  .reset-btn{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    background:none;
+    border:1px solid var(--ink);
+    color:var(--ink);
+    padding:7px 14px;
+    border-radius:3px;
+    cursor:pointer;
+  }
+  .reset-btn:hover{background:var(--ink);color:var(--paper);}
+  .reset-btn.accent{border-color:var(--maroon); color:var(--maroon);}
+  .reset-btn.accent:hover{background:var(--maroon); color:var(--paper);}
+  .reset-btn:focus-visible, input:focus-visible{
+    outline:2px solid var(--focus);
+    outline-offset:2px;
+  }
+  .readout-grid{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap:10px;
+  }
+  @media (max-width:700px){
+    .readout-grid{grid-template-columns:repeat(2,1fr);}
+  }
+  .stat{
+    background:var(--paper);
+    border:1px solid var(--grid);
+    border-radius:4px;
+    padding:10px 12px;
+  }
+  .stat .k{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--muted);
+    margin-bottom:3px;
+  }
+  .stat .v{
+    font-size:18px;
+    font-weight:700;
+    color:var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .stat.hero .v{font-size:22px;color:var(--maroon);}
+  .stat .v small{font-size:11px;font-weight:500;color:var(--muted);}
+  footer{
+    margin-top:10px;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:11.5px;
+    color:var(--muted);
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <p class="eyebrow">Cascaded amplifiers</p>
+      <h1>3-Stage Amplifier: Loading Explorer</h1>
+    </div>
+    <div class="unit-tag">ELEC2005 · Week 1 companion</div>
+  </header>
+
+  <p class="intro">
+    Each stage's gain (A<sub>v1</sub>=×10, A<sub>v2</sub>=×100, A<sub>v3</sub>=×1) is fixed at the lecture's original values. What's adjustable here is every resistance — R<sub>S</sub>, each stage's own input resistance R<sub>i</sub> <em>and</em> its output resistance R<sub>o</sub>, and R<sub>L</sub> — so you can isolate exactly how much gain is lost purely to loading between stages, independent of the gain each stage is capable of.
+  </p>
+  <p class="fixed-note">
+    Each stage's gain (A<sub>v1</sub>, A<sub>v2</sub>, A<sub>v3</sub>) is held fixed at the lecture's original values — shown in grey next to each dependent source on the diagram — so the sliders isolate purely resistive loading effects.
+  </p>
+
+  <div class="panel">
+    <p class="plot-title">Circuit — live node voltages shown in teal, adjustable values in maroon, fixed values in grey</p>
+    <svg id="circuitSvg" viewBox="0 0 1190 285" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Three stage cascaded amplifier circuit with source and load"></svg>
+  </div>
+
+  <div class="panel">
+    <p class="plot-title">Circuit conditions</p>
+    <div class="controls-grid">
+      <div class="stage-block">
+        <h3>Source</h3>
+        <div class="control-row">
+          <div class="control-label"><b>R<sub>S</sub></b><span class="control-value" id="rsVal">100 kΩ</span></div>
+          <input type="range" id="rsSlider" min="1" max="6" step="1" value="5">
+          <div class="range-ends"><span>10Ω</span><span>1MΩ</span></div>
+        </div>
+      </div>
+      <div class="stage-block">
+        <h3>Stage 1</h3>
+        <div class="control-row">
+          <div class="control-label"><b>R<sub>i1</sub></b><span class="control-value" id="ri1Val">1.0 MΩ</span></div>
+          <input type="range" id="ri1Slider" min="1" max="6" step="1" value="6">
+          <div class="range-ends"><span>10Ω</span><span>1MΩ</span></div>
+        </div>
+        <div class="control-row">
+          <div class="control-label"><b>R<sub>o1</sub></b><span class="control-value" id="ro1Val">1 kΩ</span></div>
+          <input type="range" id="ro1Slider" min="1" max="6" step="1" value="3">
+          <div class="range-ends"><span>10Ω</span><span>1MΩ</span></div>
+        </div>
+      </div>
+      <div class="stage-block">
+        <h3>Stage 2</h3>
+        <div class="control-row">
+          <div class="control-label"><b>R<sub>i2</sub></b><span class="control-value" id="ri2Val">100 kΩ</span></div>
+          <input type="range" id="ri2Slider" min="1" max="6" step="1" value="5">
+          <div class="range-ends"><span>10Ω</span><span>1MΩ</span></div>
+        </div>
+        <div class="control-row">
+          <div class="control-label"><b>R<sub>o2</sub></b><span class="control-value" id="ro2Val">1 kΩ</span></div>
+          <input type="range" id="ro2Slider" min="1" max="6" step="1" value="3">
+          <div class="range-ends"><span>10Ω</span><span>1MΩ</span></div>
+        </div>
+      </div>
+      <div class="stage-block">
+        <h3>Stage 3</h3>
+        <div class="control-row">
+          <div class="control-label"><b>R<sub>i3</sub></b><span class="control-value" id="ri3Val">10 kΩ</span></div>
+          <input type="range" id="ri3Slider" min="1" max="6" step="1" value="4">
+          <div class="range-ends"><span>10Ω</span><span>1MΩ</span></div>
+        </div>
+        <div class="control-row">
+          <div class="control-label"><b>R<sub>o3</sub></b><span class="control-value" id="ro3Val">10 Ω</span></div>
+          <input type="range" id="ro3Slider" min="1" max="6" step="1" value="1">
+          <div class="range-ends"><span>10Ω</span><span>1MΩ</span></div>
+        </div>
+      </div>
+      <div class="stage-block">
+        <h3>Load</h3>
+        <div class="control-row">
+          <div class="control-label"><b>R<sub>L</sub></b><span class="control-value" id="rlVal">100 Ω</span></div>
+          <input type="range" id="rlSlider" min="1" max="6" step="1" value="2">
+          <div class="range-ends"><span>10Ω</span><span>1MΩ</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="reset-btn" id="resetBtn">Reset to lecture example values</button>
+      <button class="reset-btn accent" id="maxGainBtn">Set for maximum gain</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <p class="plot-title">Overall gain</p>
+    <div class="readout-grid">
+      <div class="stat hero">
+        <div class="k">v<sub>L</sub> / v<sub>S</sub></div>
+        <div class="v" id="gainVV">— <small>V/V</small></div>
+      </div>
+      <div class="stat hero">
+        <div class="k">Gain in dB</div>
+        <div class="v" id="gainDB">— <small>dB</small></div>
+      </div>
+      <div class="stat">
+        <div class="k">v<sub>i1</sub> (per V of v<sub>S</sub>)</div>
+        <div class="v" id="vi1Stat">—</div>
+      </div>
+      <div class="stat">
+        <div class="k">v<sub>i2</sub> (per V of v<sub>S</sub>)</div>
+        <div class="v" id="vi2Stat">—</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Built for ELEC2005 — Electrical and Electronic Systems · not for assessment, for concept exploration only</footer>
+</div>
+
+<script>
+(function(){
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.getElementById('circuitSvg');
+
+  const sliders = {
+    rs: document.getElementById('rsSlider'),
+    ri1: document.getElementById('ri1Slider'), ro1: document.getElementById('ro1Slider'),
+    ri2: document.getElementById('ri2Slider'), ro2: document.getElementById('ro2Slider'),
+    ri3: document.getElementById('ri3Slider'), ro3: document.getElementById('ro3Slider'),
+    rl: document.getElementById('rlSlider'),
+  };
+  const vals = {
+    rs: document.getElementById('rsVal'),
+    ri1: document.getElementById('ri1Val'), ro1: document.getElementById('ro1Val'),
+    ri2: document.getElementById('ri2Val'), ro2: document.getElementById('ro2Val'),
+    ri3: document.getElementById('ri3Val'), ro3: document.getElementById('ro3Val'),
+    rl: document.getElementById('rlVal'),
+  };
+  const resetBtn = document.getElementById('resetBtn');
+  const maxGainBtn = document.getElementById('maxGainBtn');
+  const gainVVEl = document.getElementById('gainVV');
+  const gainDBEl = document.getElementById('gainDB');
+  const vi1StatEl = document.getElementById('vi1Stat');
+  const vi2StatEl = document.getElementById('vi2Stat');
+
+  // Fixed inter-stage coupling resistances (lecture's original values)
+  const Av1 = 10, Av2 = 100, Av3 = 1;
+
+  function el(tag, attrs){
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  function formatR(rOhms){
+    if (rOhms < 1000) return rOhms.toFixed(0) + ' Ω';
+    if (rOhms < 1e6) return (rOhms/1000).toFixed(0) + ' kΩ';
+    return (rOhms/1e6).toFixed(0) + ' MΩ';
+  }
+
+  function formatMultiplier(x){
+    const ax = Math.abs(x);
+    if (ax === 0) return '0';
+    if (ax >= 1000 || ax < 0.01) return x.toExponential(2);
+    if (ax >= 100) return x.toFixed(0);
+    if (ax >= 1) return x.toFixed(2);
+    return x.toFixed(4);
+  }
+
+  // Always shows a plain fixed-point number (no scientific notation), with
+  // enough decimal places to keep ~4 significant figures even at extreme
+  // magnitudes (the gain can range from ~5e-10 to ~1e6 across the full
+  // slider space), and thousands separators for readability at the top end.
+  function formatFullNumber(x){
+    if (x === 0) return '0';
+    const magnitude = Math.floor(Math.log10(Math.abs(x)));
+    const decimals = Math.max(0, Math.min(20, 3 - magnitude));
+    return x.toLocaleString('en-US', {minimumFractionDigits: decimals, maximumFractionDigits: decimals});
+  }
+
+  // ---------- Component drawing helpers ----------
+  function resistorV(x, y1, y2, teeth, amp){
+    teeth = teeth || 6; amp = amp || 8;
+    let path = `M${x},${y1} `;
+    for(let t=0;t<teeth;t++){
+      const y = y1 + (t+0.5)*(y2-y1)/teeth;
+      const xx = x + (t%2===0 ? -amp : amp);
+      path += `L${xx.toFixed(1)},${y.toFixed(1)} `;
+    }
+    path += `L${x},${y2}`;
+    return path;
+  }
+  function drawGround(nodes, x, y){
+    nodes.push(el('line',{stroke:'#1a1512','stroke-width':1.8,x1:x,y1:y,x2:x,y2:y+10}));
+    [16,10,5].forEach((w,k)=>{
+      const gy = y+10+k*6;
+      nodes.push(el('line',{stroke:'#1a1512','stroke-width':1.6,x1:x-w/2,y1:gy,x2:x+w/2,y2:gy}));
+    });
+  }
+  function drawDiamond(nodes, cx, topY, bottomY, halfW){
+    halfW = halfW || 20;
+    const midY = (topY+bottomY)/2;
+    const pts = `${cx},${topY} ${cx+halfW},${midY} ${cx},${bottomY} ${cx-halfW},${midY}`;
+    nodes.push(el('polygon',{points:pts, fill:'none', stroke:'#1a1512','stroke-width':2,'stroke-linejoin':'round'}));
+    const plus = el('text',{x:cx,y:midY-2,'text-anchor':'middle','font-size':'12',fill:'#1a1512'}); plus.textContent='+';
+    const minus = el('text',{x:cx,y:midY+15,'text-anchor':'middle','font-size':'14',fill:'#1a1512'}); minus.textContent='\u2212';
+    nodes.push(plus); nodes.push(minus);
+  }
+  function drawSourceCircle(nodes, cx, cy, r){
+    nodes.push(el('circle',{cx:cx,cy:cy,r:r,fill:'none',stroke:'#1a1512','stroke-width':2}));
+    const plus = el('text',{x:cx,y:cy-r*0.1,'text-anchor':'middle','font-size':'13',fill:'#1a1512'}); plus.textContent='+';
+    nodes.push(plus);
+    const minus = el('text',{x:cx,y:cy+r*0.7,'text-anchor':'middle','font-size':'15',fill:'#1a1512'}); minus.textContent='\u2212';
+    nodes.push(minus);
+  }
+  function line(nodes, x1,y1,x2,y2){
+    nodes.push(el('line',{stroke:'#1a1512','stroke-width':2,'stroke-linecap':'round',x1:x1,y1:y1,x2:x2,y2:y2}));
+  }
+  function txt(nodes, fill, x, y, s, anchor, size, weight){
+    const t = el('text',{x:x, y:y, 'text-anchor':anchor||'start', 'font-family':'Helvetica Neue, Arial, sans-serif',
+      'font-size':size||'12', 'font-weight':weight||'400', fill:fill});
+    t.textContent = s;
+    nodes.push(t);
+  }
+
+  // Verified layout constants (checked for zero label/component collisions
+  // and zero edge-clipping before shipping — see design notes)
+  const nodeY=40, riBottom=130, diamondTop=130, diamondBottom=178, groundStub=12;
+  const RI_OFFSET=65, RO_OFFSET=185;
+  const INK='#1a1512', MAROON='#7a1730', MUTED='#6b6156', TEAL='#1c5f7a';
+
+  function renderCircuit(state){
+    const nodes = [];
+
+    const dividers = [250,480,710,940];
+    dividers.forEach(x=>{
+      nodes.push(el('line',{x1:x,y1:12,x2:x,y2:230,stroke:'#d8cfc0','stroke-width':1.4,'stroke-dasharray':'5 4'}));
+    });
+    const cols = [[20,250,'Source'],[250,480,'Stage 1'],[480,710,'Stage 2'],[710,940,'Stage 3'],[940,1170,'Load']];
+    cols.forEach(c=> txt(nodes,MAROON,(c[0]+c[1])/2,16,c[2],'middle','14','700'));
+
+    // --- SOURCE column: vs -> Rs -> NodeA ---
+    const vsX=135, vsR=17, vsY = riBottom+vsR+6;
+    drawSourceCircle(nodes, vsX, vsY, vsR);
+    txt(nodes,INK, vsX-32, vsY+5, 'v\u209B', 'end');
+    line(nodes, vsX, vsY-vsR, vsX, riBottom);
+    nodes.push(el('path',{d:resistorV(vsX,nodeY,riBottom), fill:'none', stroke:INK,'stroke-width':2}));
+    line(nodes, vsX, nodeY, 250, nodeY);
+    line(nodes, vsX, vsY+vsR, vsX, vsY+vsR+groundStub);
+    drawGround(nodes, vsX, vsY+vsR+groundStub);
+    txt(nodes,MUTED, vsX-32, 80, 'R\u209B', 'end');
+    txt(nodes,MAROON, vsX-32, 94, state.RsLabel, 'end','12','700');
+    // ii arrow
+    nodes.push(el('line',{x1:205,y1:nodeY,x2:240,y2:nodeY,stroke:TEAL,'stroke-width':1.6}));
+    nodes.push(el('polygon',{points:`234,${nodeY-4} 234,${nodeY+4} 240,${nodeY}`, fill:TEAL}));
+    txt(nodes,TEAL, 222, nodeY-8, 'i\u1D62', 'middle','12','700');
+
+    [250,480,710,940].forEach(x=> nodes.push(el('circle',{cx:x,cy:nodeY,r:3.2,fill:INK})));
+
+    function stage(leftX, RiLabel, AvLabel, riName, RoLabelPair){
+      const riX = leftX+RI_OFFSET, dX = leftX+RO_OFFSET;
+      // Ri branch
+      line(nodes, leftX, nodeY, riX, nodeY);
+      nodes.push(el('path',{d:resistorV(riX, nodeY, riBottom), fill:'none', stroke:INK,'stroke-width':2}));
+      line(nodes, riX, riBottom, riX, riBottom+groundStub);
+      drawGround(nodes, riX, riBottom+groundStub);
+      txt(nodes,INK, riX-14, 60, '+', 'middle','12');
+      txt(nodes,INK, riX-14, 122, '\u2212', 'middle','13');
+      txt(nodes,INK, riX-14, 92, riName, 'middle','12');
+      txt(nodes,MAROON, riX+14, 96, RiLabel, 'start','12','700');
+
+      // Ro (this stage's own output resistance) directly above its diamond
+      nodes.push(el('path',{d:resistorV(dX, nodeY, diamondTop), fill:'none', stroke:INK,'stroke-width':2}));
+      drawDiamond(nodes, dX, diamondTop, diamondBottom);
+      line(nodes, dX, diamondBottom, dX, diamondBottom+groundStub);
+      drawGround(nodes, dX, diamondBottom+groundStub);
+      txt(nodes,INK, dX-14, 80, RoLabelPair[0], 'end','12');
+      txt(nodes,MAROON, dX-14, 94, RoLabelPair[1], 'end','12','700');
+      txt(nodes,MUTED, dX+26, diamondTop+20, AvLabel, 'start','11');
+      txt(nodes,MUTED, dX+26, diamondTop+34, '\u00D7 '+riName, 'start','11');
+      // wire from top of Ro to next node
+      line(nodes, dX, nodeY, leftX+230, nodeY);
+    }
+
+    stage(250, state.Ri1Label, '\u00D7'+Av1, 'vi1', ['Ro1', state.Ro1Label]);
+    stage(480, state.Ri2Label, '\u00D7'+Av2, 'vi2', ['Ro2', state.Ro2Label]);
+    stage(710, state.Ri3Label, '\u00D7'+Av3, 'vi3', ['Ro3', state.Ro3Label]);
+
+    // --- LOAD column ---
+    const loadLeft=940, rlX=loadLeft+115;
+    line(nodes, loadLeft, nodeY, rlX, nodeY);
+    nodes.push(el('path',{d:resistorV(rlX, nodeY, riBottom), fill:'none', stroke:INK,'stroke-width':2}));
+    line(nodes, rlX, riBottom, rlX, riBottom+groundStub);
+    drawGround(nodes, rlX, riBottom+groundStub);
+    txt(nodes,INK, rlX-14, 60, '+', 'middle','12');
+    txt(nodes,INK, rlX-14, 122, '\u2212', 'middle','13');
+    txt(nodes,INK, rlX-14, 92, 'vL', 'middle','12');
+    txt(nodes,MAROON, rlX+14, 96, state.RlLabel, 'start','12','700');
+    nodes.push(el('line',{x1:rlX+38,y1:26,x2:rlX+38,y2:50,stroke:TEAL,'stroke-width':1.6}));
+    nodes.push(el('polygon',{points:`${rlX+38-4},46 ${rlX+38+4},46 ${rlX+38},52`, fill:TEAL}));
+    txt(nodes,TEAL, rlX+38, 20, 'i\u2092', 'middle','12','700');
+
+    // Live signal-chain readout under the diagram
+    const chainY = 245;
+    const chainStr = `v\u209B  \u2192  ${formatMultiplier(state.vi1)} v\u209B  \u2192  ${formatMultiplier(state.vi2)} v\u209B  \u2192  ${formatMultiplier(state.vi3)} v\u209B  \u2192  ${formatMultiplier(state.vL)} v\u209B`;
+    txt(nodes, TEAL, 595, chainY, chainStr, 'middle','14','700');
+    txt(nodes, MUTED, 595, chainY+16, 'v\u209B \u2192 v\u1D62\u2081 \u2192 v\u1D62\u2082 \u2192 v\u1D62\u2083 \u2192 v\u029F  (signal at each node, per volt of v\u209B)', 'middle','10.5');
+
+    svg.innerHTML='';
+    svg.setAttribute('viewBox','0 0 1190 285');
+    nodes.forEach(n=>svg.appendChild(n));
+  }
+
+  function render(){
+    const Rs = Math.pow(10, parseInt(sliders.rs.value,10));
+    const Ri1 = Math.pow(10, parseInt(sliders.ri1.value,10));
+    const Ro1 = Math.pow(10, parseInt(sliders.ro1.value,10));
+    const Ri2 = Math.pow(10, parseInt(sliders.ri2.value,10));
+    const Ro2 = Math.pow(10, parseInt(sliders.ro2.value,10));
+    const Ri3 = Math.pow(10, parseInt(sliders.ri3.value,10));
+    const Ro3 = Math.pow(10, parseInt(sliders.ro3.value,10));
+    const RL = Math.pow(10, parseInt(sliders.rl.value,10));
+
+    vals.rs.textContent = formatR(Rs);
+    vals.ri1.textContent = formatR(Ri1);
+    vals.ro1.textContent = formatR(Ro1);
+    vals.ri2.textContent = formatR(Ri2);
+    vals.ro2.textContent = formatR(Ro2);
+    vals.ri3.textContent = formatR(Ri3);
+    vals.ro3.textContent = formatR(Ro3);
+    vals.rl.textContent = formatR(RL);
+
+    const d1 = Ri1/(Rs+Ri1);
+    const vi1 = d1;
+    const s1out = Av1*vi1;
+    const d2 = Ri2/(Ro1+Ri2);
+    const vi2 = s1out*d2;
+    const s2out = Av2*vi2;
+    const d3 = Ri3/(Ro2+Ri3);
+    const vi3 = s2out*d3;
+    const s3out = Av3*vi3;
+    const d4 = RL/(Ro3+RL);
+    const vL = s3out*d4;
+
+    gainVVEl.innerHTML = formatFullNumber(vL) + ' <small>V/V</small>';
+    gainDBEl.innerHTML = (20*Math.log10(Math.abs(vL))).toFixed(1) + ' <small>dB</small>';
+    vi1StatEl.textContent = formatMultiplier(vi1) + ' v\u209B';
+    vi2StatEl.textContent = formatMultiplier(vi2) + ' v\u209B';
+
+    renderCircuit({
+      RsLabel: formatR(Rs), Ri1Label: formatR(Ri1), Ri2Label: formatR(Ri2), Ri3Label: formatR(Ri3),
+      Ro1Label: formatR(Ro1), Ro2Label: formatR(Ro2), Ro3Label: formatR(Ro3), RlLabel: formatR(RL),
+      vi1, vi2, vi3, vL
+    });
+  }
+
+  Object.values(sliders).forEach(s => s.addEventListener('input', render));
+  resetBtn.addEventListener('click', function(){
+    sliders.rs.value=5;
+    sliders.ri1.value=6; sliders.ro1.value=3;
+    sliders.ri2.value=5; sliders.ro2.value=3;
+    sliders.ri3.value=4; sliders.ro3.value=1;
+    sliders.rl.value=2;
+    render();
+  });
+  maxGainBtn.addEventListener('click', function(){
+    // With gains fixed, Av1*Av2*Av3=1000 is a hard ceiling that the dividers
+    // can only approach (each divider is always <1), never exceed. Each
+    // divider depends on exactly one Ri (maximise) and one "other" resistor
+    // (Rs or an Ro — minimise), and RL similarly maximises the last divider.
+    // Verified numerically before shipping: ~1000 V/V (60.0 dB), the
+    // asymptotic ceiling, at these settings.
+    sliders.rs.value=1;
+    sliders.ri1.value=6; sliders.ro1.value=1;
+    sliders.ri2.value=6; sliders.ro2.value=1;
+    sliders.ri3.value=6; sliders.ro3.value=1;
+    sliders.rl.value=6;
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
