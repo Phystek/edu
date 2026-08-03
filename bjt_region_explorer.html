@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ELEC2005 — BJT Region Explorer</title>
+<style>
+  :root{
+    --ink:#1a1512;
+    --paper:#faf7f2;
+    --panel:#ffffff;
+    --maroon:#7a1730;
+    --focus:#1c5f7a;
+    --grid:#e4ddd2;
+    --muted:#6b6156;
+    --on-color:#2f7d4f;
+    --off-color:#b6ada0;
+    --low-color:#a3372c;
+    --mid-color:#c98a2c;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:#e6e6e4;
+    color:var(--ink);
+    font-family: "Iowan Old Style","Georgia",serif;
+    padding:20px 16px 40px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .wrap{max-width:1000px;margin:0 auto;}
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:8px;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:12px;
+    margin-bottom:14px;
+  }
+  h1{
+    font-size:clamp(20px,3.6vw,28px);
+    margin:0;
+    letter-spacing:-0.01em;
+    font-weight:700;
+  }
+  .eyebrow{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+    font-size:11px;
+    color:var(--maroon);
+    font-weight:600;
+    margin:0 0 4px;
+  }
+  .unit-tag{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12px;
+    color:var(--muted);
+  }
+  .intro{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:14px;
+    line-height:1.55;
+    color:#3a332c;
+    max-width:88ch;
+    margin-bottom:18px;
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--grid);
+    border-radius:4px;
+    padding:14px;
+    margin-bottom:18px;
+  }
+  .plot-title{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--ink);
+    margin:0 0 8px;
+  }
+  .diagrams-grid{
+    display:grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap:18px;
+  }
+  @media (max-width:760px){
+    .diagrams-grid{grid-template-columns:1fr;}
+  }
+  svg{width:100%;height:auto;display:block;}
+  .circuit-label{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12px;
+    fill:var(--ink);
+  }
+  .circuit-value{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12px;
+    font-weight:700;
+    fill:var(--maroon);
+  }
+  .state-badge{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:0.04em;
+  }
+  .grid-label{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:11.5px;
+    fill:var(--muted);
+    text-anchor:middle;
+  }
+  .grid-cell-label{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:14px;
+    font-weight:700;
+    text-anchor:middle;
+  }
+  .controls-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:20px;
+  }
+  @media (max-width:700px){
+    .controls-grid{grid-template-columns:1fr;}
+  }
+  .control-label{
+    display:flex;
+    justify-content:space-between;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:13.5px;
+    margin-bottom:6px;
+  }
+  .control-label b{font-weight:600;}
+  .control-value{
+    font-variant-numeric: tabular-nums;
+    color:var(--maroon);
+    font-weight:700;
+  }
+  input[type=range]{
+    width:100%;
+    accent-color:var(--maroon);
+    height:22px;
+    cursor:pointer;
+  }
+  .range-ends{
+    display:flex;justify-content:space-between;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:10.5px;color:var(--muted);margin-top:2px;
+  }
+  .ve-note{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12px;
+    color:var(--muted);
+    margin-top:14px;
+    padding-top:14px;
+    border-top:1px solid var(--grid);
+  }
+  .reset-btn{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    background:none;
+    border:1px solid var(--ink);
+    color:var(--ink);
+    padding:7px 14px;
+    border-radius:3px;
+    cursor:pointer;
+    margin-top:14px;
+  }
+  .reset-btn:hover{background:var(--ink);color:var(--paper);}
+  .reset-btn:focus-visible, input:focus-visible{
+    outline:2px solid var(--focus);
+    outline-offset:2px;
+  }
+  .readout-grid{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap:10px;
+  }
+  @media (max-width:700px){
+    .readout-grid{grid-template-columns:1fr 1fr;}
+  }
+  .stat{
+    background:var(--paper);
+    border:1px solid var(--grid);
+    border-radius:4px;
+    padding:9px 12px;
+  }
+  .stat .k{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--muted);
+    margin-bottom:3px;
+  }
+  .stat .v{
+    font-size:18px;
+    font-weight:700;
+    color:var(--maroon);
+    font-variant-numeric: tabular-nums;
+  }
+  .stat.region-cutoff{background:#e3eef4;border-color:#b7d0dc;}
+  .stat.region-cutoff .v{color:var(--focus);}
+  .stat.region-active{background:#e5f3ea;border-color:#bfe0cb;}
+  .stat.region-active .v{color:var(--on-color);}
+  .stat.region-saturation{background:#f7e9e7;border-color:#e3bdb7;}
+  .stat.region-saturation .v{color:var(--low-color);}
+  .stat.region-reverse{background:#eeece7;border-color:#d6cfc2;}
+  .stat.region-reverse .v{color:var(--muted);}
+  footer{
+    margin-top:10px;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:11.5px;
+    color:var(--muted);
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <p class="eyebrow">BJT operating regions</p>
+      <h1>BJT Region Explorer</h1>
+    </div>
+    <div class="unit-tag">ELEC2005 · Week 3 companion</div>
+  </header>
+
+  <p class="intro">
+    A BJT has two internal junctions — base–emitter and base–collector — and each is independently forward or reverse biased. Drag V<sub>B</sub> and V<sub>C</sub> and watch both junctions switch on or off, and the operating region change to match — the same "check each junction" logic you'll use by hand throughout this lecture.
+  </p>
+
+  <div class="panel">
+    <div class="diagrams-grid">
+      <div>
+        <p class="plot-title">npn junctions — live ON/OFF state</p>
+        <svg id="circuitSvg" viewBox="0 0 340 290" role="img" aria-label="NPN transistor drawn as two diodes sharing a base terminal, with the emitter grounded"></svg>
+      </div>
+      <div>
+        <p class="plot-title">Region of operation</p>
+        <svg id="gridSvg" viewBox="0 0 280 230" role="img" aria-label="Four quadrant grid showing BJT operating region based on junction states"></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <p class="plot-title">Circuit conditions</p>
+    <div class="controls-grid">
+      <div>
+        <div class="control-label"><b>Base voltage V<sub>B</sub></b><span class="control-value" id="vbVal">2.0 V</span></div>
+        <input type="range" id="vbSlider" min="0" max="5" step="0.05" value="2">
+        <div class="range-ends"><span>0 V</span><span>5 V</span></div>
+      </div>
+      <div>
+        <div class="control-label"><b>Collector voltage V<sub>C</sub></b><span class="control-value" id="vcVal">5.0 V</span></div>
+        <input type="range" id="vcSlider" min="-2" max="10" step="0.05" value="5">
+        <div class="range-ends"><span>&minus;2 V</span><span>10 V</span></div>
+      </div>
+    </div>
+    <p class="ve-note">Emitter voltage V<sub>E</sub> is held fixed at 0 V (grounded) throughout, so V<sub>BE</sub> = V<sub>B</sub>.</p>
+    <button class="reset-btn" id="resetBtn">Reset to defaults</button>
+  </div>
+
+  <div class="panel">
+    <p class="plot-title">Junction states &amp; operating region</p>
+    <div class="readout-grid">
+      <div class="stat">
+        <div class="k">V<sub>BE</sub> (turn-on at 0.7 V)</div>
+        <div class="v" id="vbeVal">— <small>V</small></div>
+      </div>
+      <div class="stat">
+        <div class="k">V<sub>BC</sub> (turn-on at 0.4 V)</div>
+        <div class="v" id="vbcVal">— <small>V</small></div>
+      </div>
+      <div class="stat" id="regionStat">
+        <div class="k">Operating region</div>
+        <div class="v" id="regionVal" style="font-size:16px;">—</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Built for ELEC2005 — Electrical and Electronic Systems · not for assessment, for concept exploration only</footer>
+</div>
+
+<script>
+(function(){
+  const NS = "http://www.w3.org/2000/svg";
+  const circuitSvg = document.getElementById('circuitSvg');
+  const gridSvg = document.getElementById('gridSvg');
+  const vbSlider = document.getElementById('vbSlider');
+  const vcSlider = document.getElementById('vcSlider');
+  const vbVal = document.getElementById('vbVal');
+  const vcVal = document.getElementById('vcVal');
+  const vbeVal = document.getElementById('vbeVal');
+  const vbcVal = document.getElementById('vbcVal');
+  const regionVal = document.getElementById('regionVal');
+  const regionStat = document.getElementById('regionStat');
+  const resetBtn = document.getElementById('resetBtn');
+
+  const VBE_THRESH = 0.7;
+  const VBC_THRESH = 0.4;
+  const VE = 0;
+
+  function el(tag, attrs){
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function txt(nodes, cls, x, y, s, anchor){
+    const t = el('text',{class:cls, x:x, y:y, 'text-anchor':anchor||'start'});
+    t.textContent = s;
+    nodes.push(t);
+  }
+  function line(nodes, x1,y1,x2,y2, stroke){
+    nodes.push(el('line',{x1:x1,y1:y1,x2:x2,y2:y2,stroke:stroke||'#1a1512','stroke-width':2,'stroke-linecap':'round'}));
+  }
+
+  function computeRegion(VB, VC){
+    const VBE = VB - VE;
+    const VBC = VB - VC;
+    const beOn = VBE > VBE_THRESH;
+    const bcOn = VBC > VBC_THRESH;
+    let regionName;
+    if (!beOn && !bcOn) regionName = 'Cutoff';
+    else if (beOn && !bcOn) regionName = 'Active';
+    else if (beOn && bcOn) regionName = 'Saturation';
+    else regionName = 'Reverse';
+    return {VBE, VBC, beOn, bcOn, regionName};
+  }
+
+  // ---- Two-junction schematic: shared B rail, two diode branches to C and E ----
+  function drawDiodeOnLeg(nodes, cx, cy, rotDeg, on, perpX, perpY){
+    const halfLen = 9, halfH = 10;
+    const color = on ? 'var(--on-color)' : 'var(--off-color)';
+    const g = el('g',{transform:`translate(${cx},${cy}) rotate(${rotDeg})`});
+    const tri = el('polygon',{points:`${-halfLen},${-halfH} ${-halfLen},${halfH} ${halfLen},0`,
+      fill:'none', stroke:color, 'stroke-width':2.2, 'stroke-linejoin':'round'});
+    const bar = el('line',{x1:halfLen,y1:-halfH,x2:halfLen,y2:halfH,stroke:color,'stroke-width':3});
+    g.appendChild(tri); g.appendChild(bar);
+    nodes.push(g);
+    // badge stays upright, offset perpendicular to the leg so it never sits on the diode itself
+    const bx = cx + perpX*28, by = cy + perpY*28;
+    const badge = el('text',{class:'state-badge', x:bx, y:by, 'text-anchor':'middle', fill:color});
+    badge.textContent = on ? 'ON' : 'OFF';
+    nodes.push(badge);
+  }
+  function drawGround(nodes, x, y){
+    nodes.push(el('line',{x1:x,y1:y,x2:x,y2:y+20,stroke:'#1a1512','stroke-width':1.8}));
+    [16,10,5].forEach((w,k)=>{
+      const gy = y+20+k*7;
+      nodes.push(el('line',{x1:x-w/2,y1:gy,x2:x+w/2,y2:gy,stroke:'#1a1512','stroke-width':1.6}));
+    });
+  }
+
+  function renderCircuit(VB, VC, state){
+    const nodes = [];
+    const baseBarX = 120, baseBarTop = 80, baseBarBot = 180, baseBarMid = 130;
+    const bX = 65, angleDeg = 22, legLen = 150, diodeT = 0.42;
+    const rad = angleDeg*Math.PI/180;
+
+    // base terminal + base bar (the vertical bar is the classic BJT symbol's base region)
+    nodes.push(el('circle',{cx:bX,cy:baseBarMid,r:11,fill:'none',stroke:'#1a1512','stroke-width':2}));
+    txt(nodes,'circuit-label', bX-18, baseBarMid-5, 'B', 'end');
+    txt(nodes,'circuit-value', bX-18, baseBarMid+11, VB.toFixed(2)+'V', 'end');
+    line(nodes, bX+11, baseBarMid, baseBarX, baseBarMid);
+    line(nodes, baseBarX, baseBarTop, baseBarX, baseBarBot);
+
+    // collector leg: base bar -> diode -> C terminal (angled up-right)
+    const cDirX = Math.cos(rad), cDirY = -Math.sin(rad);
+    const cEndX = baseBarX + legLen*cDirX, cEndY = baseBarTop + legLen*cDirY;
+    const cCenterX = baseBarX + diodeT*legLen*cDirX, cCenterY = baseBarTop + diodeT*legLen*cDirY;
+    const cAnodeX = cCenterX - 9*cDirX, cAnodeY = cCenterY - 9*cDirY;
+    const cCathodeX = cCenterX + 9*cDirX, cCathodeY = cCenterY + 9*cDirY;
+    line(nodes, baseBarX, baseBarTop, cAnodeX, cAnodeY);
+    line(nodes, cCathodeX, cCathodeY, cEndX - 11*cDirX, cEndY - 11*cDirY);
+    drawDiodeOnLeg(nodes, cCenterX, cCenterY, -angleDeg, state.bcOn, cDirY, -cDirX);
+    nodes.push(el('circle',{cx:cEndX,cy:cEndY,r:11,fill:'none',stroke:'#1a1512','stroke-width':2}));
+    txt(nodes,'circuit-label', cEndX+16, cEndY-6, 'C', 'start');
+    txt(nodes,'circuit-value', cEndX+16, cEndY+10, VC.toFixed(2)+'V', 'start');
+
+    // emitter leg: base bar -> diode -> ground (angled down-right), with the NPN arrow
+    const eDirX = Math.cos(rad), eDirY = Math.sin(rad);
+    const eEndX = baseBarX + legLen*eDirX, eEndY = baseBarBot + legLen*eDirY;
+    const eCenterX = baseBarX + diodeT*legLen*eDirX, eCenterY = baseBarBot + diodeT*legLen*eDirY;
+    const eAnodeX = eCenterX - 9*eDirX, eAnodeY = eCenterY - 9*eDirY;
+    const eCathodeX = eCenterX + 9*eDirX, eCathodeY = eCenterY + 9*eDirY;
+    line(nodes, baseBarX, baseBarBot, eAnodeX, eAnodeY);
+    line(nodes, eCathodeX, eCathodeY, eEndX, eEndY);
+    drawDiodeOnLeg(nodes, eCenterX, eCenterY, angleDeg, state.beOn, -eDirY, eDirX);
+    // NPN emitter arrow, on the wire just past the diode, pointing away from the base (out of the transistor)
+    const arrowX = eCathodeX + 20*eDirX, arrowY = eCathodeY + 20*eDirY;
+    const arrowBackX = arrowX - 9*eDirX + 4*eDirY, arrowBackY = arrowY - 9*eDirY - 4*eDirX;
+    const arrowBack2X = arrowX - 9*eDirX - 4*eDirY, arrowBack2Y = arrowY - 9*eDirY + 4*eDirX;
+    nodes.push(el('polygon',{points:`${arrowX},${arrowY} ${arrowBackX},${arrowBackY} ${arrowBack2X},${arrowBack2Y}`,
+      fill:'#1a1512'}));
+    // ground symbol showing VE is fixed at 0V
+    drawGround(nodes, eEndX, eEndY);
+    txt(nodes,'circuit-label', eEndX+20, eEndY+13, 'E = 0 V', 'start');
+
+    circuitSvg.innerHTML = '';
+    circuitSvg.setAttribute('viewBox','0 0 340 290');
+    nodes.forEach(n=>circuitSvg.appendChild(n));
+  }
+
+  // ---- Four-quadrant region grid ----
+  const REGION_COLORS = {
+    'Cutoff': '#1c5f7a',
+    'Active': '#2f7d4f',
+    'Saturation': '#a3372c',
+    'Reverse': '#6b6156'
+  };
+  const REGION_FILLS = {
+    'Cutoff': '#e3eef4',
+    'Active': '#e5f3ea',
+    'Saturation': '#f7e9e7',
+    'Reverse': '#eeece7'
+  };
+
+  function renderGrid(state){
+    const nodes = [];
+    const x0=30, y0=30, cellW=110, cellH=90, gap=10;
+
+    const cells = [
+      {name:'Reverse',  col:0, row:0},
+      {name:'Saturation', col:1, row:0},
+      {name:'Cutoff',   col:0, row:1},
+      {name:'Active',   col:1, row:1},
+    ];
+    cells.forEach(c=>{
+      const x = x0 + c.col*(cellW+gap);
+      const y = y0 + c.row*(cellH+gap);
+      const isCurrent = c.name === state.regionName;
+      nodes.push(el('rect',{x:x,y:y,width:cellW,height:cellH,rx:4,
+        fill: isCurrent ? REGION_FILLS[c.name] : '#ffffff',
+        stroke: isCurrent ? REGION_COLORS[c.name] : 'var(--grid)',
+        'stroke-width': isCurrent ? 2.5 : 1.5}));
+      const label = el('text',{class:'grid-cell-label', x:x+cellW/2, y:y+cellH/2+5,
+        fill: isCurrent ? REGION_COLORS[c.name] : '#9c9488'});
+      label.textContent = c.name === 'Reverse' ? 'Reverse Active' : (c.name==='Active' ? 'Forward Active' : c.name);
+      nodes.push(label);
+    });
+
+    // axis labels
+    txt(nodes,'grid-label', x0+cellW/2, 20, 'BE junction: off', 'middle');
+    txt(nodes,'grid-label', x0+cellW+gap+cellW/2, 20, 'BE junction: on', 'middle');
+    const rowLabelX = x0-10;
+    const r1 = el('text',{class:'grid-label', x:rowLabelX, y:y0+cellH/2+4, 'text-anchor':'end'});
+    r1.textContent = 'BC on'; r1.setAttribute('transform',`rotate(-90 ${rowLabelX} ${y0+cellH/2+4})`);
+    nodes.push(r1);
+    const r2 = el('text',{class:'grid-label', x:rowLabelX, y:y0+cellH+gap+cellH/2+4, 'text-anchor':'end'});
+    r2.textContent = 'BC off'; r2.setAttribute('transform',`rotate(-90 ${rowLabelX} ${y0+cellH+gap+cellH/2+4})`);
+    nodes.push(r2);
+
+    gridSvg.innerHTML = '';
+    gridSvg.setAttribute('viewBox','0 0 280 230');
+    nodes.forEach(n=>gridSvg.appendChild(n));
+  }
+
+  function render(){
+    const VB = parseFloat(vbSlider.value);
+    const VC = parseFloat(vcSlider.value);
+    vbVal.textContent = VB.toFixed(2) + ' V';
+    vcVal.textContent = VC.toFixed(2) + ' V';
+
+    const state = computeRegion(VB, VC);
+
+    vbeVal.innerHTML = state.VBE.toFixed(2) + ' <small>V</small>';
+    vbcVal.innerHTML = state.VBC.toFixed(2) + ' <small>V</small>';
+    const displayName = state.regionName === 'Reverse' ? 'Reverse Active' : (state.regionName === 'Active' ? 'Forward Active' : state.regionName);
+    regionVal.textContent = displayName;
+    regionStat.classList.remove('region-cutoff','region-active','region-saturation','region-reverse');
+    regionStat.classList.add('region-' + state.regionName.toLowerCase());
+
+    renderCircuit(VB, VC, state);
+    renderGrid(state);
+  }
+
+  vbSlider.addEventListener('input', render);
+  vcSlider.addEventListener('input', render);
+  resetBtn.addEventListener('click', function(){
+    vbSlider.value = 2;
+    vcSlider.value = 5;
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
