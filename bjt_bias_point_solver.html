@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ELEC2005 — BJT Bias Point Solver</title>
+<style>
+  :root{
+    --ink:#1a1512;
+    --paper:#faf7f2;
+    --panel:#ffffff;
+    --maroon:#7a1730;
+    --focus:#1c5f7a;
+    --grid:#e4ddd2;
+    --muted:#6b6156;
+    --on-color:#2f7d4f;
+    --low-color:#a3372c;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:#e6e6e4;
+    color:var(--ink);
+    font-family: "Iowan Old Style","Georgia",serif;
+    padding:20px 16px 40px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .wrap{max-width:1040px;margin:0 auto;}
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:8px;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:12px;
+    margin-bottom:14px;
+  }
+  h1{
+    font-size:clamp(20px,3.6vw,28px);
+    margin:0;
+    letter-spacing:-0.01em;
+    font-weight:700;
+  }
+  .eyebrow{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+    font-size:11px;
+    color:var(--maroon);
+    font-weight:600;
+    margin:0 0 4px;
+  }
+  .unit-tag{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12px;
+    color:var(--muted);
+  }
+  .intro{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:14px;
+    line-height:1.55;
+    color:#3a332c;
+    max-width:88ch;
+    margin-bottom:18px;
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--grid);
+    border-radius:4px;
+    padding:14px;
+    margin-bottom:18px;
+  }
+  .plot-title{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--ink);
+    margin:0 0 8px;
+  }
+  .layout-grid{
+    display:grid;
+    grid-template-columns: 0.85fr 1.15fr;
+    gap:18px;
+    align-items:start;
+  }
+  @media (max-width:800px){
+    .layout-grid{grid-template-columns:1fr;}
+  }
+  svg{width:100%;height:auto;display:block;}
+  .circuit-label{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12px;
+    fill:var(--ink);
+  }
+  .circuit-value{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12px;
+    font-weight:700;
+    fill:var(--maroon);
+  }
+  .controls-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:16px 24px;
+  }
+  @media (max-width:700px){
+    .controls-grid{grid-template-columns:1fr;}
+  }
+  .control-label{
+    display:flex;
+    justify-content:space-between;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:13.5px;
+    margin-bottom:6px;
+  }
+  .control-label b{font-weight:600;}
+  .control-value{
+    font-variant-numeric: tabular-nums;
+    color:var(--maroon);
+    font-weight:700;
+  }
+  input[type=range]{
+    width:100%;
+    accent-color:var(--maroon);
+    height:22px;
+    cursor:pointer;
+  }
+  .range-ends{
+    display:flex;justify-content:space-between;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:10.5px;color:var(--muted);margin-top:2px;
+  }
+  .mode-toggle{
+    display:flex;
+    border:1px solid var(--ink);
+    border-radius:3px;
+    overflow:hidden;
+  }
+  .mode-btn{
+    flex:1;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    background:var(--panel);
+    color:var(--ink);
+    border:none;
+    padding:7px 10px;
+    cursor:pointer;
+  }
+  .mode-btn + .mode-btn{border-left:1px solid var(--ink);}
+  .mode-btn.active{background:var(--ink);color:var(--paper);}
+  .mode-btn:focus-visible{outline:2px solid var(--focus);outline-offset:-2px;}
+  .reset-btn{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    background:none;
+    border:1px solid var(--ink);
+    color:var(--ink);
+    padding:7px 14px;
+    border-radius:3px;
+    cursor:pointer;
+    margin-top:16px;
+  }
+  .reset-btn:hover{background:var(--ink);color:var(--paper);}
+  .reset-btn:focus-visible, input:focus-visible{
+    outline:2px solid var(--focus);
+    outline-offset:2px;
+  }
+  .readout-grid{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap:10px;
+  }
+  @media (max-width:700px){
+    .readout-grid{grid-template-columns:1fr 1fr;}
+  }
+  .stat{
+    background:var(--paper);
+    border:1px solid var(--grid);
+    border-radius:4px;
+    padding:9px 12px;
+  }
+  .stat .k{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--muted);
+    margin-bottom:3px;
+  }
+  .stat .v{
+    font-size:16px;
+    font-weight:700;
+    color:var(--maroon);
+    font-variant-numeric: tabular-nums;
+  }
+  .stat .v small{font-size:11px;font-weight:500;color:var(--muted);}
+  .stat.region-cutoff{background:#e3eef4;border-color:#b7d0dc;}
+  .stat.region-cutoff .v{color:var(--focus);}
+  .stat.region-active{background:#e5f3ea;border-color:#bfe0cb;}
+  .stat.region-active .v{color:var(--on-color);}
+  .stat.region-saturation{background:#f7e9e7;border-color:#e3bdb7;}
+  .stat.region-saturation .v{color:var(--low-color);}
+  footer{
+    margin-top:10px;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:11.5px;
+    color:var(--muted);
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <p class="eyebrow">Bias-point analysis</p>
+      <h1>Bias Point Solver</h1>
+    </div>
+    <div class="unit-tag">ELEC2005 · Week 3 companion</div>
+  </header>
+
+  <p class="intro">
+    This is the "assume active, check, correct" method from Examples 1–6 as an interactive circuit: adjust the bias network and watch the region badge flip to Saturation automatically whenever the active-mode assumption breaks down. Try raising β on the default circuit — a design that works comfortably at β=100 can fail at β=150, because the actual (forced) β can never exceed what the collector loop allows.
+  </p>
+
+  <div class="panel">
+    <div class="layout-grid">
+      <div>
+        <p class="plot-title">Bias circuit</p>
+        <svg id="circuitSvg" viewBox="0 0 340 390" role="img" aria-label="NPN bias circuit with base loop, collector loop and emitter resistor"></svg>
+      </div>
+      <div>
+        <p class="plot-title">Circuit conditions</p>
+        <div class="controls-grid" style="margin-bottom:16px;">
+          <div style="grid-column:1/-1;">
+            <div class="control-label"><b>Supply voltage V<sub>CC</sub></b></div>
+            <div class="mode-toggle" id="vccToggle">
+              <button type="button" class="mode-btn active" data-vcc="10">10 V</button>
+              <button type="button" class="mode-btn" data-vcc="15">15 V</button>
+            </div>
+          </div>
+        </div>
+        <div class="controls-grid">
+          <div>
+            <div class="control-label"><b>Base supply V<sub>BB</sub></b><span class="control-value" id="vbbVal">5.0 V</span></div>
+            <input type="range" id="vbbSlider" min="0" max="8" step="0.1" value="5">
+            <div class="range-ends"><span>0 V</span><span>8 V</span></div>
+          </div>
+          <div>
+            <div class="control-label"><b>Base resistor R<sub>B</sub></b><span class="control-value" id="rbVal">10.0 kΩ</span></div>
+            <input type="range" id="rbSlider" min="0.1" max="100" step="0.1" value="10">
+            <div class="range-ends"><span>0.1 kΩ</span><span>100 kΩ</span></div>
+          </div>
+          <div>
+            <div class="control-label"><b>Collector resistor R<sub>C</sub></b><span class="control-value" id="rcVal">1.44 kΩ</span></div>
+            <input type="range" id="rcSlider" min="0.1" max="5" step="0.01" value="1.44">
+            <div class="range-ends"><span>0.1 kΩ</span><span>5 kΩ</span></div>
+          </div>
+          <div>
+            <div class="control-label"><b>Emitter resistor R<sub>E</sub></b><span class="control-value" id="reVal">1.0 kΩ</span></div>
+            <input type="range" id="reSlider" min="0" max="4" step="0.05" value="1">
+            <div class="range-ends"><span>0 kΩ</span><span>4 kΩ</span></div>
+          </div>
+          <div style="grid-column:1/-1;">
+            <div class="control-label"><b>Current gain β</b><span class="control-value" id="betaVal">100</span></div>
+            <input type="range" id="betaSlider" min="20" max="300" step="1" value="100">
+            <div class="range-ends"><span>20</span><span>300</span></div>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:16px;">
+          <button class="reset-btn" id="resetBtn">Reset to defaults</button>
+          <button class="reset-btn preset-btn" data-preset="1">Example 1</button>
+          <button class="reset-btn preset-btn" data-preset="2">Example 2</button>
+          <button class="reset-btn preset-btn" data-preset="3">Example 3</button>
+          <button class="reset-btn preset-btn" data-preset="5">Example 5</button>
+          <button class="reset-btn preset-btn" data-preset="6">Example 6</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <p class="plot-title">Bias point</p>
+    <div class="readout-grid">
+      <div class="stat">
+        <div class="k">V<sub>B</sub></div>
+        <div class="v" id="vbVal2">— <small>V</small></div>
+      </div>
+      <div class="stat">
+        <div class="k">V<sub>E</sub></div>
+        <div class="v" id="veVal">— <small>V</small></div>
+      </div>
+      <div class="stat">
+        <div class="k">V<sub>C</sub></div>
+        <div class="v" id="vcVal2">— <small>V</small></div>
+      </div>
+      <div class="stat" id="regionStat">
+        <div class="k">Region</div>
+        <div class="v" id="regionVal" style="font-size:15px;">—</div>
+      </div>
+      <div class="stat">
+        <div class="k">I<sub>B</sub></div>
+        <div class="v" id="ibVal">— <small>µA</small></div>
+      </div>
+      <div class="stat">
+        <div class="k">I<sub>E</sub></div>
+        <div class="v" id="ieVal">— <small>mA</small></div>
+      </div>
+      <div class="stat">
+        <div class="k">I<sub>C</sub></div>
+        <div class="v" id="icVal">— <small>mA</small></div>
+      </div>
+      <div class="stat">
+        <div class="k">Forced β (I<sub>C</sub>/I<sub>B</sub>)</div>
+        <div class="v" id="forcedBetaVal">— </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Built for ELEC2005 — Electrical and Electronic Systems · not for assessment, for concept exploration only. Fixed values: V<sub>BE</sub>=0.7V, V<sub>CE(sat)</sub>=0.2V.</footer>
+</div>
+
+<script>
+(function(){
+  const NS = "http://www.w3.org/2000/svg";
+  const circuitSvg = document.getElementById('circuitSvg');
+  const vccToggle = document.getElementById('vccToggle');
+  const vbbSlider = document.getElementById('vbbSlider');
+  const rbSlider = document.getElementById('rbSlider');
+  const rcSlider = document.getElementById('rcSlider');
+  const reSlider = document.getElementById('reSlider');
+  const betaSlider = document.getElementById('betaSlider');
+  const vbbVal = document.getElementById('vbbVal');
+  const rbVal = document.getElementById('rbVal');
+  const rcVal = document.getElementById('rcVal');
+  const reVal = document.getElementById('reVal');
+  const betaVal = document.getElementById('betaVal');
+  const resetBtn = document.getElementById('resetBtn');
+
+  const vbVal2 = document.getElementById('vbVal2');
+  const veVal = document.getElementById('veVal');
+  const vcVal2 = document.getElementById('vcVal2');
+  const ibVal = document.getElementById('ibVal');
+  const ieVal = document.getElementById('ieVal');
+  const icVal = document.getElementById('icVal');
+  const forcedBetaVal = document.getElementById('forcedBetaVal');
+  const regionVal = document.getElementById('regionVal');
+  const regionStat = document.getElementById('regionStat');
+
+  let VCC = 10.0;
+  const VBE = 0.7, VCESAT = 0.2;
+
+  function el(tag, attrs){
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function txt(nodes, cls, x, y, s, anchor){
+    const t = el('text',{class:cls, x:x, y:y, 'text-anchor':anchor||'start'});
+    t.textContent = s;
+    nodes.push(t);
+  }
+  function subText(nodes, cls, x, y, main, sub, anchor){
+    const t = el('text',{class:cls, x:x, y:y, 'text-anchor':anchor||'start'});
+    const mainSpan = document.createElementNS(NS,'tspan');
+    mainSpan.textContent = main;
+    const subSpan = document.createElementNS(NS,'tspan');
+    subSpan.textContent = sub;
+    subSpan.setAttribute('dy','3');
+    subSpan.setAttribute('font-size','75%');
+    t.appendChild(mainSpan);
+    t.appendChild(subSpan);
+    nodes.push(t);
+  }
+  function line(nodes, x1,y1,x2,y2, stroke, w){
+    nodes.push(el('line',{x1:x1,y1:y1,x2:x2,y2:y2,stroke:stroke||'#1a1512','stroke-width':w||2,'stroke-linecap':'round'}));
+  }
+  function resistorZ(x1,y1,x2,y2, teeth){
+    teeth = teeth || 5;
+    const dx = x2-x1, dy = y2-y1;
+    const len = Math.hypot(dx,dy);
+    const ux=dx/len, uy=dy/len, px=-uy, py=ux;
+    const amp = 8;
+    let path = `M${x1},${y1} `;
+    for(let t=0;t<teeth;t++){
+      const f = (t+0.5)/teeth;
+      const cx = x1+dx*f, cy=y1+dy*f;
+      const side = (t%2===0)?1:-1;
+      path += `L${(cx+px*amp*side).toFixed(1)},${(cy+py*amp*side).toFixed(1)} `;
+    }
+    path += `L${x2},${y2}`;
+    return path;
+  }
+  function drawGround(nodes, x, y){
+    nodes.push(el('line',{x1:x,y1:y,x2:x,y2:y+40,stroke:'#1a1512','stroke-width':1.8}));
+    [22,14,7].forEach((w,k)=>{
+      const gy = y+40+k*8;
+      nodes.push(el('line',{x1:x-w/2,y1:gy,x2:x+w/2,y2:gy,stroke:'#1a1512','stroke-width':1.6}));
+    });
+  }
+
+  // ---- Bias-point solver: "assume active, check, correct" ----
+  function solve(VBB, RB, RC, RE, beta){
+    const IB_active = (VBB - VBE) / (RB + (beta+1)*RE);
+    if (IB_active <= 0){
+      return {region:'Cutoff', IB:0, IC:0, IE:0, VE:0, VB:Math.max(0,VBB), VC:VCC, forcedBeta:0};
+    }
+    const IE_active = (beta+1)*IB_active;
+    const IC_active = beta*IB_active;
+    const VE_active = IE_active*RE;
+    const VC_active = VCC - IC_active*RC;
+    const VCE_active = VC_active - VE_active;
+
+    if (VCE_active > VCESAT){
+      return {region:'Active', IB:IB_active, IC:IC_active, IE:IE_active,
+              VE:VE_active, VB:VE_active+VBE, VC:VC_active, forcedBeta:IC_active/IB_active};
+    }
+
+    // Saturation: base loop and collector loop are coupled through IE=IB+IC.
+    // (RB+RE)*IB + RE*IC = VBB-VBE
+    //  RE*IB + (RC+RE)*IC = VCC-VCESAT
+    const a11=RB+RE, a12=RE, a21=RE, a22=RC+RE;
+    const b1=VBB-VBE, b2=VCC-VCESAT;
+    const det = a11*a22 - a12*a21;
+    let IB_sat = (b1*a22 - a12*b2)/det;
+    let IC_sat = (a11*b2 - b1*a21)/det;
+    if (IB_sat < 0){
+      // Edge case at extreme low-RB/high-VBB combinations: base loop alone would demand
+      // more current than the shared RE drop allows. Floor IB at 0 and let the collector
+      // loop alone set IC (RB becomes irrelevant in this deep-saturation corner).
+      IB_sat = 0;
+      IC_sat = (VCC-VCESAT)/(RC+RE);
+    }
+    const IE_sat = IB_sat + IC_sat;
+    const VE_sat = IE_sat*RE;
+    return {region:'Saturation', IB:IB_sat, IC:IC_sat, IE:IE_sat,
+            VE:VE_sat, VB:VE_sat+VBE, VC:VE_sat+VCESAT, forcedBeta: IB_sat>0 ? IC_sat/IB_sat : 0};
+  }
+
+  function renderCircuit(VBB, RB, RC, RE, state){
+    const nodes = [];
+    const baseBarX = 175, baseBarMid = 205;
+    const attachHalfSpan = 22, barOverhang = 12;
+    const attachTop = baseBarMid - attachHalfSpan, attachBot = baseBarMid + attachHalfSpan;
+    const barExtTop = attachTop - barOverhang, barExtBot = attachBot + barOverhang;
+    const angleDeg = 22, legLen = 62;
+    const rad = angleDeg*Math.PI/180;
+
+    line(nodes, baseBarX, barExtTop, baseBarX, barExtBot);
+    txt(nodes,'circuit-label', baseBarX-14, baseBarMid-8, 'B', 'end');
+
+    // base loop: VBB -> RB -> base bar
+    nodes.push(el('circle',{cx:65,cy:baseBarMid,r:11,fill:'none',stroke:'#1a1512','stroke-width':2}));
+    subText(nodes,'circuit-label', 47, baseBarMid-8, 'V','BB', 'end');
+    txt(nodes,'circuit-value', 47, baseBarMid+10, VBB.toFixed(2)+'V', 'end');
+    line(nodes, 76, baseBarMid, 95, baseBarMid);
+    nodes.push(el('path',{d:resistorZ(95,baseBarMid,135,baseBarMid), fill:'none', stroke:'#1a1512','stroke-width':2}));
+    subText(nodes,'circuit-label', 115, baseBarMid-19, 'R','B', 'middle');
+    txt(nodes,'circuit-value', 115, baseBarMid+22, (RB/1000).toFixed(2)+'k\u03A9', 'middle');
+    line(nodes, 135, baseBarMid, baseBarX, baseBarMid);
+
+    // collector leg: base bar -> C -> RC -> VCC
+    const cDirX = Math.cos(rad), cDirY = -Math.sin(rad);
+    const cEndX = baseBarX + legLen*cDirX, cEndY = attachTop + legLen*cDirY;
+    line(nodes, baseBarX, attachTop, cEndX, cEndY);
+    txt(nodes,'circuit-label', cEndX-50, cEndY-2, 'C', 'start');
+    const VCC_cy = 60;
+    line(nodes, cEndX, cEndY, cEndX, 120);
+    nodes.push(el('path',{d:resistorZ(cEndX,120,cEndX,85), fill:'none', stroke:'#1a1512','stroke-width':2}));
+    subText(nodes,'circuit-label', cEndX+14, 102+4, 'R','C', 'start');
+    txt(nodes,'circuit-value', cEndX+14, 134, (RC/1000).toFixed(2)+'k\u03A9', 'start');
+    line(nodes, cEndX, 85, cEndX, VCC_cy+11);
+    nodes.push(el('circle',{cx:cEndX,cy:VCC_cy,r:11,fill:'none',stroke:'#1a1512','stroke-width':2}));
+    subText(nodes,'circuit-label', cEndX+16, VCC_cy-6, 'V','CC', 'start');
+    txt(nodes,'circuit-value', cEndX+16, VCC_cy+10, VCC.toFixed(0)+'V', 'start');
+
+    // emitter leg: base bar -> E -> RE -> ground
+    const eDirX = Math.cos(rad), eDirY = Math.sin(rad);
+    const eEndX = baseBarX + legLen*eDirX, eEndY = attachBot + legLen*eDirY;
+    line(nodes, baseBarX, attachBot, eEndX, eEndY);
+    txt(nodes,'circuit-label', eEndX+14, eEndY-2, 'E', 'start');
+    const arrowT = 0.7;
+    const arrowX = baseBarX + arrowT*legLen*eDirX, arrowY = attachBot + arrowT*legLen*eDirY;
+    const backX = arrowX - 9*eDirX + 4*eDirY, backY = arrowY - 9*eDirY - 4*eDirX;
+    const back2X = arrowX - 9*eDirX - 4*eDirY, back2Y = arrowY - 9*eDirY + 4*eDirX;
+    nodes.push(el('polygon',{points:`${arrowX},${arrowY} ${backX},${backY} ${back2X},${back2Y}`, fill:'#1a1512'}));
+
+    const gx = eEndX;
+    const reTop = eEndY+15, reBot = reTop+35;
+    line(nodes, eEndX, eEndY, gx, reTop);
+    nodes.push(el('path',{d:resistorZ(gx,reTop,gx,reBot), fill:'none', stroke:'#1a1512','stroke-width':2}));
+    subText(nodes,'circuit-label', gx+14, reTop+17+4, 'R','E', 'start');
+    txt(nodes,'circuit-value', gx+14, reTop+17+32, (RE/1000).toFixed(2)+'k\u03A9', 'start');
+    const groundY = reBot+15;
+    line(nodes, gx, reBot, gx, groundY);
+    drawGround(nodes, gx, groundY);
+    txt(nodes,'circuit-label', gx+16, groundY+48, '0 V', 'start');
+
+    circuitSvg.innerHTML = '';
+    circuitSvg.setAttribute('viewBox','0 0 340 390');
+    nodes.forEach(n=>circuitSvg.appendChild(n));
+  }
+
+  function render(){
+    const VBB = parseFloat(vbbSlider.value);
+    const RB = parseFloat(rbSlider.value)*1000;
+    const RC = parseFloat(rcSlider.value)*1000;
+    const RE = parseFloat(reSlider.value)*1000;
+    const beta = parseFloat(betaSlider.value);
+
+    vbbVal.textContent = VBB.toFixed(2)+' V';
+    rbVal.textContent = (RB/1000).toFixed(2)+' k\u03A9';
+    rcVal.textContent = (RC/1000).toFixed(2)+' k\u03A9';
+    reVal.textContent = (RE/1000).toFixed(2)+' k\u03A9';
+    betaVal.textContent = beta.toFixed(0);
+
+    const state = solve(VBB, RB, RC, RE, beta);
+
+    vbVal2.innerHTML = state.VB.toFixed(2)+' <small>V</small>';
+    veVal.innerHTML = state.VE.toFixed(2)+' <small>V</small>';
+    vcVal2.innerHTML = state.VC.toFixed(2)+' <small>V</small>';
+    ibVal.innerHTML = (state.IB*1e6).toFixed(1)+' <small>\u00B5A</small>';
+    ieVal.innerHTML = (state.IE*1000).toFixed(3)+' <small>mA</small>';
+    icVal.innerHTML = (state.IC*1000).toFixed(3)+' <small>mA</small>';
+    forcedBetaVal.textContent = state.region==='Cutoff' ? '\u2014' : state.forcedBeta.toFixed(1);
+    regionVal.textContent = state.region;
+    regionStat.classList.remove('region-cutoff','region-active','region-saturation');
+    regionStat.classList.add('region-'+state.region.toLowerCase());
+
+    renderCircuit(VBB, RB, RC, RE, state);
+  }
+
+  [vbbSlider, rbSlider, rcSlider, reSlider, betaSlider].forEach(s=>s.addEventListener('input', render));
+  vccToggle.querySelectorAll('.mode-btn').forEach(btn=>{
+    btn.addEventListener('click', function(){
+      VCC = parseFloat(btn.dataset.vcc);
+      vccToggle.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active', b===btn));
+      render();
+    });
+  });
+  resetBtn.addEventListener('click', function(){
+    VCC = 10.0;
+    vccToggle.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active', b.dataset.vcc==='10'));
+    vbbSlider.value = 5;
+    rbSlider.value = 10;
+    rcSlider.value = 1.44;
+    reSlider.value = 1;
+    betaSlider.value = 100;
+    render();
+  });
+
+  // Preset values verified to reproduce each lecture example's numbers (VCC, VBB, RB kOhm, RC kOhm, RE kOhm, beta)
+  const PRESETS = {
+    '1': [10, 0.0, 0.1, 4.7, 3.3, 100],
+    '2': [10, 4.0, 0.1, 4.7, 3.3, 100],
+    '3': [10, 6.0, 0.1, 4.7, 3.3, 100],
+    '5': [10, 5.0, 100, 2.0, 0, 100],
+    '6': [15, 5.0, 33.33, 5.0, 3.0, 100],
+  };
+  document.querySelectorAll('.preset-btn').forEach(btn=>{
+    btn.addEventListener('click', function(){
+      const [vcc, vbb, rb, rc, re, beta] = PRESETS[btn.dataset.preset];
+      VCC = vcc;
+      vccToggle.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active', parseFloat(b.dataset.vcc)===vcc));
+      vbbSlider.value = vbb;
+      rbSlider.value = rb;
+      rcSlider.value = rc;
+      reSlider.value = re;
+      betaSlider.value = beta;
+      render();
+    });
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
