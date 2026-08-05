@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why Diodes Pin the Voltage — ELEC2005</title>
+<style>
+  :root{
+    --ink:#1a1512;
+    --paper:#faf7f2;
+    --panel:#ffffff;
+    --maroon:#7a1730;
+    --muted:#6b6156;
+    --grid:#e4ddd2;
+    --focus:#1c5f7a;
+    --on-color:#2f7d4f;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:#e6e6e4;
+    color:var(--ink);
+    font-family:"Iowan Old Style","Georgia",serif;
+    padding:24px 14px 40px;
+  }
+  .wrap{max-width:960px;margin:0 auto;}
+
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:12px;
+    margin-bottom:14px;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .eyebrow{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--maroon);
+    font-weight:700;
+    margin:0 0 4px;
+  }
+  h1{
+    margin:0;
+    font-size:26px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+  }
+  .tag{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12px;
+    color:var(--muted);
+    white-space:nowrap;
+    padding-bottom:2px;
+  }
+
+  .intro{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:14px;
+    line-height:1.5;
+    color:var(--ink);
+    max-width:760px;
+    margin:0 0 16px;
+  }
+
+  .callout{
+    background:#fbe9c6;
+    border:1px solid #e0be6f;
+    color:#5c4a12;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12.5px;
+    line-height:1.5;
+    padding:10px 14px;
+    border-radius:4px;
+    margin-bottom:20px;
+  }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--grid);
+    border-radius:4px;
+    padding:14px 16px;
+  }
+
+  .circuits{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+    margin-bottom:16px;
+  }
+  @media (max-width:800px){
+    .circuits{grid-template-columns:1fr;}
+  }
+  .circuit-panel h2{
+    font-size:15px;
+    margin:0 0 2px;
+    letter-spacing:-0.01em;
+  }
+  .circuit-panel .sub{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:11px;
+    color:var(--muted);
+    margin:0 0 10px;
+  }
+  .schem-svg{width:100%;height:auto;display:block;margin-bottom:8px;}
+  .plot-svg{width:100%;height:auto;display:block;}
+  .plot-label{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:11px;
+    fill:var(--muted);
+  }
+  .axis-line{stroke:var(--ink);stroke-width:1.3;}
+  .grid-line{stroke:var(--grid);stroke-width:1;}
+  .device-curve{fill:none;stroke:var(--maroon);stroke-width:2.2;}
+  .load-line{fill:none;stroke:var(--focus);stroke-width:2;stroke-dasharray:none;}
+  .op-point{fill:var(--ink);}
+  .op-cross{stroke:var(--ink);stroke-width:1.3;}
+  .legend-text{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:10.5px;
+  }
+
+  .controls{
+    margin-top:16px;
+  }
+  .controls h2{
+    font-size:14px;
+    margin:0 0 12px;
+    letter-spacing:-0.01em;
+  }
+  .slider-row{margin-bottom:16px;}
+  .slider-row:last-of-type{margin-bottom:6px;}
+  .slider-label-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:13px;
+    margin-bottom:4px;
+  }
+  .slider-label-row .name{color:var(--ink);}
+  .slider-label-row .value{
+    color:var(--maroon);
+    font-weight:700;
+    font-variant-numeric:tabular-nums;
+  }
+  input[type=range]{
+    width:100%;
+    accent-color:var(--maroon);
+  }
+  .minmax-row{
+    display:flex;
+    justify-content:space-between;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:10.5px;
+    color:var(--muted);
+    margin-top:2px;
+  }
+  .reset-btn{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12px;
+    background:none;
+    border:1px solid var(--ink);
+    color:var(--ink);
+    padding:7px 14px;
+    border-radius:4px;
+    cursor:pointer;
+    margin-top:6px;
+  }
+  .reset-btn:hover{
+    background:var(--ink);
+    color:var(--paper);
+  }
+
+  .readout{
+    margin-top:16px;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+  }
+  @media (max-width:800px){
+    .readout{grid-template-columns:repeat(2,1fr);}
+  }
+  .stat{
+    background:var(--paper);
+    border:1px solid var(--grid);
+    border-radius:4px;
+    padding:10px 12px;
+  }
+  .stat .stat-label{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:10px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:4px;
+  }
+  .stat .stat-value{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:19px;
+    font-weight:700;
+    color:var(--ink);
+    font-variant-numeric:tabular-nums;
+  }
+  .stat.pinned .stat-value{color:var(--on-color);}
+
+  .takeaway{
+    margin-top:16px;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:13px;
+    line-height:1.55;
+    color:var(--ink);
+    background:var(--paper);
+    border:1px solid var(--grid);
+    border-radius:4px;
+    padding:12px 14px;
+  }
+  .takeaway b{color:var(--maroon);}
+
+  footer{
+    text-align:center;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:11px;
+    color:var(--muted);
+    margin-top:26px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <p class="eyebrow">ELEC2005 &middot; Week 2 &middot; Diodes</p>
+      <h1>Why Diodes Pin the Voltage</h1>
+    </div>
+    <div class="tag">ELEC2005 &middot; Wk 2 &middot; Diode Circuits</div>
+  </header>
+
+  <p class="intro">
+    Both circuits below are a voltage source driving a series element and a load resistor
+    R<sub>load</sub>. On the left, the series element is an ordinary resistor R1 &mdash; its
+    voltage divides with R<sub>load</sub> in the usual way. On the right, the series element
+    is a diode. Its curved, steep I&ndash;V characteristic forces the intersection with the load
+    line into a narrow voltage band, almost regardless of V<sub>S</sub> or R<sub>load</sub>.
+    Move the sliders and watch how far each operating point travels.
+  </p>
+
+  <div class="callout">
+    The diode uses a standard exponential model (I&nbsp;=&nbsp;I<sub>S</sub>&middot;(e<sup>V/nV<sub>T</sub></sup> &minus; 1),
+    n&nbsp;=&nbsp;1.8) for illustration &mdash; it is not any specific datasheet part, but the pinning
+    behaviour it shows is general to real diodes.
+  </div>
+
+  <div class="circuits">
+
+    <div class="circuit-panel panel">
+      <h2>Resistor circuit</h2>
+      <p class="sub">V<sub>S</sub> &rarr; R1 (fixed, 1&nbsp;k&Omega;) &rarr; R<sub>load</sub> &rarr; ground</p>
+      <svg id="schemR" class="schem-svg" viewBox="0 0 340 155" xmlns="http://www.w3.org/2000/svg"></svg>
+      <svg id="plotR" class="plot-svg" viewBox="0 0 320 260" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+
+    <div class="circuit-panel panel">
+      <h2>Diode circuit</h2>
+      <p class="sub">V<sub>S</sub> &rarr; D1 &rarr; R<sub>load</sub> &rarr; ground</p>
+      <svg id="schemD" class="schem-svg" viewBox="0 0 340 155" xmlns="http://www.w3.org/2000/svg"></svg>
+      <svg id="plotD" class="plot-svg" viewBox="0 0 320 260" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+
+  </div>
+
+  <div class="panel controls">
+    <h2>Shared controls &mdash; both circuits use the same source and load</h2>
+
+    <div class="slider-row">
+      <div class="slider-label-row">
+        <span class="name">Source voltage V<sub>S</sub></span>
+        <span class="value"><span id="vsVal">5.0</span>&nbsp;V</span>
+      </div>
+      <input type="range" id="vsSlider" min="1" max="10" step="0.1" value="5">
+      <div class="minmax-row"><span>1 V</span><span>10 V</span></div>
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-label-row">
+        <span class="name">Load resistance R<sub>load</sub></span>
+        <span class="value"><span id="rlVal">1.00</span>&nbsp;k&Omega;</span>
+      </div>
+      <input type="range" id="rlSlider" min="0" max="1" step="0.001" value="0.5">
+      <div class="minmax-row"><span>100 &Omega;</span><span>10 k&Omega;</span></div>
+    </div>
+
+    <button class="reset-btn" id="resetBtn">Reset to defaults</button>
+  </div>
+
+  <div class="readout">
+    <div class="stat">
+      <div class="stat-label">V across R1</div>
+      <div class="stat-value" id="statVR">&mdash;</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">V across R<sub>load</sub> (R ckt)</div>
+      <div class="stat-value" id="statVRL_R">&mdash;</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Current (resistor ckt)</div>
+      <div class="stat-value" id="statIR">&mdash;</div>
+    </div>
+    <div class="stat pinned">
+      <div class="stat-label">V across D1</div>
+      <div class="stat-value" id="statVD">&mdash;</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">V across R<sub>load</sub> (D ckt)</div>
+      <div class="stat-value" id="statVRL_D">&mdash;</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Current (diode ckt)</div>
+      <div class="stat-value" id="statID">&mdash;</div>
+    </div>
+  </div>
+
+  <div class="takeaway" id="takeaway"></div>
+
+  <footer>ELEC2005 &middot; Week 2 lecture companion &middot; for concept exploration, not assessment</footer>
+
+</div>
+
+<script>
+(function(){
+  // ---- constants (verified against model.py before implementation) ----
+  var R1 = 1000;              // fixed series resistor, ohms
+  var Is = 5e-9, n = 1.8, Vt = 0.02585, nVt = n*Vt;
+
+  function diodeI(Vd){ return Is*(Math.exp(Vd/nVt)-1); }
+
+  // bisection solve for Vd given Vs, Rload (mirrors model.py exactly)
+  function solveDiodeVd(Vs, Rload){
+    var lo=0, hi=Vs;
+    function f(Vd){ return Vs - Vd - diodeI(Vd)*Rload; }
+    var flo=f(lo);
+    for(var i=0;i<100;i++){
+      var mid=0.5*(lo+hi), fm=f(mid);
+      if(Math.abs(fm)<1e-10 || (hi-lo)<1e-12) return mid;
+      if((flo<0) !== (fm<0)){ hi=mid; } else { lo=mid; flo=fm; }
+    }
+    return 0.5*(lo+hi);
+  }
+
+  // ---- SVG helper ----
+  function el(tag, attrs){
+    var e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for(var k in attrs){ e.setAttribute(k, attrs[k]); }
+    return e;
+  }
+
+  // ---- plot geometry (fixed, non-rescaling axis frames) ----
+  var PLOT = {
+    x0: 44, y0: 210,   // origin pixel coords
+    w: 250, h: 190      // plot area size in pixels
+  };
+
+  function buildAxes(svg, vMax, iMax, vLabel, iLabel){
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    var x0=PLOT.x0, y0=PLOT.y0, w=PLOT.w, h=PLOT.h;
+    // gridlines (4 divisions each way)
+    for(var i=1;i<4;i++){
+      var gx = x0 + w*i/4;
+      svg.appendChild(el('line',{x1:gx,y1:y0,x2:gx,y2:y0-h,class:'grid-line'}));
+      var gy = y0 - h*i/4;
+      svg.appendChild(el('line',{x1:x0,y1:gy,x2:x0+w,y2:gy,class:'grid-line'}));
+    }
+    // axes
+    svg.appendChild(el('line',{x1:x0,y1:y0,x2:x0+w,y2:y0,class:'axis-line'}));
+    svg.appendChild(el('line',{x1:x0,y1:y0,x2:x0,y2:y0-h,class:'axis-line'}));
+    // tick labels
+    for(var i=0;i<=4;i++){
+      var vt = (vMax*i/4);
+      var tx = x0 + w*i/4;
+      var t = el('text',{x:tx,y:y0+16,class:'plot-label','text-anchor':'middle'});
+      t.textContent = (vMax<=1?vt.toFixed(2):vt.toFixed(1));
+      svg.appendChild(t);
+      var it = (iMax*i/4);
+      var ty = y0 - h*i/4;
+      var t2 = el('text',{x:x0-8,y:ty+4,class:'plot-label','text-anchor':'end'});
+      t2.textContent = it.toFixed(0);
+      svg.appendChild(t2);
+    }
+    // axis titles
+    var xt = el('text',{x:x0+w/2,y:y0+34,class:'plot-label','text-anchor':'middle'});
+    xt.textContent = vLabel;
+    svg.appendChild(xt);
+    var ytxt = el('text',{x:12,y:y0-h/2,class:'plot-label','text-anchor':'middle'});
+    ytxt.setAttribute('transform','rotate(-90 12 '+(y0-h/2)+')');
+    ytxt.textContent = iLabel;
+    svg.appendChild(ytxt);
+  }
+
+  function toPx(v, i, vMax, iMax){
+    var x = PLOT.x0 + PLOT.w * (v/vMax);
+    var y = PLOT.y0 - PLOT.h * (i/iMax);
+    return [x,y];
+  }
+
+  function drawPath(svg, pts, cls){
+    var d = pts.map(function(p,idx){ return (idx===0?'M':'L')+p[0].toFixed(1)+' '+p[1].toFixed(1); }).join(' ');
+    svg.appendChild(el('path',{d:d, class:cls}));
+  }
+
+  function drawOpPoint(svg, v, i, vMax, iMax){
+    var p = toPx(v,i,vMax,iMax);
+    svg.appendChild(el('line',{x1:p[0],y1:PLOT.y0,x2:p[0],y2:p[1],class:'op-cross','stroke-dasharray':'3,3','opacity':'0.6'}));
+    svg.appendChild(el('line',{x1:PLOT.x0,y1:p[1],x2:p[0],y2:p[1],class:'op-cross','stroke-dasharray':'3,3','opacity':'0.6'}));
+    svg.appendChild(el('circle',{cx:p[0],cy:p[1],r:5,class:'op-point'}));
+    svg.appendChild(el('circle',{cx:p[0],cy:p[1],r:8,fill:'none',stroke:'var(--ink)','stroke-width':1}));
+  }
+
+  function drawLegend(svg, items){
+    var x = PLOT.x0 + PLOT.w - 5, y = 14;
+    items.forEach(function(it,idx){
+      var yy = y + idx*15;
+      svg.appendChild(el('line',{x1:x-95,y1:yy,x2:x-78,y2:yy,stroke:it.color,'stroke-width':2.2}));
+      var t = el('text',{x:x-72,y:yy+4,class:'legend-text',fill:'var(--ink)'});
+      t.textContent = it.label;
+      svg.appendChild(t);
+    });
+  }
+
+  // ---- resistor circuit plot ----
+  var VMAX_R = 10, IMAX_R = 10; // V, mA
+  function drawResistorPlot(Vs, Rload){
+    var svg = document.getElementById('plotR');
+    buildAxes(svg, VMAX_R, IMAX_R, 'V across R1 (V)', 'I (mA)');
+    // device curve: I(mA) = V/R1 * 1000
+    var devPts = [[0,0],[VMAX_R, VMAX_R/R1*1000]].map(function(p){return toPx(p[0],p[1],VMAX_R,IMAX_R);});
+    drawPath(svg, devPts, 'device-curve');
+    // op point (solved from Vs, Rload, R1 — the load line itself is not drawn)
+    var I = Vs/(R1+Rload);      // A
+    var Vd = I*R1;               // V across R1
+    drawOpPoint(svg, Vd, I*1000, VMAX_R, IMAX_R);
+    drawLegend(svg, [{color:'var(--maroon)',label:'R1 (Ohm\u2019s law)'}]);
+    return {V:Vd, I:I};
+  }
+
+  // ---- diode circuit plot ----
+  var VMAX_D = 1.0, IMAX_D = 100; // V, mA
+  function drawDiodePlot(Vs, Rload){
+    var svg = document.getElementById('plotD');
+    buildAxes(svg, VMAX_D, IMAX_D, 'V across D1 (V)', 'I (mA)');
+    // device curve: sample until I exceeds IMAX_D
+    var pts = [];
+    var steps = 120;
+    for(var k=0;k<=steps;k++){
+      var v = VMAX_D * k/steps;
+      var i_mA = diodeI(v)*1000;
+      if(i_mA > IMAX_D){
+        pts.push([v, IMAX_D]);
+        break;
+      }
+      pts.push([v, i_mA]);
+    }
+    drawPath(svg, pts.map(function(p){return toPx(p[0],p[1],VMAX_D,IMAX_D);}), 'device-curve');
+    // op point (solved from Vs, Rload, diode model — the load line itself is not drawn)
+    var Vd = solveDiodeVd(Vs, Rload);
+    var I = diodeI(Vd);
+    drawOpPoint(svg, Vd, I*1000, VMAX_D, IMAX_D);
+    drawLegend(svg, [{color:'var(--maroon)',label:'D1 (exponential)'}]);
+    return {V:Vd, I:I};
+  }
+
+  // ---- schematics ----
+  function zigzagPath(x1,y1,x2,y2,segs){
+    segs = segs || 6;
+    var dx=(x2-x1)/segs, dy=(y2-y1)/segs;
+    var pts=[[x1,y1]];
+    for(var k=1;k<segs;k++){
+      var px=x1+dx*k, py=y1+dy*k;
+      var perp = (k%2===0)?0: (k%2===1?1:-1);
+      if(Math.abs(x2-x1) > Math.abs(y2-y1)){
+        py += (k%2===1? -7:7);
+      } else {
+        px += (k%2===1? 7:-7);
+      }
+      pts.push([px,py]);
+    }
+    pts.push([x2,y2]);
+    return pts.map(function(p,idx){return (idx===0?'M':'L')+p[0].toFixed(1)+' '+p[1].toFixed(1);}).join(' ');
+  }
+
+  function drawSchematic(svgId, isDiode, VsText, RloadText, VdText, VrlText){
+    var svg = document.getElementById(svgId);
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    var S = {stroke:'var(--ink)','stroke-width':1.6, fill:'none'};
+
+    // Everything is drawn into a translated group so there's headroom above the
+    // top wire for a voltage bracket across the device (not the Rload node).
+    var C = el('g',{transform:'translate(0,24)'});
+    svg.appendChild(C);
+
+    // loop coordinates (local to the translated group)
+    var left=40, right=210, top=25, bottom=105;
+
+    // wires: top-left corner up from battery to top rail, across, down right side, along bottom, back up to battery
+    // battery on left, vertical, centered
+    var battMidY = (top+bottom)/2;
+    C.appendChild(el('line',{x1:left,y1:top,x2:left,y2:battMidY-14, ...S}));
+    C.appendChild(el('line',{x1:left,y1:battMidY+14,x2:left,y2:bottom, ...S}));
+    // battery plates: long thin (+) top, short thick (-) bottom
+    C.appendChild(el('line',{x1:left-12,y1:battMidY-14,x2:left+12,y2:battMidY-14, ...S}));
+    C.appendChild(el('line',{x1:left-7,y1:battMidY-6,x2:left+7,y2:battMidY-6, stroke:'var(--ink)','stroke-width':4}));
+    C.appendChild(el('line',{x1:left-12,y1:battMidY+6,x2:left+12,y2:battMidY+6, ...S}));
+    C.appendChild(el('line',{x1:left-7,y1:battMidY+14,x2:left+7,y2:battMidY+14, stroke:'var(--ink)','stroke-width':4}));
+    var vsLbl = el('text',{x:left-18,y:battMidY+4,class:'legend-text',fill:'var(--maroon)','font-weight':'700','text-anchor':'end'});
+    vsLbl.textContent = 'V\u209B='+VsText+'V';
+    C.appendChild(vsLbl);
+
+    // top wire: left -> device -> top-right corner
+    C.appendChild(el('line',{x1:left,y1:top,x2:100,y2:top, ...S}));
+    C.appendChild(el('line',{x1:170,y1:top,x2:right,y2:top, ...S}));
+
+    if(isDiode){
+      // diode symbol pointing right (anode left, cathode right): triangle + bar
+      C.appendChild(el('path',{d:'M100 '+top+' L100 '+(top-11)+' L136 '+top+' L100 '+(top+11)+' Z', fill:'var(--ink)', stroke:'none'}));
+      C.appendChild(el('line',{x1:136,y1:top-11,x2:136,y2:top+11, stroke:'var(--ink)','stroke-width':2.2}));
+      C.appendChild(el('line',{x1:136,y1:top,x2:170,y2:top, ...S}));
+      var dLbl = el('text',{x:118,y:top+22,class:'legend-text',fill:'var(--ink)','text-anchor':'middle'});
+      dLbl.textContent = 'D1';
+      C.appendChild(dLbl);
+    } else {
+      C.appendChild(el('path',{d:zigzagPath(100,top,170,top,7), ...S}));
+      var rLbl = el('text',{x:135,y:top+22,class:'legend-text',fill:'var(--ink)','text-anchor':'middle'});
+      rLbl.textContent = 'R1 (1k\u03A9)';
+      C.appendChild(rLbl);
+    }
+
+    // voltage-sense bracket across the DEVICE itself (node-to-node, not node-to-ground):
+    // spans from the node just left of the device (95) to the node just right of it (175),
+    // sitting above the top wire, with +/- polarity ticks and the live value centered above.
+    var bx1=93, bx2=177, by=top-16;
+    C.appendChild(el('line',{x1:bx1,y1:by,x2:bx2,y2:by, stroke:'var(--maroon)','stroke-width':1.3}));
+    C.appendChild(el('line',{x1:bx1,y1:by,x2:bx1,y2:by+7, stroke:'var(--maroon)','stroke-width':1.3}));
+    C.appendChild(el('line',{x1:bx2,y1:by,x2:bx2,y2:by+7, stroke:'var(--maroon)','stroke-width':1.3}));
+    var plus = el('text',{x:bx1-3,y:by-2,class:'legend-text',fill:'var(--maroon)','font-weight':'700','text-anchor':'middle'});
+    plus.textContent = '+';
+    C.appendChild(plus);
+    var minus = el('text',{x:bx2+4,y:by-1,class:'legend-text',fill:'var(--maroon)','font-weight':'700','text-anchor':'middle'});
+    minus.textContent = '\u2212';
+    C.appendChild(minus);
+    var vLbl = el('text',{x:(bx1+bx2)/2,y:by-8,class:'legend-text',fill:'var(--maroon)','font-weight':'700','text-anchor':'middle'});
+    vLbl.textContent = (isDiode? 'V(D1) = ' : 'V(R1) = ') + VdText + ' V';
+    C.appendChild(vLbl);
+
+    // plain junction dot at the top-right corner (no voltage label here — that node's
+    // voltage to ground is V(Rload), a separate quantity, not the device voltage)
+    C.appendChild(el('circle',{cx:right,cy:top,r:2.4,fill:'var(--ink)'}));
+
+    // right wire down through Rload
+    C.appendChild(el('line',{x1:right,y1:top,x2:right,y2:55, ...S}));
+    C.appendChild(el('path',{d:zigzagPath(right,55,right,90,6), ...S}));
+    C.appendChild(el('line',{x1:right,y1:90,x2:right,y2:bottom, ...S}));
+    var rlLbl = el('text',{x:right+8,y:75,class:'legend-text',fill:'var(--ink)'});
+    rlLbl.textContent = 'R';
+    C.appendChild(rlLbl);
+    var rlLbl2 = el('text',{x:right+16,y:78,class:'legend-text',fill:'var(--ink)','font-size':'8'});
+    rlLbl2.textContent = 'load';
+    C.appendChild(rlLbl2);
+    var rlVal = el('text',{x:right+8,y:90,class:'legend-text',fill:'var(--maroon)','font-weight':'700'});
+    rlVal.textContent = RloadText+'k\u03A9';
+    C.appendChild(rlVal);
+
+    // bottom wire back to battery, with ground symbol
+    C.appendChild(el('line',{x1:right,y1:bottom,x2:left,y2:bottom, ...S}));
+    var gx = (left+right)/2;
+    C.appendChild(el('line',{x1:gx,y1:bottom,x2:gx,y2:bottom+8, ...S}));
+    C.appendChild(el('line',{x1:gx-8,y1:bottom+8,x2:gx+8,y2:bottom+8, ...S}));
+    C.appendChild(el('line',{x1:gx-5,y1:bottom+11,x2:gx+5,y2:bottom+11, ...S}));
+    C.appendChild(el('line',{x1:gx-2,y1:bottom+14,x2:gx+2,y2:bottom+14, ...S}));
+
+    // voltage-sense bracket across Rload itself (node-to-ground, same style as the
+    // device bracket above): vertical line alongside the right-hand branch, from the
+    // top node (right,top) down to the ground node (right,bottom), + at top / - at
+    // bottom since current flows top-to-bottom through Rload.
+    var bxR = right + 60;
+    C.appendChild(el('line',{x1:bxR,y1:top,x2:bxR,y2:bottom, stroke:'var(--maroon)','stroke-width':1.3}));
+    C.appendChild(el('line',{x1:bxR-7,y1:top,x2:bxR,y2:top, stroke:'var(--maroon)','stroke-width':1.3}));
+    C.appendChild(el('line',{x1:bxR-7,y1:bottom,x2:bxR,y2:bottom, stroke:'var(--maroon)','stroke-width':1.3}));
+    var plusRL = el('text',{x:bxR+4,y:top+4,class:'legend-text',fill:'var(--maroon)','font-weight':'700'});
+    plusRL.textContent = '+';
+    C.appendChild(plusRL);
+    var minusRL = el('text',{x:bxR+4,y:bottom+2,class:'legend-text',fill:'var(--maroon)','font-weight':'700'});
+    minusRL.textContent = '\u2212';
+    C.appendChild(minusRL);
+    var rlBracketLbl = el('text',{x:bxR+16,y:(top+bottom)/2,class:'legend-text',fill:'var(--maroon)','font-weight':'700','text-anchor':'middle'});
+    rlBracketLbl.setAttribute('transform','rotate(-90 '+(bxR+16)+' '+((top+bottom)/2)+')');
+    rlBracketLbl.appendChild(document.createTextNode('V(R'));
+    var rlSub = el('tspan',{dy:'2','font-size':'8'});
+    rlSub.textContent = 'load';
+    rlBracketLbl.appendChild(rlSub);
+    var rlRest = el('tspan',{dy:'-2'});
+    rlRest.textContent = ') = ' + VrlText + ' V';
+    rlBracketLbl.appendChild(rlRest);
+    C.appendChild(rlBracketLbl);
+  }
+
+  // ---- wire-up ----
+  var vsSlider = document.getElementById('vsSlider');
+  var rlSlider = document.getElementById('rlSlider'); // log-mapped 0..1 -> 200..5000 ohm
+  var vsVal = document.getElementById('vsVal');
+  var rlVal = document.getElementById('rlVal');
+
+  var RL_MIN=100, RL_MAX=10000;
+  function sliderToRload(s){
+    var logMin=Math.log10(RL_MIN), logMax=Math.log10(RL_MAX);
+    return Math.pow(10, logMin + s*(logMax-logMin));
+  }
+
+  function fmt(v, d){ return v.toFixed(d); }
+
+  function update(){
+    var Vs = parseFloat(vsSlider.value);
+    var Rload = sliderToRload(parseFloat(rlSlider.value));
+
+    vsVal.textContent = fmt(Vs,1);
+    rlVal.textContent = fmt(Rload/1000,2);
+
+    var r = drawResistorPlot(Vs, Rload);
+    var d = drawDiodePlot(Vs, Rload);
+
+    var VRload_r = r.I*Rload;   // V across Rload in the resistor circuit
+    var VRload_d = d.I*Rload;   // V across Rload in the diode circuit
+
+    drawSchematic('schemR', false, fmt(Vs,1), fmt(Rload/1000,2), fmt(r.V,2), fmt(VRload_r,2));
+    drawSchematic('schemD', true, fmt(Vs,1), fmt(Rload/1000,2), fmt(d.V,2), fmt(VRload_d,2));
+
+    document.getElementById('statVR').textContent = fmt(r.V,2)+' V';
+    document.getElementById('statVRL_R').textContent = fmt(VRload_r,2)+' V';
+    document.getElementById('statIR').textContent = fmt(r.I*1000,2)+' mA';
+    document.getElementById('statVD').textContent = fmt(d.V,3)+' V';
+    document.getElementById('statVRL_D').textContent = fmt(VRload_d,2)+' V';
+    document.getElementById('statID').textContent = fmt(d.I*1000,2)+' mA';
+
+    document.getElementById('takeaway').innerHTML =
+      'At these settings, V(R1) = <b>'+fmt(r.V,2)+' V</b> &mdash; drag V<sub>S</sub> or R<sub>load</sub> and it moves '+
+      'freely across the whole 0&ndash;10&nbsp;V range. V(D1) = <b>'+fmt(d.V,3)+' V</b> &mdash; across the same slider '+
+      'ranges it only ever moves within roughly 0.43&ndash;0.78&nbsp;V. The diode\u2019s steep curve, not the circuit '+
+      'values, is what pins its voltage.';
+  }
+
+  vsSlider.addEventListener('input', update);
+  rlSlider.addEventListener('input', update);
+  document.getElementById('resetBtn').addEventListener('click', function(){
+    vsSlider.value = 5;
+    rlSlider.value = 0.5;
+    update();
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>
