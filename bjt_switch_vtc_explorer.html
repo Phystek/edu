@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BJT Switch Voltage-Transfer-Characteristic Explorer — ELEC2005</title>
+<style>
+  :root{
+    --ink:#1a1512;
+    --paper:#faf7f2;
+    --panel:#ffffff;
+    --maroon:#7a1730;
+    --muted:#6b6156;
+    --grid:#e4ddd2;
+    --focus:#1c5f7a;
+    --on-color:#2f7d4f;
+    --low-color:#a3372c;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    padding:28px 16px 40px;
+    background:#e6e6e4;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    color:var(--ink);
+  }
+  .wrap{max-width:960px;margin:0 auto;}
+
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:14px;
+    margin-bottom:6px;
+  }
+  .eyebrow{
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--maroon);
+    font-weight:700;
+    margin:0 0 6px;
+  }
+  h1{
+    font-family:"Iowan Old Style","Georgia",serif;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    font-size:26px;
+    margin:0;
+    line-height:1.15;
+  }
+  .tag{font-size:12px;color:var(--muted);white-space:nowrap;padding-bottom:3px;}
+  .intro{font-size:14px;line-height:1.55;color:var(--ink);max-width:760px;margin:16px 0 22px;}
+  .intro strong{color:var(--maroon);}
+
+  .grid{display:grid;grid-template-columns:1.35fr 1fr;gap:20px;}
+  @media (max-width:800px){.grid{grid-template-columns:1fr;}}
+
+  .panel{background:var(--panel);border:1px solid var(--grid);border-radius:4px;padding:16px;}
+  .panel-title{font-family:"Iowan Old Style","Georgia",serif;font-weight:700;font-size:15px;margin:0 0 10px;}
+
+  .left-col{display:flex;flex-direction:column;gap:16px;}
+  svg{width:100%;height:auto;display:block;}
+  .axis-label{font-size:11px;fill:var(--muted);font-family:"Helvetica Neue",Arial,sans-serif;}
+  .tick-label{font-size:9.5px;fill:var(--muted);font-family:"Helvetica Neue",Arial,sans-serif;}
+  .legend-text{font-size:11px;fill:var(--ink);font-family:"Helvetica Neue",Arial,sans-serif;}
+  .circuit-label{font-size:13px;fill:var(--ink);font-family:"Helvetica Neue",Arial,sans-serif;}
+  .circuit-value{font-size:12px;fill:var(--maroon);font-weight:700;font-family:"Helvetica Neue",Arial,sans-serif;font-variant-numeric:tabular-nums;}
+  .region-label{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-family:"Helvetica Neue",Arial,sans-serif;}
+
+  .right-col{display:flex;flex-direction:column;gap:16px;}
+
+  .ctrl{margin-bottom:16px;}
+  .ctrl:last-child{margin-bottom:0;}
+  .ctrl-label-row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:4px;}
+  .ctrl-name{color:var(--ink);font-weight:500;}
+  .ctrl-value{color:var(--maroon);font-weight:700;font-variant-numeric:tabular-nums;}
+  input[type=range]{width:100%;accent-color:var(--maroon);margin:2px 0;}
+  .ctrl-caption-row{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);}
+
+  .mode-toggle{display:flex;border:1px solid var(--ink);border-radius:4px;overflow:hidden;margin-bottom:16px;}
+  .mode-btn{
+    flex:1; padding:7px 10px; font-size:12.5px; font-weight:600;
+    font-family:"Helvetica Neue",Arial,sans-serif; text-align:center;
+    background:var(--panel); color:var(--ink); border:none; cursor:pointer;
+    border-right:1px solid var(--ink);
+  }
+  .mode-btn:last-child{border-right:none;}
+  .mode-btn.active{background:var(--ink); color:var(--paper);}
+
+  .reset-btn{
+    display:block;width:100%;margin-top:4px;padding:8px 10px;font-size:12.5px;
+    font-family:"Helvetica Neue",Arial,sans-serif;font-weight:600;letter-spacing:.02em;
+    color:var(--ink);background:transparent;border:1px solid var(--ink);border-radius:4px;
+    cursor:pointer;transition:background .15s, color .15s;
+  }
+  .reset-btn:hover{background:var(--ink);color:var(--paper);}
+
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .stat-card{background:var(--paper);border:1px solid var(--grid);border-radius:4px;padding:10px 10px;}
+  .stat-label{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 4px;}
+  .stat-value{font-size:19px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;}
+  .stat-value.flag-cutoff{color:var(--focus);}
+  .stat-value.flag-active{color:var(--on-color);}
+  .stat-value.flag-saturation{color:var(--low-color);}
+  .stat-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+
+  footer{text-align:center;font-size:11px;color:var(--muted);margin-top:26px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <p class="eyebrow">Week 4 &middot; BJT as a Switch</p>
+      <h1>BJT Switch Voltage-Transfer-Characteristic Explorer</h1>
+    </div>
+    <div class="tag">ELEC2005 &middot; Wk 4</div>
+  </header>
+
+  <p class="intro">
+    Sweep the input voltage V<sub>IN</sub> from 0 up to V<sub>CC</sub> and watch the transistor
+    step through all three regions: <strong>cutoff</strong> (off &mdash; output pulled high),
+    <strong>active</strong> (the brief transition), and <strong>saturation</strong> (on &mdash;
+    output pulled low). R<sub>B</sub> and R<sub>C</sub> reshape where that transition happens and
+    how sharp it is &mdash; this is exactly the design trade-off behind choosing switch resistor
+    values.
+  </p>
+
+  <div class="grid">
+
+    <div class="left-col">
+      <div class="panel">
+        <p class="panel-title">V<sub>OUT</sub> vs. V<sub>IN</sub> &mdash; the switch transfer characteristic</p>
+        <svg id="plot" viewBox="0 0 620 400" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+
+      <div class="panel">
+        <p class="panel-title">Switch circuit</p>
+        <svg id="schem" viewBox="0 0 340 390" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+    </div>
+
+    <div class="right-col">
+      <div class="panel">
+        <p class="panel-title">Controls</p>
+
+        <div class="mode-toggle" id="vccToggle">
+          <button class="mode-btn active" data-vcc="5">V_CC = 5V</button>
+          <button class="mode-btn" data-vcc="10">V_CC = 10V</button>
+        </div>
+
+        <div class="ctrl">
+          <div class="ctrl-label-row">
+            <span class="ctrl-name">Input voltage V<sub>IN</sub></span>
+            <span class="ctrl-value"><span id="vinVal">0.00</span>&nbsp;V</span>
+          </div>
+          <input type="range" id="vinSlider" min="0" max="5" step="0.01" value="0">
+          <div class="ctrl-caption-row"><span>0 V</span><span id="vinMaxLabel">5 V (= V_CC)</span></div>
+        </div>
+
+        <div class="ctrl">
+          <div class="ctrl-label-row">
+            <span class="ctrl-name">Base resistor R<sub>B</sub></span>
+            <span class="ctrl-value"><span id="rbVal">47k</span>&nbsp;&Omega;</span>
+          </div>
+          <input type="range" id="rbSlider" min="3" max="6" step="0.001" value="4.672">
+          <div class="ctrl-caption-row"><span>1 k&Omega;</span><span>1 M&Omega; (log scale)</span></div>
+        </div>
+
+        <div class="ctrl">
+          <div class="ctrl-label-row">
+            <span class="ctrl-name">Collector resistor R<sub>C</sub></span>
+            <span class="ctrl-value"><span id="rcVal">1.0k</span>&nbsp;&Omega;</span>
+          </div>
+          <input type="range" id="rcSlider" min="2" max="4" step="0.001" value="3">
+          <div class="ctrl-caption-row"><span>100 &Omega;</span><span>10 k&Omega; (log scale)</span></div>
+        </div>
+
+        <button class="reset-btn" id="resetBtn">Reset to defaults</button>
+      </div>
+
+      <div class="panel">
+        <p class="panel-title">Readout</p>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <p class="stat-label">V<sub>OUT</sub></p>
+            <p class="stat-value" id="statVout">5.00 V</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label">I<sub>C</sub></p>
+            <p class="stat-value" id="statIc">0.00 mA</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label">I<sub>B</sub></p>
+            <p class="stat-value" id="statIb">0.0 &micro;A</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label">Region</p>
+            <p class="stat-value" id="statRegion">Cutoff</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>ELEC2005 &middot; Week 4 &mdash; for concept exploration, not assessment.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Physics model (verified in Python before implementation) ----------
+  var VBE = 0.7, VCESAT = 0.2, BETA = 100;
+
+  function solve(VIN, RB, RC, VCC){
+    if (VIN <= VBE){
+      return {region:"Cutoff", IB:0, IC:0, VOUT:VCC};
+    }
+    var IB = (VIN - VBE) / RB;
+    var IC_active = BETA * IB;
+    var VOUT_active = VCC - IC_active * RC;
+    if (VOUT_active > VCESAT){
+      return {region:"Active", IB:IB, IC:IC_active, VOUT:VOUT_active};
+    } else {
+      var IC_sat = (VCC - VCESAT) / RC;
+      return {region:"Saturation", IB:IB, IC:IC_sat, VOUT:VCESAT};
+    }
+  }
+
+  // VIN at which the transistor just reaches the saturation boundary (VOUT=VCESAT).
+  function transitionVIN(RB, RC, VCC){
+    return VBE + RB * (VCC - VCESAT) / (BETA * RC);
+  }
+
+  // ---------- Geometry (precomputed & checked in Python) ----------
+  var W = 620, H = 400;
+  var M = {left:58, right:18, top:18, bottom:48};
+  var PX0 = M.left, PX1 = W - M.right;
+  var PY0 = M.top,  PY1 = H - M.bottom;
+  var PW = PX1 - PX0, PH = PY1 - PY0;
+
+  function xScale(vin, VCC){ return PX0 + (vin/VCC) * PW; }
+  function yScale(vout, VCC){
+    var c = Math.max(0, Math.min(VCC, vout));
+    return PY1 - (c/VCC) * PH;
+  }
+
+  var SVGNS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs, children){
+    var e = document.createElementNS(SVGNS, tag);
+    for (var k in attrs){ e.setAttribute(k, attrs[k]); }
+    (children||[]).forEach(function(c){ e.appendChild(c); });
+    return e;
+  }
+  function textEl(x, y, str, cls, extra){
+    var t = el("text", Object.assign({x:x, y:y, class:cls||""}, extra||{}));
+    t.textContent = str;
+    return t;
+  }
+  function txt(nodes, cls, x, y, s, anchor){
+    var t = el("text", {class:cls, x:x, y:y, "text-anchor":anchor||"start"});
+    t.textContent = s;
+    nodes.push(t);
+  }
+  function subText(nodes, cls, x, y, main, sub, anchor){
+    var t = el("text", {class:cls, x:x, y:y, "text-anchor":anchor||"start"});
+    var mainSpan = document.createElementNS(SVGNS,"tspan");
+    mainSpan.textContent = main;
+    var subSpan = document.createElementNS(SVGNS,"tspan");
+    subSpan.textContent = sub;
+    subSpan.setAttribute("dy","3");
+    subSpan.setAttribute("font-size","75%");
+    t.appendChild(mainSpan);
+    t.appendChild(subSpan);
+    nodes.push(t);
+  }
+  function wire(nodes, x1,y1,x2,y2){
+    nodes.push(el("line",{x1:x1,y1:y1,x2:x2,y2:y2,stroke:"#1a1512","stroke-width":2,"stroke-linecap":"round"}));
+  }
+  function resistorZ(x1,y1,x2,y2,teeth){
+    teeth = teeth || 5;
+    var dx=x2-x1, dy=y2-y1, len=Math.hypot(dx,dy);
+    var ux=dx/len, uy=dy/len, px=-uy, py=ux, amp=8;
+    var path = "M"+x1+","+y1+" ";
+    for (var t=0;t<teeth;t++){
+      var f=(t+0.5)/teeth, cx=x1+dx*f, cy=y1+dy*f, side=(t%2===0)?1:-1;
+      path += "L"+(cx+px*amp*side).toFixed(1)+","+(cy+py*amp*side).toFixed(1)+" ";
+    }
+    path += "L"+x2+","+y2;
+    return path;
+  }
+  function drawGroundNodes(nodes, x, y){
+    nodes.push(el("line",{x1:x,y1:y,x2:x,y2:y+40,stroke:"#1a1512","stroke-width":1.8}));
+    [22,14,7].forEach(function(w,k){
+      var gy = y+40+k*8;
+      nodes.push(el("line",{x1:x-w/2,y1:gy,x2:x+w/2,y2:gy,stroke:"#1a1512","stroke-width":1.6}));
+    });
+  }
+
+  // ---------- Elements ----------
+  var vinSlider = document.getElementById("vinSlider");
+  var rbSlider = document.getElementById("rbSlider");
+  var rcSlider = document.getElementById("rcSlider");
+  var vinVal = document.getElementById("vinVal");
+  var rbVal = document.getElementById("rbVal");
+  var rcVal = document.getElementById("rcVal");
+  var vinMaxLabel = document.getElementById("vinMaxLabel");
+  var resetBtn = document.getElementById("resetBtn");
+  var plotSvg = document.getElementById("plot");
+  var schemSvg = document.getElementById("schem");
+  var vccToggle = document.getElementById("vccToggle");
+
+  var currentVCC = 5;
+  var DEFAULT_VIN = 0, DEFAULT_RB_LOG = Math.log10(47000), DEFAULT_RC_LOG = Math.log10(1000);
+
+  function rbFromSlider(){ return Math.pow(10, parseFloat(rbSlider.value)); }
+  function rcFromSlider(){ return Math.pow(10, parseFloat(rcSlider.value)); }
+
+  function fmtR(v){
+    if (v >= 1e6) return (v/1e6).toFixed(2).replace(/\.?0+$/,"") + "M";
+    if (v >= 1000) return (v/1000).toFixed(v>=100000?0:2).replace(/\.00$/,"") + "k";
+    return v.toFixed(0);
+  }
+
+  var REGION_COLOR = {
+    Cutoff: {fill:"#e3eef4", border:"#1c5f7a"},
+    Active: {fill:"#e5f3ea", border:"#2f7d4f"},
+    Saturation: {fill:"#f7e9e7", border:"#a3372c"}
+  };
+
+  function renderPlot(){
+    while (plotSvg.firstChild) plotSvg.removeChild(plotSvg.firstChild);
+
+    var VCC = currentVCC;
+    var VIN = parseFloat(vinSlider.value);
+    var RB = rbFromSlider(), RC = rcFromSlider();
+    var vinSat = Math.min(VCC, transitionVIN(RB, RC, VCC));
+    var vinCutoffEdge = Math.min(VCC, VBE);
+
+    // --- region background shading (full plot height, split by VIN) ---
+    var bands = [
+      {region:"Cutoff", x0:0, x1:vinCutoffEdge},
+      {region:"Active", x0:vinCutoffEdge, x1:vinSat},
+      {region:"Saturation", x0:vinSat, x1:VCC}
+    ];
+    bands.forEach(function(b){
+      if (b.x1 <= b.x0) return;
+      var x0px = xScale(b.x0, VCC), x1px = xScale(b.x1, VCC);
+      plotSvg.appendChild(el("rect", {
+        x:x0px, y:PY0, width:x1px-x0px, height:PH,
+        fill:REGION_COLOR[b.region].fill, opacity:"0.6"
+      }));
+      // label, only if band wide enough to hold it legibly
+      if (x1px - x0px > 58){
+        plotSvg.appendChild(textEl((x0px+x1px)/2, PY0+14, b.region.toUpperCase(), "region-label",
+          {"text-anchor":"middle", fill:REGION_COLOR[b.region].border}));
+      }
+    });
+
+    // boundary lines between regions
+    [vinCutoffEdge, vinSat].forEach(function(v){
+      if (v <= 0 || v >= VCC) return;
+      var x = xScale(v, VCC);
+      plotSvg.appendChild(el("line", {x1:x, x2:x, y1:PY0, y2:PY1, stroke:"#1a1512", "stroke-width":"1", "stroke-dasharray":"2,3", opacity:"0.5"}));
+    });
+
+    // gridlines + ticks (5 divisions of VCC)
+    var nDiv = 5;
+    for (var i=0;i<=nDiv;i++){
+      var v = VCC*i/nDiv;
+      var gx = xScale(v, VCC), gy = yScale(v, VCC);
+      plotSvg.appendChild(el("line", {x1:gx, x2:gx, y1:PY0, y2:PY1, stroke:"#e4ddd2", "stroke-width":"1"}));
+      plotSvg.appendChild(el("line", {x1:PX0, x2:PX1, y1:gy, y2:gy, stroke:"#e4ddd2", "stroke-width":"1"}));
+      plotSvg.appendChild(textEl(gx, PY1+16, v.toFixed(v<1?2:1), "tick-label", {"text-anchor":"middle"}));
+      plotSvg.appendChild(textEl(PX0-8, gy+3, v.toFixed(v<1?2:1), "tick-label", {"text-anchor":"end"}));
+    }
+
+    // axes
+    plotSvg.appendChild(el("line", {x1:PX0, x2:PX1, y1:PY1, y2:PY1, stroke:"#1a1512", "stroke-width":"1.4"}));
+    plotSvg.appendChild(el("line", {x1:PX0, x2:PX0, y1:PY0, y2:PY1, stroke:"#1a1512", "stroke-width":"1.4"}));
+    plotSvg.appendChild(textEl((PX0+PX1)/2, H-6, "V_IN (V)", "axis-label", {"text-anchor":"middle"}));
+    var yLabel = textEl(14, (PY0+PY1)/2, "V_OUT (V)", "axis-label", {"text-anchor":"middle"});
+    yLabel.setAttribute("transform", "rotate(-90 14 " + ((PY0+PY1)/2) + ")");
+    plotSvg.appendChild(yLabel);
+
+    // --- VTC curve ---
+    var N = 160;
+    var pts = [];
+    for (var k=0;k<N;k++){
+      var vin = VCC*k/(N-1);
+      var r = solve(vin, RB, RC, VCC);
+      pts.push([xScale(vin, VCC), yScale(r.VOUT, VCC)]);
+    }
+    var d = pts.map(function(p,idx){ return (idx===0?"M":"L")+p[0].toFixed(1)+","+p[1].toFixed(1); }).join(" ");
+    plotSvg.appendChild(el("path", {d:d, fill:"none", stroke:"#7a1730", "stroke-width":"2.5"}));
+
+    // live marker, colored by current region
+    var now = solve(VIN, RB, RC, VCC);
+    var mc = REGION_COLOR[now.region].border;
+    plotSvg.appendChild(el("circle", {cx:xScale(VIN,VCC), cy:yScale(now.VOUT,VCC), r:5, fill:mc, stroke:"#faf7f2", "stroke-width":"1.5"}));
+  }
+
+  // ---------- Schematic ----------
+  var baseBarX = 175, baseBarMid = 205;
+  var attachHalfSpan = 22, barOverhang = 12;
+  var attachTop = baseBarMid-attachHalfSpan, attachBot = baseBarMid+attachHalfSpan;
+  var barExtTop = attachTop-barOverhang, barExtBot = attachBot+barOverhang;
+  var angleDeg = 22, legLen = 62, rad = angleDeg*Math.PI/180;
+  var cDirX = Math.cos(rad), cDirY = -Math.sin(rad);
+  var eDirX = Math.cos(rad), eDirY = Math.sin(rad);
+  var cEndX = baseBarX+legLen*cDirX, cEndY = attachTop+legLen*cDirY;
+  var eEndX = baseBarX+legLen*eDirX, eEndY = attachBot+legLen*eDirY;
+
+  function renderSchematic(){
+    while (schemSvg.firstChild) schemSvg.removeChild(schemSvg.firstChild);
+    var nodes = [];
+    var VCC = currentVCC, VIN = parseFloat(vinSlider.value);
+    var RB = rbFromSlider(), RC = rcFromSlider();
+
+    // base bar
+    wire(nodes, baseBarX, barExtTop, baseBarX, barExtBot);
+    txt(nodes,"circuit-label", baseBarX-14, baseBarMid-8, "B", "end");
+
+    // V_IN source -> R_B -> base bar
+    var vinCx = 68;
+    nodes.push(el("circle",{cx:vinCx,cy:baseBarMid,r:11,fill:"none",stroke:"#1a1512","stroke-width":2}));
+    subText(nodes,"circuit-label", vinCx-18, baseBarMid-8, "V","IN","end");
+    txt(nodes,"circuit-value", vinCx-18, baseBarMid+10, VIN.toFixed(2)+"V", "end");
+    wire(nodes, vinCx+11, baseBarMid, vinCx+30, baseBarMid);
+    nodes.push(el("path",{d:resistorZ(vinCx+30,baseBarMid,vinCx+70,baseBarMid), fill:"none", stroke:"#1a1512","stroke-width":2}));
+    subText(nodes,"circuit-label", vinCx+50, baseBarMid-32, "R","B","middle");
+    txt(nodes,"circuit-value", vinCx+50, baseBarMid-19, fmtR(RB)+"\u03A9", "middle");
+    wire(nodes, vinCx+70, baseBarMid, baseBarX, baseBarMid);
+
+    // collector leg -> R_C -> V_CC
+    wire(nodes, baseBarX, attachTop, cEndX, cEndY);
+    txt(nodes,"circuit-label", cEndX+10, cEndY-4, "C", "start");
+    var RC_bot = 120, RC_top = 85, VCC_cy = 60, VCC_r = 11;
+    wire(nodes, cEndX, cEndY, cEndX, RC_bot);
+    nodes.push(el("path",{d:resistorZ(cEndX,RC_bot,cEndX,RC_top), fill:"none", stroke:"#1a1512","stroke-width":2}));
+    subText(nodes,"circuit-label", cEndX+14, (RC_top+RC_bot)/2+4, "R","C","start");
+    txt(nodes,"circuit-value", cEndX+14, (RC_top+RC_bot)/2+20, fmtR(RC)+"\u03A9", "start");
+    wire(nodes, cEndX, RC_top, cEndX, VCC_cy+VCC_r);
+    nodes.push(el("circle",{cx:cEndX,cy:VCC_cy,r:VCC_r,fill:"none",stroke:"#1a1512","stroke-width":2}));
+    subText(nodes,"circuit-label", cEndX+16, VCC_cy-6, "V","CC","start");
+    txt(nodes,"circuit-value", cEndX+16, VCC_cy+10, VCC.toFixed(0)+"V", "start");
+
+    // V_OUT readout tapped at the collector node
+    var r = solve(VIN, RB, RC, VCC);
+    txt(nodes,"circuit-label", cEndX-98, cEndY-4, "V_OUT =", "start");
+    txt(nodes,"circuit-value", cEndX-10, cEndY-4, r.VOUT.toFixed(2)+"V", "end");
+
+    // emitter leg with NPN arrow, straight to ground (simple switch — no R_E)
+    wire(nodes, baseBarX, attachBot, eEndX, eEndY);
+    txt(nodes,"circuit-label", eEndX+10, eEndY-4, "E", "start");
+    var arrowT = 0.7;
+    var arrowX = baseBarX+arrowT*legLen*eDirX, arrowY = attachBot+arrowT*legLen*eDirY;
+    var backX = arrowX-9*eDirX+4*eDirY, backY = arrowY-9*eDirY-4*eDirX;
+    var back2X = arrowX-9*eDirX-4*eDirY, back2Y = arrowY-9*eDirY+4*eDirX;
+    nodes.push(el("polygon",{points:arrowX+","+arrowY+" "+backX+","+backY+" "+back2X+","+back2Y, fill:"#1a1512"}));
+    var gndY = eEndY+15;
+    wire(nodes, eEndX, eEndY, eEndX, gndY);
+    drawGroundNodes(nodes, eEndX, gndY);
+
+    nodes.forEach(function(n){ schemSvg.appendChild(n); });
+  }
+
+  // ---------- Readout ----------
+  function renderStats(){
+    var VCC = currentVCC, VIN = parseFloat(vinSlider.value);
+    var RB = rbFromSlider(), RC = rcFromSlider();
+    var r = solve(VIN, RB, RC, VCC);
+
+    document.getElementById("statVout").textContent = r.VOUT.toFixed(2) + " V";
+    document.getElementById("statIc").textContent = (r.IC*1e3).toFixed(2) + " mA";
+    document.getElementById("statIb").textContent = (r.IB*1e6).toFixed(1) + " \u00B5A";
+
+    var regionEl = document.getElementById("statRegion");
+    regionEl.textContent = r.region;
+    regionEl.className = "stat-value flag-" + r.region.toLowerCase();
+  }
+
+  function renderAll(){
+    vinVal.textContent = parseFloat(vinSlider.value).toFixed(2);
+    rbVal.textContent = fmtR(rbFromSlider());
+    rcVal.textContent = fmtR(rcFromSlider());
+    renderPlot();
+    renderSchematic();
+    renderStats();
+  }
+
+  vinSlider.addEventListener("input", renderAll);
+  rbSlider.addEventListener("input", renderAll);
+  rcSlider.addEventListener("input", renderAll);
+
+  vccToggle.addEventListener("click", function(e){
+    var btn = e.target.closest(".mode-btn");
+    if (!btn) return;
+    var newVCC = parseFloat(btn.getAttribute("data-vcc"));
+    if (newVCC === currentVCC) return;
+    currentVCC = newVCC;
+    Array.prototype.forEach.call(vccToggle.querySelectorAll(".mode-btn"), function(b){
+      b.classList.toggle("active", b === btn);
+    });
+    vinSlider.max = currentVCC;
+    vinMaxLabel.textContent = currentVCC.toFixed(0) + " V (= V_CC)";
+    // clamp current VIN into the new range
+    if (parseFloat(vinSlider.value) > currentVCC) vinSlider.value = currentVCC;
+    renderAll();
+  });
+
+  resetBtn.addEventListener("click", function(){
+    currentVCC = 5;
+    Array.prototype.forEach.call(vccToggle.querySelectorAll(".mode-btn"), function(b){
+      b.classList.toggle("active", b.getAttribute("data-vcc") === "5");
+    });
+    vinSlider.max = 5;
+    vinMaxLabel.textContent = "5 V (= V_CC)";
+    vinSlider.value = DEFAULT_VIN;
+    rbSlider.value = DEFAULT_RB_LOG;
+    rcSlider.value = DEFAULT_RC_LOG;
+    renderAll();
+  });
+
+  // set precise defaults on load
+  vinSlider.value = DEFAULT_VIN;
+  rbSlider.value = DEFAULT_RB_LOG;
+  rcSlider.value = DEFAULT_RC_LOG;
+  renderAll();
+})();
+</script>
+</body>
+</html>
