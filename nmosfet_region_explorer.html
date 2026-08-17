@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nMOSFET Region Explorer — ELEC2005</title>
+<style>
+  :root{
+    --ink:#1a1512;
+    --paper:#faf7f2;
+    --panel:#ffffff;
+    --maroon:#7a1730;
+    --muted:#6b6156;
+    --grid:#e4ddd2;
+    --focus:#1c5f7a;
+    --on-color:#2f7d4f;
+    --low-color:#a3372c;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:#e6e6e4;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    color:var(--ink);
+  }
+  .wrap{max-width:960px;margin:0 auto;padding:28px 20px 40px;}
+  header{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:1px solid var(--ink);padding-bottom:12px;margin-bottom:6px;
+    flex-wrap:wrap;gap:8px;
+  }
+  .eyebrow{
+    font-size:11px;letter-spacing:0.14em;text-transform:uppercase;
+    color:var(--maroon);font-weight:700;margin:0 0 4px;
+  }
+  h1{
+    font-family:"Iowan Old Style","Georgia",serif;
+    font-weight:700;font-size:28px;letter-spacing:-0.01em;margin:0;
+  }
+  .tag{
+    font-size:12px;color:var(--muted);text-align:right;white-space:nowrap;
+  }
+  .intro{
+    font-size:14px;line-height:1.55;color:var(--ink);max-width:760px;margin:14px 0 22px;
+  }
+  .grid{
+    display:grid;grid-template-columns:1.35fr 1fr;gap:18px;
+  }
+  @media(max-width:800px){
+    .grid{grid-template-columns:1fr;}
+  }
+  .panel{
+    background:var(--panel);border:1px solid var(--grid);border-radius:4px;
+    padding:16px;margin-bottom:16px;
+  }
+  .panel h2{
+    font-family:"Iowan Old Style","Georgia",serif;
+    font-size:16px;margin:0 0 10px;font-weight:700;
+  }
+  .section-label{
+    font-size:11px;letter-spacing:0.14em;text-transform:uppercase;
+    color:var(--maroon);font-weight:700;margin-bottom:10px;
+  }
+  svg{display:block;width:100%;height:auto;}
+  .slider-block{margin-bottom:18px;}
+  .slider-row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:4px;}
+  .slider-row .name{color:var(--ink);}
+  .slider-row .val{color:var(--maroon);font-weight:700;font-variant-numeric:tabular-nums;}
+  input[type=range]{width:100%;accent-color:var(--maroon);}
+  .caption-row{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:2px;}
+  .btn-reset{
+    width:100%;padding:9px 0;margin-top:4px;
+    border:1px solid var(--ink);background:transparent;color:var(--ink);
+    border-radius:4px;font-family:inherit;font-size:13px;cursor:pointer;
+    transition:background .15s, color .15s;
+  }
+  .btn-reset:hover{background:var(--ink);color:var(--paper);}
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .stat-card{
+    background:var(--paper);border:1px solid var(--grid);border-radius:4px;
+    padding:10px 12px;
+  }
+  .stat-card .label{
+    font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;
+  }
+  .stat-card .value{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .region-card{grid-column:1 / -1;text-align:center;padding:12px;border-width:1.5px;}
+  .region-card .value{font-size:21px;}
+  footer{
+    text-align:center;font-size:11px;color:var(--muted);margin-top:22px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">ELEC2005 · Week 5</p>
+      <h1>nMOSFET Region Explorer</h1>
+    </div>
+    <div class="tag">MOSFETs — Part 1<br>Regions of Operation</div>
+  </header>
+  <p class="intro">
+    Drag V<sub>GS</sub> and V<sub>DS</sub> to see which region the transistor is operating in — cutoff, triode, or
+    saturation — and how the drain current i<sub>D</sub> responds. The curve traces i<sub>D</sub> vs V<sub>DS</sub> at the
+    current V<sub>GS</sub>; the dot marks your exact operating point.
+  </p>
+
+  <div class="grid">
+    <div class="left-col">
+      <div class="panel">
+        <p class="section-label">i<sub>D</sub> vs V<sub>DS</sub></p>
+        <svg id="plot" viewBox="0 0 555 360" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div class="panel">
+        <p class="section-label">Circuit</p>
+        <svg id="circuit" viewBox="0 0 480 200" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+    </div>
+
+    <div class="right-col">
+      <div class="panel">
+        <p class="section-label">Controls</p>
+        <div class="slider-block">
+          <div class="slider-row"><span class="name">V<sub>GS</sub></span><span class="val" id="vgsVal">1.80 V</span></div>
+          <input type="range" id="vgsSlider" min="0" max="2.5" step="0.01" value="1.8">
+          <div class="caption-row"><span>0 V</span><span>2.5 V</span></div>
+        </div>
+        <div class="slider-block">
+          <div class="slider-row"><span class="name">V<sub>DS</sub></span><span class="val" id="vdsVal">1.20 V</span></div>
+          <input type="range" id="vdsSlider" min="0" max="2.5" step="0.01" value="1.2">
+          <div class="caption-row"><span>0 V</span><span>2.5 V</span></div>
+        </div>
+        <button class="btn-reset" id="resetBtn">Reset to defaults</button>
+      </div>
+
+      <div class="panel">
+        <p class="section-label">Readout</p>
+        <div class="stat-grid">
+          <div class="stat-card region-card" id="regionCard">
+            <div class="label">Region</div>
+            <div class="value" id="regionVal">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Overdrive V<sub>OV</sub></div>
+            <div class="value" id="vovVal">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Drain current i<sub>D</sub></div>
+            <div class="value" id="idVal">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>ELEC2005 · Week 5 — for concept exploration, not assessment. Model: V<sub>t</sub> = 1 V, k<sub>n</sub>'(W/L) = 1 mA/V² (matches lecture Examples 3–4).</footer>
+</div>
+
+<script>
+(function(){
+  const NS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs, children){
+    const e = document.createElementNS(NS, tag);
+    if(attrs) for(const k in attrs) e.setAttribute(k, attrs[k]);
+    if(children) children.forEach(c => e.appendChild(c));
+    return e;
+  }
+
+  // ---- Model constants (matches lecture Example 3/4) ----
+  const Vt = 1.0;      // V
+  const kn = 1.0;       // mA/V^2
+
+  function regionAndId(VGS, VDS){
+    const VOV = VGS - Vt;
+    if(VGS <= Vt) return {region:"cutoff", iD:0, VOV};
+    if(VDS < VOV){
+      const iD = kn*(VOV*VDS - 0.5*VDS*VDS);
+      return {region:"triode", iD, VOV};
+    }
+    const iD = 0.5*kn*VOV*VOV;
+    return {region:"saturation", iD, VOV};
+  }
+
+  // ---- Plot geometry (fixed, non-rescaling frame) ----
+  const PLOT_W = 480, PLOT_H = 300;
+  const MARGIN_L = 55, MARGIN_T = 20, MARGIN_R = 20, MARGIN_B = 40;
+  const VDS_MAX = 2.5, ID_MAX = 1.3;
+
+  function xPx(vds){ return MARGIN_L + (vds/VDS_MAX)*PLOT_W; }
+  function yPx(iD){ return MARGIN_T + PLOT_H - (iD/ID_MAX)*PLOT_H; }
+
+  const plotSvg = document.getElementById("plot");
+  const circuitSvg = document.getElementById("circuit");
+
+  const vgsSlider = document.getElementById("vgsSlider");
+  const vdsSlider = document.getElementById("vdsSlider");
+  const vgsVal = document.getElementById("vgsVal");
+  const vdsVal = document.getElementById("vdsVal");
+  const regionVal = document.getElementById("regionVal");
+  const regionCard = document.getElementById("regionCard");
+  const vovVal = document.getElementById("vovVal");
+  const idVal = document.getElementById("idVal");
+
+  const REGION_COLORS = {
+    cutoff:     {fill:"#e3eef4", border:"#1c5f7a"},
+    triode:     {fill:"#f7e9e7", border:"#a3372c"},
+    saturation: {fill:"#e5f3ea", border:"#2f7d4f"}
+  };
+  const REGION_LABEL = {cutoff:"Cutoff", triode:"Triode", saturation:"Saturation"};
+
+  function drawPlot(VGS, VDS){
+    while(plotSvg.firstChild) plotSvg.removeChild(plotSvg.firstChild);
+
+    // axes
+    plotSvg.appendChild(el("line",{x1:MARGIN_L,y1:MARGIN_T,x2:MARGIN_L,y2:MARGIN_T+PLOT_H,stroke:"var(--ink)","stroke-width":1.2}));
+    plotSvg.appendChild(el("line",{x1:MARGIN_L,y1:MARGIN_T+PLOT_H,x2:MARGIN_L+PLOT_W,y2:MARGIN_T+PLOT_H,stroke:"var(--ink)","stroke-width":1.2}));
+
+    // gridlines + ticks (VDS every 0.5V, iD every 0.2mA)
+    for(let v=0; v<=VDS_MAX+1e-9; v+=0.5){
+      const x = xPx(v);
+      plotSvg.appendChild(el("line",{x1:x,y1:MARGIN_T,x2:x,y2:MARGIN_T+PLOT_H,stroke:"var(--grid)","stroke-width":1}));
+      const t = el("text",{x:x,y:MARGIN_T+PLOT_H+16,"font-size":10,fill:"var(--muted)","text-anchor":"middle","font-family":"Helvetica Neue,Arial,sans-serif"});
+      t.textContent = v.toFixed(1);
+      plotSvg.appendChild(t);
+    }
+    for(let i=0; i<=ID_MAX+1e-9; i+=0.2){
+      const y = yPx(i);
+      plotSvg.appendChild(el("line",{x1:MARGIN_L,y1:y,x2:MARGIN_L+PLOT_W,y2:y,stroke:"var(--grid)","stroke-width":1}));
+      const t = el("text",{x:MARGIN_L-8,y:y+3,"font-size":10,fill:"var(--muted)","text-anchor":"end","font-family":"Helvetica Neue,Arial,sans-serif"});
+      t.textContent = i.toFixed(1);
+      plotSvg.appendChild(t);
+    }
+
+    // axis labels
+    const xlab = el("text",{x:MARGIN_L+PLOT_W/2,y:MARGIN_T+PLOT_H+34,"font-size":12,fill:"var(--ink)","text-anchor":"middle","font-style":"italic"});
+    xlab.textContent = "VDS (V)";
+    plotSvg.appendChild(xlab);
+    const ylab = el("text",{x:14,y:MARGIN_T+PLOT_H/2,"font-size":12,fill:"var(--ink)","text-anchor":"middle","font-style":"italic",transform:`rotate(-90 14 ${MARGIN_T+PLOT_H/2})`});
+    ylab.textContent = "iD (mA)";
+    plotSvg.appendChild(ylab);
+
+    // curve: iD vs VDS at current VGS
+    const N = 200;
+    let d = "";
+    for(let k=0;k<=N;k++){
+      const vds = (k/N)*VDS_MAX;
+      const {iD} = regionAndId(VGS, vds);
+      const x = xPx(vds), y = yPx(Math.min(iD, ID_MAX));
+      d += (k===0 ? "M" : "L") + x.toFixed(2) + " " + y.toFixed(2) + " ";
+    }
+    plotSvg.appendChild(el("path",{d, fill:"none", stroke:"var(--maroon)","stroke-width":2.5}));
+
+    // VOV boundary marker (dashed) if channel exists
+    const VOV = VGS - Vt;
+    if(VOV > 0 && VOV <= VDS_MAX){
+      const xB = xPx(VOV);
+      plotSvg.appendChild(el("line",{x1:xB,y1:MARGIN_T,x2:xB,y2:MARGIN_T+PLOT_H,stroke:"#c98a2c","stroke-width":1.5,"stroke-dasharray":"5,4"}));
+      const tb = el("text",{x:xB,y:MARGIN_T-6,"font-size":10,fill:"#c98a2c","text-anchor":"middle"});
+      tb.textContent = "VOV = " + VOV.toFixed(2) + "V";
+      plotSvg.appendChild(tb);
+    }
+
+    // region shading labels (triode / saturation) along top
+    if(VOV > 0){
+      const xB = Math.min(xPx(VOV), MARGIN_L+PLOT_W);
+      if(VOV < VDS_MAX){
+        const midSat = (xB + (MARGIN_L+PLOT_W))/2;
+        const ts = el("text",{x:midSat,y:MARGIN_T+14,"font-size":10,fill:"var(--muted)","text-anchor":"middle"});
+        ts.textContent = "Saturation";
+        plotSvg.appendChild(ts);
+      }
+      const midTri = (MARGIN_L + xB)/2;
+      if(xB - MARGIN_L > 30){
+        const tt = el("text",{x:midTri,y:MARGIN_T+14,"font-size":10,fill:"var(--muted)","text-anchor":"middle"});
+        tt.textContent = "Triode";
+        plotSvg.appendChild(tt);
+      }
+    }
+
+    // operating point marker
+    const {iD} = regionAndId(VGS, VDS);
+    const mx = xPx(VDS), my = yPx(Math.min(iD, ID_MAX));
+    plotSvg.appendChild(el("line",{x1:mx,y1:MARGIN_T+PLOT_H,x2:mx,y2:my,stroke:"var(--focus)","stroke-width":1,"stroke-dasharray":"3,3"}));
+    plotSvg.appendChild(el("line",{x1:MARGIN_L,y1:my,x2:mx,y2:my,stroke:"var(--focus)","stroke-width":1,"stroke-dasharray":"3,3"}));
+    plotSvg.appendChild(el("circle",{cx:mx,cy:my,r:5,fill:"var(--focus)",stroke:"white","stroke-width":1.5}));
+  }
+
+  function drawCircuit(VGS, VDS){
+    while(circuitSvg.firstChild) circuitSvg.removeChild(circuitSvg.firstChild);
+    const ink = "var(--ink)";
+
+    // Ground symbol helper
+    function ground(cx, cy){
+      const g = [];
+      g.push(el("line",{x1:cx,y1:cy,x2:cx,y2:cy+8,stroke:ink,"stroke-width":1.3}));
+      g.push(el("line",{x1:cx-9,y1:cy+8,x2:cx+9,y2:cy+8,stroke:ink,"stroke-width":1.3}));
+      g.push(el("line",{x1:cx-6,y1:cy+12,x2:cx+6,y2:cy+12,stroke:ink,"stroke-width":1.3}));
+      g.push(el("line",{x1:cx-3,y1:cy+16,x2:cx+3,y2:cy+16,stroke:ink,"stroke-width":1.3}));
+      return g;
+    }
+
+    // Layout constants (verified via bounding-box check — see plan_circuit_geometry.py)
+    const gy = 100;
+    const gateTickX = 200, gateTickTop = gy-15, gateTickBot = gy+15;
+    const chx = 215, chTop = gy-30, chBot = gy+30;   // solid channel bar — simplified symbol (body tied to source)
+    const barOverhang = 8;                            // bar extends a bit past where the leads connect
+    const barTop = chTop - barOverhang, barBot = chBot + barOverhang;
+    const leadExtX = chx + 25;                        // 240
+    const dTopY = 40, sBotY = 160;
+    const vgsCx = 110, vgsCy = 155;
+    const vdsCx = 340, vdsCy = 79;
+    const R = 12;
+
+    // gate lead + gate tick (short bar, gap before channel — represents oxide insulation)
+    circuitSvg.appendChild(el("line",{x1:vgsCx,y1:gy,x2:gateTickX,y2:gy,stroke:ink,"stroke-width":1.5}));
+    circuitSvg.appendChild(el("line",{x1:gateTickX,y1:gateTickTop,x2:gateTickX,y2:gateTickBot,stroke:ink,"stroke-width":2}));
+
+    // channel bar — single solid vertical bar, extended a bit past the lead connection points
+    circuitSvg.appendChild(el("line",{x1:chx,y1:barTop,x2:chx,y2:barBot,stroke:ink,"stroke-width":2.5}));
+
+    // top lead: channel -> right -> up to drain
+    circuitSvg.appendChild(el("line",{x1:chx,y1:chTop,x2:leadExtX,y2:chTop,stroke:ink,"stroke-width":1.5}));
+    circuitSvg.appendChild(el("line",{x1:leadExtX,y1:chTop,x2:leadExtX,y2:dTopY,stroke:ink,"stroke-width":1.5}));
+
+    // bottom lead: channel -> right (with source arrow) -> down to source
+    circuitSvg.appendChild(el("line",{x1:chx,y1:chBot,x2:leadExtX,y2:chBot,stroke:ink,"stroke-width":1.5}));
+    circuitSvg.appendChild(el("line",{x1:leadExtX,y1:chBot,x2:leadExtX,y2:sBotY,stroke:ink,"stroke-width":1.5}));
+    // arrow on source lead, pointing outward (right) — standard simplified nMOS symbol
+    const amx = chx + 13;
+    circuitSvg.appendChild(el("polygon",{points:`${amx-2},${chBot-5} ${amx-2},${chBot+5} ${amx+7},${chBot}`, fill:ink}));
+
+    // terminal labels — close to the symbol
+    const lblG = el("text",{x:gateTickX,y:gateTickTop-8,"font-size":13,"text-anchor":"middle",fill:ink}); lblG.textContent="G"; circuitSvg.appendChild(lblG);
+    const lblD = el("text",{x:chx+12,y:barTop-8,"font-size":13,"text-anchor":"middle",fill:ink}); lblD.textContent="D"; circuitSvg.appendChild(lblD);
+    const lblS = el("text",{x:chx+12,y:barBot+18,"font-size":13,"text-anchor":"middle",fill:ink}); lblS.textContent="S"; circuitSvg.appendChild(lblS);
+
+    // Source terminal grounded
+    circuitSvg.appendChild(el("line",{x1:leadExtX,y1:sBotY,x2:leadExtX,y2:sBotY+10,stroke:ink,"stroke-width":1.3}));
+    ground(leadExtX, sBotY+10).forEach(g=>circuitSvg.appendChild(g));
+
+    // VGS source (left of gate, own ground)
+    circuitSvg.appendChild(el("line",{x1:vgsCx,y1:gy,x2:vgsCx,y2:vgsCy-R,stroke:ink,"stroke-width":1.3}));
+    circuitSvg.appendChild(el("circle",{cx:vgsCx,cy:vgsCy,r:R,fill:"none",stroke:ink,"stroke-width":1.3}));
+    const vgsPlus = el("text",{x:vgsCx,y:vgsCy-2,"font-size":9,"text-anchor":"middle",fill:ink}); vgsPlus.textContent="+"; circuitSvg.appendChild(vgsPlus);
+    const vgsMinus = el("text",{x:vgsCx,y:vgsCy+9,"font-size":9,"text-anchor":"middle",fill:ink}); vgsMinus.textContent="\u2212"; circuitSvg.appendChild(vgsMinus);
+    circuitSvg.appendChild(el("line",{x1:vgsCx,y1:vgsCy+R,x2:vgsCx,y2:vgsCy+R+10,stroke:ink,"stroke-width":1.3}));
+    ground(vgsCx, vgsCy+R+10).forEach(g=>circuitSvg.appendChild(g));
+    const vgsLbl = el("text",{x:vgsCx-14,y:vgsCy,"font-size":12,"text-anchor":"end",fill:"var(--maroon)","font-weight":"700"});
+    vgsLbl.textContent = "VGS = " + VGS.toFixed(2) + "V";
+    circuitSvg.appendChild(vgsLbl);
+
+    // VDS source (right of drain, returns to source rail)
+    circuitSvg.appendChild(el("line",{x1:leadExtX,y1:dTopY,x2:vdsCx,y2:dTopY,stroke:ink,"stroke-width":1.3}));
+    circuitSvg.appendChild(el("line",{x1:vdsCx,y1:dTopY,x2:vdsCx,y2:vdsCy-R,stroke:ink,"stroke-width":1.3}));
+    circuitSvg.appendChild(el("circle",{cx:vdsCx,cy:vdsCy,r:R,fill:"none",stroke:ink,"stroke-width":1.3}));
+    const vdsPlus = el("text",{x:vdsCx,y:vdsCy-2,"font-size":9,"text-anchor":"middle",fill:ink}); vdsPlus.textContent="+"; circuitSvg.appendChild(vdsPlus);
+    const vdsMinus = el("text",{x:vdsCx,y:vdsCy+9,"font-size":9,"text-anchor":"middle",fill:ink}); vdsMinus.textContent="\u2212"; circuitSvg.appendChild(vdsMinus);
+    circuitSvg.appendChild(el("line",{x1:vdsCx,y1:vdsCy+R,x2:vdsCx,y2:sBotY,stroke:ink,"stroke-width":1.3}));
+    circuitSvg.appendChild(el("line",{x1:vdsCx,y1:sBotY,x2:leadExtX,y2:sBotY,stroke:ink,"stroke-width":1.3}));
+    const vdsLbl = el("text",{x:vdsCx+16,y:vdsCy+4,"font-size":12,"text-anchor":"start",fill:"var(--maroon)","font-weight":"700"});
+    vdsLbl.textContent = "VDS = " + VDS.toFixed(2) + "V";
+    circuitSvg.appendChild(vdsLbl);
+
+    // iD arrow into drain, with label
+    const {iD} = regionAndId(VGS, VDS);
+    circuitSvg.appendChild(el("line",{x1:leadExtX,y1:dTopY-14,x2:leadExtX,y2:dTopY-2,stroke:"var(--focus)","stroke-width":1.6}));
+    circuitSvg.appendChild(el("polygon",{points:`${leadExtX-4},${dTopY-6} ${leadExtX+4},${dTopY-6} ${leadExtX},${dTopY-1}`, fill:"var(--focus)"}));
+    const idLbl = el("text",{x:leadExtX+10,y:dTopY-12,"font-size":11,"text-anchor":"start",fill:"var(--focus)"});
+    idLbl.textContent = "iD = " + iD.toFixed(2) + "mA";
+    circuitSvg.appendChild(idLbl);
+  }
+
+  function update(){
+    const VGS = parseFloat(vgsSlider.value);
+    const VDS = parseFloat(vdsSlider.value);
+    vgsVal.textContent = VGS.toFixed(2) + " V";
+    vdsVal.textContent = VDS.toFixed(2) + " V";
+
+    const {region, iD, VOV} = regionAndId(VGS, VDS);
+    regionVal.textContent = REGION_LABEL[region];
+    idVal.textContent = iD.toFixed(3) + " mA";
+    vovVal.textContent = (VOV > 0 ? VOV.toFixed(2) : "0.00") + " V";
+
+    const colors = REGION_COLORS[region];
+    regionCard.style.background = colors.fill;
+    regionCard.style.borderColor = colors.border;
+    regionVal.style.color = colors.border;
+
+    drawPlot(VGS, VDS);
+    drawCircuit(VGS, VDS);
+  }
+
+  vgsSlider.addEventListener("input", update);
+  vdsSlider.addEventListener("input", update);
+  document.getElementById("resetBtn").addEventListener("click", function(){
+    vgsSlider.value = 1.8;
+    vdsSlider.value = 1.2;
+    update();
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>
