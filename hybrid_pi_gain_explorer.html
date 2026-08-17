@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hybrid-&pi; Small-Signal Gain Explorer — ELEC2005</title>
+<style>
+  :root{
+    --ink:#1a1512;
+    --paper:#faf7f2;
+    --panel:#ffffff;
+    --maroon:#7a1730;
+    --muted:#6b6156;
+    --grid:#e4ddd2;
+    --focus:#1c5f7a;
+    --on-color:#2f7d4f;
+    --low-color:#a3372c;
+    --mustard:#c98a2c;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    padding:28px 16px 40px;
+    background:#e6e6e4;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    color:var(--ink);
+  }
+  .wrap{max-width:960px;margin:0 auto;}
+
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:14px;
+    margin-bottom:6px;
+  }
+  .eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin:0 0 6px;}
+  h1{font-family:"Iowan Old Style","Georgia",serif;font-weight:700;letter-spacing:-0.01em;font-size:24px;margin:0;line-height:1.15;}
+  .tag{font-size:12px;color:var(--muted);white-space:nowrap;padding-bottom:3px;}
+  .intro{font-size:14px;line-height:1.55;color:var(--ink);max-width:760px;margin:16px 0 22px;}
+  .intro strong{color:var(--maroon);}
+
+  .grid{display:grid;grid-template-columns:1.35fr 1fr;gap:20px;}
+  @media (max-width:800px){.grid{grid-template-columns:1fr;}}
+
+  .panel{background:var(--panel);border:1px solid var(--grid);border-radius:4px;padding:16px;}
+  .panel-title{font-family:"Iowan Old Style","Georgia",serif;font-weight:700;font-size:15px;margin:0 0 10px;}
+
+  .left-col{display:flex;flex-direction:column;gap:16px;}
+  svg{width:100%;height:auto;display:block;}
+  .axis-label{font-size:11px;fill:var(--muted);font-family:"Helvetica Neue",Arial,sans-serif;}
+  .tick-label{font-size:9.5px;fill:var(--muted);font-family:"Helvetica Neue",Arial,sans-serif;}
+  .circuit-label{font-size:13px;fill:var(--ink);font-family:"Helvetica Neue",Arial,sans-serif;}
+  .circuit-value{font-size:12px;fill:var(--maroon);font-weight:700;font-family:"Helvetica Neue",Arial,sans-serif;font-variant-numeric:tabular-nums;}
+  .circuit-muted{font-size:11px;fill:var(--muted);font-family:"Helvetica Neue",Arial,sans-serif;font-style:italic;}
+
+  .right-col{display:flex;flex-direction:column;gap:16px;}
+
+  .ctrl{margin-bottom:16px;}
+  .ctrl:last-child{margin-bottom:0;}
+  .ctrl-label-row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:4px;}
+  .ctrl-name{color:var(--ink);font-weight:500;}
+  .ctrl-value{color:var(--maroon);font-weight:700;font-variant-numeric:tabular-nums;}
+  input[type=range]{width:100%;accent-color:var(--maroon);margin:2px 0;}
+  .ctrl-caption-row{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);}
+
+  .mode-toggle{display:flex;border:1px solid var(--ink);border-radius:4px;overflow:hidden;margin-bottom:14px;}
+  .mode-btn{flex:1;padding:7px 6px;font-size:12px;font-weight:600;font-family:"Helvetica Neue",Arial,sans-serif;text-align:center;background:var(--panel);color:var(--ink);border:none;cursor:pointer;border-right:1px solid var(--ink);}
+  .mode-btn:last-child{border-right:none;}
+  .mode-btn.active{background:var(--ink);color:var(--paper);}
+  .toggle-label{font-size:11px;color:var(--muted);margin:0 0 4px;font-weight:500;}
+
+  .reset-btn{display:block;width:100%;margin-top:4px;padding:8px 10px;font-size:12.5px;font-family:"Helvetica Neue",Arial,sans-serif;font-weight:600;letter-spacing:.02em;color:var(--ink);background:transparent;border:1px solid var(--ink);border-radius:4px;cursor:pointer;transition:background .15s, color .15s;}
+  .reset-btn:hover{background:var(--ink);color:var(--paper);}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+  @media (max-width:620px){.stat-grid{grid-template-columns:1fr 1fr;}}
+  .stat-card{background:var(--paper);border:1px solid var(--grid);border-radius:4px;padding:10px 10px;}
+  .stat-label{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 4px;}
+  .stat-value{font-size:18px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;}
+  .stat-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+  .stat-value.warn{color:var(--low-color);}
+
+  .callout{background:#fbe9c6;border:1px solid #e0be6f;color:#5c4a12;font-size:12px;line-height:1.5;border-radius:4px;padding:8px 12px;margin-top:10px;}
+
+  footer{text-align:center;font-size:11px;color:var(--muted);margin-top:26px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <p class="eyebrow">Week 4 &middot; CE Amplifier &mdash; Small-Signal Analysis</p>
+      <h1>Hybrid-&pi; Small-Signal Gain Explorer</h1>
+    </div>
+    <div class="tag">ELEC2005 &middot; Wk 4</div>
+  </header>
+
+  <p class="intro">
+    Once a BJT is biased at a Q-point, its small-signal behaviour collapses to three numbers:
+    g<sub>m</sub>, r<sub>&pi;</sub>, and r<sub>o</sub>. Drag I<sub>C</sub> and watch the whole
+    hybrid-&pi; model rescale live. Toggle the emitter bypass capacitor to see the classic
+    gain-vs-input-resistance trade-off, and toggle the Early effect to see how much r<sub>o</sub>
+    really matters.
+  </p>
+
+  <div class="grid">
+
+    <div class="left-col">
+      <div class="panel">
+        <p class="panel-title">Hybrid-&pi; small-signal equivalent circuit</p>
+        <svg id="schem" viewBox="0 0 460 300" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+
+      <div class="panel">
+        <p class="panel-title">Q-point swing margin</p>
+        <svg id="swingbar" viewBox="0 0 460 96" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div class="callout" id="infeasibleWarning" style="display:none;">
+          <b>Not a valid bias point:</b> at these I<sub>C</sub>, R<sub>C</sub>, R<sub>E</sub> and
+          V<sub>CC</sub> values the transistor would already be saturated in DC &mdash; there's no
+          room left for V<sub>CE</sub>. Reduce I<sub>C</sub>, R<sub>C</sub> or R<sub>E</sub>, or
+          raise V<sub>CC</sub>.
+        </div>
+      </div>
+
+      <div class="panel">
+        <p class="panel-title">Readout</p>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <p class="stat-label">A<sub>v</sub> (voltage gain)</p>
+            <p class="stat-value" id="statAv">&minus;1.41</p>
+            <p class="stat-sub" id="statAvSub">inverting</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label">R<sub>in</sub> at base</p>
+            <p class="stat-value" id="statRin">336k &Omega;</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label">V<sub>CE,Q</sub></p>
+            <p class="stat-value" id="statVce">7.00 V</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label">Max symmetric swing</p>
+            <p class="stat-value" id="statSwing">&plusmn;6.80 V</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="right-col">
+      <div class="panel">
+        <p class="panel-title">Controls</p>
+
+        <p class="toggle-label">Supply voltage</p>
+        <div class="mode-toggle" id="vccToggle">
+          <button class="mode-btn" data-vcc="5">5V</button>
+          <button class="mode-btn" data-vcc="10">10V</button>
+          <button class="mode-btn active" data-vcc="15">15V</button>
+        </div>
+
+        <p class="toggle-label">Emitter resistor</p>
+        <div class="mode-toggle" id="bypassToggle">
+          <button class="mode-btn active" data-byp="0">Unbypassed</button>
+          <button class="mode-btn" data-byp="1">Bypassed</button>
+        </div>
+
+        <p class="toggle-label">Early effect</p>
+        <div class="mode-toggle" id="earlyToggle">
+          <button class="mode-btn active" data-early="0">Off (r_o = &infin;)</button>
+          <button class="mode-btn" data-early="1">On</button>
+        </div>
+
+        <div class="ctrl">
+          <div class="ctrl-label-row">
+            <span class="ctrl-name">Bias current I<sub>C</sub></span>
+            <span class="ctrl-value"><span id="icVal">1.00</span>&nbsp;mA</span>
+          </div>
+          <input type="range" id="icSlider" min="-4" max="-2" step="0.005" value="-3">
+          <div class="ctrl-caption-row"><span>0.1 mA</span><span>10 mA (log scale)</span></div>
+        </div>
+
+        <div class="ctrl">
+          <div class="ctrl-label-row">
+            <span class="ctrl-name">Collector resistor R<sub>C</sub></span>
+            <span class="ctrl-value"><span id="rcVal">4.7k</span>&nbsp;&Omega;</span>
+          </div>
+          <input type="range" id="rcSlider" min="2" max="4" step="0.005" value="3.672">
+          <div class="ctrl-caption-row"><span>100 &Omega;</span><span>10 k&Omega; (log scale)</span></div>
+        </div>
+
+        <div class="ctrl">
+          <div class="ctrl-label-row">
+            <span class="ctrl-name">Emitter resistor R<sub>E</sub></span>
+            <span class="ctrl-value"><span id="reVal">3.3k</span>&nbsp;&Omega;</span>
+          </div>
+          <input type="range" id="reSlider" min="1" max="4" step="0.005" value="3.519">
+          <div class="ctrl-caption-row"><span>10 &Omega;</span><span>10 k&Omega; (log scale)</span></div>
+        </div>
+
+        <div class="ctrl">
+          <div class="ctrl-label-row">
+            <span class="ctrl-name">Current gain &beta;</span>
+            <span class="ctrl-value"><span id="betaVal">100</span></span>
+          </div>
+          <input type="range" id="betaSlider" min="50" max="300" step="1" value="100">
+          <div class="ctrl-caption-row"><span>50</span><span>300</span></div>
+        </div>
+
+        <div class="ctrl" id="vaCtrl" style="opacity:0.4;">
+          <div class="ctrl-label-row">
+            <span class="ctrl-name">Early voltage V<sub>A</sub></span>
+            <span class="ctrl-value"><span id="vaVal">100</span>&nbsp;V</span>
+          </div>
+          <input type="range" id="vaSlider" min="50" max="300" step="1" value="100" disabled>
+          <div class="ctrl-caption-row"><span>50 V</span><span>300 V</span></div>
+        </div>
+
+        <button class="reset-btn" id="resetBtn">Reset to defaults</button>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>ELEC2005 &middot; Week 4 &mdash; for concept exploration, not assessment.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Physics model (verified in Python before implementation) ----------
+  var VT = 0.025, VCESAT = 0.2;
+
+  function compute(IC, RC, RE_physical, RE_bypassed, beta, VA, earlyOn, VCC){
+    var gm = IC / VT;
+    var rpi = beta / gm;
+    var ro, RC_ro;
+    if (earlyOn){
+      ro = VA / IC;
+      RC_ro = (RC * ro) / (RC + ro);
+    } else {
+      ro = Infinity;
+      RC_ro = RC;
+    }
+    var RE_eff = RE_bypassed ? 0 : RE_physical;
+    var Av = -gm * RC_ro / (1 + gm * RE_eff);
+    var Rin = rpi + (beta + 1) * RE_eff;
+
+    var VCE_Q_ideal = VCC - IC * (RC + RE_physical);
+    var feasible = VCE_Q_ideal > VCESAT;
+    var VCE_Q = Math.max(VCE_Q_ideal, VCESAT);
+    var marginLow = feasible ? VCE_Q - VCESAT : 0;
+    var marginHigh = feasible ? VCC - VCE_Q : 0;
+    var maxSwing = feasible ? Math.min(marginLow, marginHigh) : 0;
+
+    return {gm:gm, rpi:rpi, ro:ro, RC_ro:RC_ro, Av:Av, Rin:Rin,
+            VCE_Q:VCE_Q, feasible:feasible, marginLow:marginLow, marginHigh:marginHigh, maxSwing:maxSwing};
+  }
+
+  var SVGNS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs, children){
+    var e = document.createElementNS(SVGNS, tag);
+    for (var k in attrs){ e.setAttribute(k, attrs[k]); }
+    (children||[]).forEach(function(c){ e.appendChild(c); });
+    return e;
+  }
+  function textEl(x, y, str, cls, extra){
+    var t = el("text", Object.assign({x:x, y:y, class:cls||""}, extra||{}));
+    t.textContent = str;
+    return t;
+  }
+  function txt(nodes, cls, x, y, s, anchor){
+    var t = el("text", {class:cls, x:x, y:y, "text-anchor":anchor||"start"});
+    t.textContent = s;
+    nodes.push(t);
+  }
+  function subText(nodes, cls, x, y, main, sub, anchor){
+    var t = el("text", {class:cls, x:x, y:y, "text-anchor":anchor||"start"});
+    var mainSpan = document.createElementNS(SVGNS,"tspan");
+    mainSpan.textContent = main;
+    var subSpan = document.createElementNS(SVGNS,"tspan");
+    subSpan.textContent = sub;
+    subSpan.setAttribute("dy","3");
+    subSpan.setAttribute("font-size","75%");
+    t.appendChild(mainSpan);
+    t.appendChild(subSpan);
+    nodes.push(t);
+  }
+  function wire(nodes, x1,y1,x2,y2, dash){
+    var attrs = {x1:x1,y1:y1,x2:x2,y2:y2,stroke:"#1a1512","stroke-width":2,"stroke-linecap":"round"};
+    if (dash) attrs["stroke-dasharray"] = dash;
+    nodes.push(el("line",attrs));
+  }
+  function resistorZ(x1,y1,x2,y2,teeth){
+    teeth = teeth || 5;
+    var dx=x2-x1, dy=y2-y1, len=Math.hypot(dx,dy);
+    var ux=dx/len, uy=dy/len, px=-uy, py=ux, amp=7;
+    var path = "M"+x1+","+y1+" ";
+    for (var t=0;t<teeth;t++){
+      var f=(t+0.5)/teeth, cx=x1+dx*f, cy=y1+dy*f, side=(t%2===0)?1:-1;
+      path += "L"+(cx+px*amp*side).toFixed(1)+","+(cy+py*amp*side).toFixed(1)+" ";
+    }
+    path += "L"+x2+","+y2;
+    return path;
+  }
+  function drawGroundDown(nodes, x, y){
+    nodes.push(el("line",{x1:x,y1:y,x2:x,y2:y+16,stroke:"#1a1512","stroke-width":1.6}));
+    [16,10,5].forEach(function(w,k){
+      var gy = y+16+k*6;
+      nodes.push(el("line",{x1:x-w/2,y1:gy,x2:x+w/2,y2:gy,stroke:"#1a1512","stroke-width":1.4}));
+    });
+  }
+  function drawGroundUp(nodes, x, y){
+    // mirrored ground symbol, hatches ABOVE the point y (for the AC-ground / VCC rail at the top)
+    nodes.push(el("line",{x1:x,y1:y,x2:x,y2:y-16,stroke:"#1a1512","stroke-width":1.6}));
+    [16,10,5].forEach(function(w,k){
+      var gy = y-16-k*6;
+      nodes.push(el("line",{x1:x-w/2,y1:gy,x2:x+w/2,y2:gy,stroke:"#1a1512","stroke-width":1.4}));
+    });
+  }
+
+  // ---------- Elements ----------
+  var icSlider = document.getElementById("icSlider");
+  var rcSlider = document.getElementById("rcSlider");
+  var reSlider = document.getElementById("reSlider");
+  var betaSlider = document.getElementById("betaSlider");
+  var vaSlider = document.getElementById("vaSlider");
+  var icVal = document.getElementById("icVal");
+  var rcVal = document.getElementById("rcVal");
+  var reVal = document.getElementById("reVal");
+  var betaVal = document.getElementById("betaVal");
+  var vaVal = document.getElementById("vaVal");
+  var vaCtrl = document.getElementById("vaCtrl");
+  var resetBtn = document.getElementById("resetBtn");
+  var schemSvg = document.getElementById("schem");
+  var swingSvg = document.getElementById("swingbar");
+  var vccToggle = document.getElementById("vccToggle");
+  var bypassToggle = document.getElementById("bypassToggle");
+  var earlyToggle = document.getElementById("earlyToggle");
+  var infeasibleWarning = document.getElementById("infeasibleWarning");
+
+  var currentVCC = 15, currentBypassed = false, currentEarlyOn = false;
+  var DEFAULT_IC_LOG = -3, DEFAULT_RC_LOG = Math.log10(4700), DEFAULT_RE_LOG = Math.log10(3300);
+  var DEFAULT_BETA = 100, DEFAULT_VA = 100;
+
+  function icFromSlider(){ return Math.pow(10, parseFloat(icSlider.value)); }
+  function rcFromSlider(){ return Math.pow(10, parseFloat(rcSlider.value)); }
+  function reFromSlider(){ return Math.pow(10, parseFloat(reSlider.value)); }
+
+  function fmtR(v){
+    if (v >= 1e6) return (v/1e6).toFixed(2).replace(/\.?0+$/,"") + "M";
+    if (v >= 1000) return (v/1000).toFixed(v>=100000?0:2).replace(/\.00$/,"") + "k";
+    return v.toFixed(0);
+  }
+
+  function currentParams(){
+    return {
+      IC: icFromSlider(), RC: rcFromSlider(), RE: reFromSlider(),
+      beta: parseFloat(betaSlider.value), VA: parseFloat(vaSlider.value),
+      bypassed: currentBypassed, earlyOn: currentEarlyOn, VCC: currentVCC
+    };
+  }
+
+  // ---------- Hybrid-pi schematic ----------
+  // Consistent 45px zigzag length for every resistor-like element (matches
+  // R_C/R_E), with wire stubs before/after each symbol so nothing terminates
+  // directly at a junction. r_o placed on the outer edge (right), the
+  // dependent source on the inner side (left, closer to r_pi) -- the
+  // conventional layout. See geometry_v2.py for the verification.
+  var ZZ = 45;
+  var B_x = 100, C_x = 300, dep_x = 270, ro_x = 330;
+  var gnd_top_y = 12, RC_top = 25, RC_bot = RC_top + ZZ;      // 25, 70
+  var C_junction_y = RC_bot + 18;                              // 88
+  var top_B = 70, bot_E = 190;
+  var branch_top = C_junction_y, branch_bot = bot_E;           // 88, 190
+  var mid_y = (branch_top + branch_bot) / 2;                   // 139
+  var ro_sym_top = mid_y - ZZ/2, ro_sym_bot = mid_y + ZZ/2;     // 116.5, 161.5
+  var dep_sym_top = mid_y - 16, dep_sym_bot = mid_y + 16;       // 123, 155
+  var rpi_mid = (top_B + bot_E) / 2;                            // 130
+  var rpi_top = rpi_mid - ZZ/2, rpi_bot = rpi_mid + ZZ/2;       // 107.5, 152.5
+  var RE_top = bot_E + 15, RE_bot = RE_top + ZZ;                // 205, 250
+  var gnd_bot_y = RE_bot + 15;                                  // 265
+
+  function renderSchematic(){
+    while (schemSvg.firstChild) schemSvg.removeChild(schemSvg.firstChild);
+    var nodes = [];
+    var p = currentParams();
+    var r = compute(p.IC, p.RC, p.RE, p.bypassed, p.beta, p.VA, p.earlyOn, p.VCC);
+
+    // --- AC ground at top, R_C down to node C, then a wire stub to the junction ---
+    drawGroundUp(nodes, C_x, gnd_top_y);
+    wire(nodes, C_x, gnd_top_y, C_x, RC_top);
+    nodes.push(el("path",{d:resistorZ(C_x,RC_top,C_x,RC_bot), fill:"none", stroke:"#1a1512","stroke-width":2}));
+    subText(nodes,"circuit-label", C_x+14, (RC_top+RC_bot)/2+4, "R","C","start");
+    txt(nodes,"circuit-value", C_x+14, (RC_top+RC_bot)/2+20, fmtR(p.RC)+"\u03A9", "start");
+    wire(nodes, C_x, RC_bot, C_x, C_junction_y);
+
+    // node C junction + wires out to the dependent-source (inner) and r_o (outer) branches
+    nodes.push(el("circle",{cx:C_x,cy:C_junction_y,r:2.5,fill:"#1a1512"}));
+    txt(nodes,"circuit-label", C_x-10, C_junction_y-6, "C", "end");
+    wire(nodes, C_x, C_junction_y, dep_x, C_junction_y);
+    wire(nodes, C_x, C_junction_y, ro_x, C_junction_y);
+    wire(nodes, dep_x, C_junction_y, dep_x, dep_sym_top);
+    wire(nodes, ro_x, C_junction_y, ro_x, ro_sym_top);
+
+    // r_o branch (OUTER edge) -- or an open circuit if Early effect is off
+    if (p.earlyOn){
+      nodes.push(el("path",{d:resistorZ(ro_x,ro_sym_top,ro_x,ro_sym_bot), fill:"none", stroke:"#1a1512","stroke-width":2}));
+      subText(nodes,"circuit-label", ro_x+14, mid_y+4, "r","o","start");
+      txt(nodes,"circuit-value", ro_x+14, mid_y+20, fmtR(r.ro)+"\u03A9", "start");
+    } else {
+      wire(nodes, ro_x, ro_sym_top, ro_x, ro_sym_bot, "2,4");
+      txt(nodes,"circuit-label", ro_x+14, mid_y+4, "r_o", "start");
+      txt(nodes,"circuit-muted", ro_x+14, mid_y+20, "\u2192 \u221E (open)", "start");
+    }
+    wire(nodes, ro_x, ro_sym_bot, ro_x, branch_bot);
+
+    // dependent-source branch (INNER, closer to r_pi): diamond with arrow,
+    // labeled g_m v_pi. Current i_c = g_m v_pi flows from collector to
+    // emitter through an NPN, so the arrow points DOWN (C at top -> E at bottom).
+    wire(nodes, dep_x, dep_sym_top, dep_x, mid_y-16);
+    wire(nodes, dep_x, mid_y+16, dep_x, dep_sym_bot);
+    wire(nodes, dep_x, dep_sym_bot, dep_x, branch_bot);
+    var dw=13, dh=16;
+    nodes.push(el("polygon",{points:
+      dep_x+","+(mid_y-dh)+" "+(dep_x+dw)+","+mid_y+" "+dep_x+","+(mid_y+dh)+" "+(dep_x-dw)+","+mid_y,
+      fill:"none", stroke:"#1a1512","stroke-width":2}));
+    nodes.push(el("line",{x1:dep_x,y1:mid_y-9,x2:dep_x,y2:mid_y+9,stroke:"#1a1512","stroke-width":1.6}));
+    var awx=dep_x, awy=mid_y+9;
+    nodes.push(el("polygon",{points:awx+","+(awy+6)+" "+(awx-4)+","+(awy-2)+" "+(awx+4)+","+(awy-2), fill:"#1a1512"}));
+    var gmvpi = el("text",{class:"circuit-label", x:dep_x-18, y:mid_y-2, "text-anchor":"end"});
+    function addTspan(parent, str, dy, fontsize){
+      var s = document.createElementNS(SVGNS,"tspan");
+      s.textContent = str;
+      if (dy !== undefined) s.setAttribute("dy", dy);
+      if (fontsize) s.setAttribute("font-size", fontsize);
+      parent.appendChild(s);
+    }
+    addTspan(gmvpi, "g");
+    addTspan(gmvpi, "m", 3, "75%");
+    addTspan(gmvpi, "\u00A0v", -3);
+    addTspan(gmvpi, "\u03C0", 3, "75%");
+    nodes.push(gmvpi);
+    txt(nodes,"circuit-value", dep_x-18, mid_y+14, (r.gm*1e3).toFixed(2)+" mA/V", "end");
+
+    // bottom rail (node E): connects r_pi bottom to the dep-source/r_o bottom
+    wire(nodes, B_x, bot_E, ro_x, bot_E);
+    txt(nodes,"circuit-label", (B_x+dep_x)/2-16, bot_E+16, "E", "end");
+
+    // r_pi branch (B to E), wire stubs top & bottom, 45px zigzag, v_pi polarity marks
+    wire(nodes, 15, top_B, B_x, top_B);
+    nodes.push(el("circle",{cx:15,cy:top_B,r:2.5,fill:"#1a1512"}));
+    txt(nodes,"circuit-label", 8, top_B-8, "B", "start");
+    wire(nodes, B_x, top_B, B_x, rpi_top);
+    nodes.push(el("path",{d:resistorZ(B_x,rpi_top,B_x,rpi_bot), fill:"none", stroke:"#1a1512","stroke-width":2}));
+    wire(nodes, B_x, rpi_bot, B_x, bot_E);
+    subText(nodes,"circuit-label", B_x-14, rpi_mid-4, "r","\u03C0","end");
+    txt(nodes,"circuit-value", B_x-14, rpi_mid+12, fmtR(r.rpi)+"\u03A9", "end");
+    txt(nodes,"circuit-muted", B_x+12, top_B+18, "+", "start");
+    txt(nodes,"circuit-muted", B_x+12, bot_E-10, "\u2212", "start");
+    txt(nodes,"circuit-label", B_x+12, rpi_mid+34, "v_\u03C0", "start");
+
+    // emitter resistor or bypass wire, down to true ground
+    if (p.bypassed){
+      wire(nodes, (B_x+dep_x)/2, bot_E, (B_x+dep_x)/2, gnd_bot_y);
+      txt(nodes,"circuit-muted", (B_x+dep_x)/2+10, (bot_E+gnd_bot_y)/2, "R_E bypassed (AC short)", "start");
+      drawGroundDown(nodes, (B_x+dep_x)/2, gnd_bot_y);
+    } else {
+      var reX = (B_x+dep_x)/2;
+      wire(nodes, reX, bot_E, reX, RE_top);
+      nodes.push(el("path",{d:resistorZ(reX,RE_top,reX,RE_bot), fill:"none", stroke:"#1a1512","stroke-width":2}));
+      subText(nodes,"circuit-label", reX+14, (RE_top+RE_bot)/2+4, "R","E","start");
+      txt(nodes,"circuit-value", reX+14, (RE_top+RE_bot)/2+20, fmtR(p.RE)+"\u03A9", "start");
+      wire(nodes, reX, RE_bot, reX, gnd_bot_y);
+      drawGroundDown(nodes, reX, gnd_bot_y);
+    }
+
+    nodes.forEach(function(n){ schemSvg.appendChild(n); });
+  }
+
+  // ---------- Q-point swing bar ----------
+  function renderSwingBar(){
+    while (swingSvg.firstChild) swingSvg.removeChild(swingSvg.firstChild);
+    var p = currentParams();
+    var r = compute(p.IC, p.RC, p.RE, p.bypassed, p.beta, p.VA, p.earlyOn, p.VCC);
+
+    infeasibleWarning.style.display = r.feasible ? "none" : "block";
+
+    var W = 460, BX0 = 40, BX1 = 420, BY0 = 42, BY1 = 64;
+    function x(v){ return BX0 + (v/p.VCC) * (BX1-BX0); }
+
+    // background bar
+    swingSvg.appendChild(el("rect", {x:BX0,y:BY0,width:BX1-BX0,height:BY1-BY0, fill:"#faf7f2", stroke:"#e4ddd2"}));
+    // saturation zone
+    swingSvg.appendChild(el("rect", {x:x(0),y:BY0,width:x(VCESAT)-x(0),height:BY1-BY0, fill:"#f7e9e7"}));
+
+    if (r.feasible){
+      // achievable symmetric swing band
+      var swLo = r.VCE_Q - r.maxSwing, swHi = r.VCE_Q + r.maxSwing;
+      swingSvg.appendChild(el("rect", {x:x(swLo),y:BY0,width:x(swHi)-x(swLo),height:BY1-BY0, fill:"#e3eef4", opacity:"0.9"}));
+      // Q-point marker
+      swingSvg.appendChild(el("line", {x1:x(r.VCE_Q),x2:x(r.VCE_Q),y1:BY0-6,y2:BY1+6, stroke:"#7a1730","stroke-width":"2.5"}));
+      swingSvg.appendChild(textEl(x(r.VCE_Q), BY0-12, "Q", "circuit-label", {"text-anchor":"middle","fill":"#7a1730","font-weight":"700"}));
+    }
+
+    // border + ticks
+    swingSvg.appendChild(el("rect", {x:BX0,y:BY0,width:BX1-BX0,height:BY1-BY0, fill:"none", stroke:"#1a1512","stroke-width":"1.2"}));
+    [0, VCESAT, p.VCC].forEach(function(v){
+      var xx = x(v);
+      swingSvg.appendChild(el("line",{x1:xx,x2:xx,y1:BY1,y2:BY1+6,stroke:"#1a1512","stroke-width":"1"}));
+    });
+    swingSvg.appendChild(textEl(x(0), BY1+20, "0V", "tick-label", {"text-anchor":"start"}));
+    swingSvg.appendChild(textEl(x(p.VCC), BY1+20, "V_CC="+p.VCC.toFixed(0)+"V", "tick-label", {"text-anchor":"end"}));
+
+    swingSvg.appendChild(textEl(BX0, BY0-30, "\u25A0 saturation", "tick-label", {"fill":"#a3372c"}));
+    swingSvg.appendChild(textEl(BX0+100, BY0-30, "\u25A0 achievable symmetric swing", "tick-label", {"fill":"#1c5f7a"}));
+  }
+
+  // ---------- Readout ----------
+  function renderStats(){
+    var p = currentParams();
+    var r = compute(p.IC, p.RC, p.RE, p.bypassed, p.beta, p.VA, p.earlyOn, p.VCC);
+
+    document.getElementById("statAv").textContent = (r.Av<0?"\u2212":"") + Math.abs(r.Av).toFixed(Math.abs(r.Av)<10?2:1);
+    document.getElementById("statAvSub").textContent = r.Av < 0 ? "inverting" : "non-inverting";
+    document.getElementById("statRin").textContent = fmtR(r.Rin) + " \u03A9";
+
+    var vceEl = document.getElementById("statVce");
+    vceEl.textContent = r.VCE_Q.toFixed(2) + " V";
+    vceEl.className = "stat-value" + (r.feasible ? "" : " warn");
+
+    var swingEl = document.getElementById("statSwing");
+    swingEl.textContent = r.feasible ? ("\u00B1" + r.maxSwing.toFixed(2) + " V") : "\u2014";
+  }
+
+  function renderAll(){
+    icVal.textContent = (icFromSlider()*1e3).toFixed(2);
+    rcVal.textContent = fmtR(rcFromSlider());
+    reVal.textContent = fmtR(reFromSlider());
+    betaVal.textContent = betaSlider.value;
+    vaVal.textContent = vaSlider.value;
+    renderSchematic();
+    renderSwingBar();
+    renderStats();
+  }
+
+  [icSlider, rcSlider, reSlider, betaSlider, vaSlider].forEach(function(s){
+    s.addEventListener("input", renderAll);
+  });
+
+  function wireToggle(toggleEl, attr, onSelect){
+    toggleEl.addEventListener("click", function(e){
+      var btn = e.target.closest(".mode-btn");
+      if (!btn) return;
+      Array.prototype.forEach.call(toggleEl.querySelectorAll(".mode-btn"), function(b){
+        b.classList.toggle("active", b === btn);
+      });
+      onSelect(btn.getAttribute(attr));
+      renderAll();
+    });
+  }
+
+  wireToggle(vccToggle, "data-vcc", function(v){ currentVCC = parseFloat(v); });
+  wireToggle(bypassToggle, "data-byp", function(v){ currentBypassed = (v === "1"); });
+  wireToggle(earlyToggle, "data-early", function(v){
+    currentEarlyOn = (v === "1");
+    vaSlider.disabled = !currentEarlyOn;
+    vaCtrl.style.opacity = currentEarlyOn ? "1" : "0.4";
+  });
+
+  resetBtn.addEventListener("click", function(){
+    currentVCC = 15; currentBypassed = false; currentEarlyOn = false;
+    Array.prototype.forEach.call(vccToggle.querySelectorAll(".mode-btn"), function(b){
+      b.classList.toggle("active", b.getAttribute("data-vcc") === "15");
+    });
+    Array.prototype.forEach.call(bypassToggle.querySelectorAll(".mode-btn"), function(b){
+      b.classList.toggle("active", b.getAttribute("data-byp") === "0");
+    });
+    Array.prototype.forEach.call(earlyToggle.querySelectorAll(".mode-btn"), function(b){
+      b.classList.toggle("active", b.getAttribute("data-early") === "0");
+    });
+    vaSlider.disabled = true;
+    vaCtrl.style.opacity = "0.4";
+    icSlider.value = DEFAULT_IC_LOG;
+    rcSlider.value = DEFAULT_RC_LOG;
+    reSlider.value = DEFAULT_RE_LOG;
+    betaSlider.value = DEFAULT_BETA;
+    vaSlider.value = DEFAULT_VA;
+    renderAll();
+  });
+
+  // set precise defaults on load
+  icSlider.value = DEFAULT_IC_LOG;
+  rcSlider.value = DEFAULT_RC_LOG;
+  reSlider.value = DEFAULT_RE_LOG;
+  betaSlider.value = DEFAULT_BETA;
+  vaSlider.value = DEFAULT_VA;
+  renderAll();
+})();
+</script>
+</body>
+</html>
