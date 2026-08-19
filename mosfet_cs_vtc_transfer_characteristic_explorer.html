@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MOSFET Common-Source VTC &amp; Load-Line Explorer — ELEC2005</title>
+<style>
+  :root{
+    --ink:#1a1512;
+    --paper:#faf7f2;
+    --panel:#ffffff;
+    --maroon:#7a1730;
+    --muted:#6b6156;
+    --grid:#e4ddd2;
+    --focus:#1c5f7a;
+    --mustard:#c98a2c;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:#e6e6e4;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:960px;margin:0 auto;padding:24px 20px 40px;}
+  header{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:1px solid var(--grid);
+    padding-bottom:14px;margin-bottom:14px;
+    flex-wrap:wrap;gap:10px;
+  }
+  .eyebrow{
+    font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--maroon);font-weight:700;margin-bottom:4px;
+  }
+  h1{
+    font-family:"Iowan Old Style","Georgia",serif;
+    font-weight:700;letter-spacing:-.01em;
+    font-size:26px;margin:0;
+  }
+  .tag{
+    font-size:12px;color:var(--muted);white-space:nowrap;
+  }
+  .intro{
+    font-size:14px;line-height:1.5;color:var(--muted);margin:0 0 18px;max-width:72ch;
+  }
+  .callout{
+    background:#fbe9c6;border:1px solid #e0be6f;color:#5c4a12;
+    border-radius:4px;padding:10px 14px;font-size:13px;line-height:1.5;
+    margin-bottom:18px;
+  }
+  .grid{
+    display:grid;grid-template-columns:1.35fr 1fr;gap:18px;
+  }
+  @media (max-width:800px){
+    .grid{grid-template-columns:1fr;}
+  }
+  .panel{
+    background:var(--panel);border:1px solid var(--grid);border-radius:4px;padding:16px;
+  }
+  .panel + .panel{margin-top:18px;}
+  .panel h2{
+    font-family:"Iowan Old Style","Georgia",serif;
+    font-size:15px;margin:0 0 10px;font-weight:700;
+  }
+  .section-label{
+    font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--maroon);
+    font-weight:700;margin:0 0 8px;
+  }
+  svg{display:block;width:100%;height:auto;}
+  .axis-label{font-size:12px;fill:var(--ink);font-family:"Helvetica Neue",Arial,sans-serif;}
+  .tick-label{font-size:10.5px;fill:var(--muted);font-family:"Helvetica Neue",Arial,sans-serif;}
+  .region-label{font-size:10.5px;fill:var(--muted);font-family:"Helvetica Neue",Arial,sans-serif;letter-spacing:.02em;}
+  .curve{fill:none;stroke:var(--maroon);stroke-width:2.5;}
+  .loadline{fill:none;stroke:var(--focus);stroke-width:1.6;stroke-dasharray:5 4;}
+  .gridline{stroke:var(--grid);stroke-width:1;}
+  .axisline{stroke:var(--ink);stroke-width:1.2;}
+  .qdot{fill:var(--maroon);stroke:#fff;stroke-width:1.5;}
+  .abc-dot{fill:var(--focus);stroke:#fff;stroke-width:1.2;}
+  .abc-text{font-size:11px;fill:var(--focus);font-weight:700;font-family:"Helvetica Neue",Arial,sans-serif;}
+
+  .controls label{
+    display:block;font-size:12px;color:var(--ink);margin-bottom:2px;
+  }
+  .slider-row{margin-bottom:14px;}
+  .slider-top{
+    display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;
+  }
+  .slider-name{font-size:12.5px;color:var(--ink);}
+  .slider-val{
+    font-size:13px;font-weight:700;color:var(--maroon);
+    font-variant-numeric:tabular-nums;
+  }
+  input[type=range]{
+    width:100%;accent-color:var(--maroon);
+  }
+  .minmax{
+    display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);
+    margin-top:2px;
+  }
+  .reset-btn{
+    display:block;width:100%;margin-top:6px;
+    padding:8px 10px;font-size:12.5px;font-family:"Helvetica Neue",Arial,sans-serif;
+    border:1px solid var(--ink);background:transparent;color:var(--ink);
+    border-radius:4px;cursor:pointer;
+  }
+  .reset-btn:hover{background:var(--ink);color:#fff;}
+
+  .stat-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;
+  }
+  .stat{
+    background:var(--paper);border:1px solid var(--grid);border-radius:4px;
+    padding:8px 10px;
+  }
+  .stat-label{
+    font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+    margin-bottom:3px;
+  }
+  .stat-value{
+    font-size:17px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;
+  }
+  .stat-value.region-cutoff{color:var(--muted);}
+  .stat-value.region-saturation{color:#2f7d4f;}
+  .stat-value.region-triode{color:var(--maroon);}
+
+  .mode-note{
+    font-size:12px;color:var(--muted);line-height:1.5;margin-top:12px;
+  }
+  .legend{
+    display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px;
+  }
+  .legend span{display:inline-flex;align-items:center;gap:5px;}
+  .swatch{width:14px;height:3px;display:inline-block;border-radius:2px;}
+
+  footer{
+    text-align:center;font-size:11px;color:var(--muted);margin-top:28px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">ELEC2005 — Week 6 companion</div>
+      <h1>MOSFET Common-Source VTC &amp; Load-Line Explorer</h1>
+    </div>
+    <div class="tag">MOSFET amplifiers · Lecture 6</div>
+  </header>
+
+  <p class="intro">
+    Drag the V<sub>GS</sub> slider to move the Q point along the voltage transfer characteristic
+    of a common-source amplifier. Watch how the operating point crosses from cutoff, through the
+    steep saturation region (good for amplification), and into triode (useful as a switch).
+  </p>
+
+  <div class="grid">
+    <div>
+      <div class="panel">
+        <div class="section-label">Voltage transfer characteristic</div>
+        <svg id="vtcSvg" viewBox="0 0 480 380" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div class="legend">
+          <span><span class="swatch" style="background:var(--maroon)"></span> V<sub>DS</sub> vs V<sub>GS</sub> (VTC)</span>
+          <span><span class="swatch" style="background:var(--focus)"></span> A / B / C boundary points</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="section-label">Circuit</div>
+        <svg id="circuitSvg" viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel controls">
+        <h2>Controls</h2>
+
+        <div class="slider-row">
+          <div class="slider-top">
+            <span class="slider-name">V<sub>GS</sub> (Q point)</span>
+            <span class="slider-val" id="valVGS">—</span>
+          </div>
+          <input type="range" id="sVGS" min="0" max="6" step="0.01">
+          <div class="minmax"><span>0 V</span><span>6 V</span></div>
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-top">
+            <span class="slider-name">V<sub>DD</sub></span>
+            <span class="slider-val" id="valVDD">—</span>
+          </div>
+          <input type="range" id="sVDD" min="2" max="6" step="0.1">
+          <div class="minmax"><span>2 V</span><span>6 V</span></div>
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-top">
+            <span class="slider-name">R<sub>D</sub></span>
+            <span class="slider-val" id="valRD">—</span>
+          </div>
+          <input type="range" id="sRDlog" min="-1" max="1" step="0.01">
+          <div class="minmax"><span>0.1 kΩ</span><span>10 kΩ</span></div>
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-top">
+            <span class="slider-name">V<sub>t</sub> (threshold)</span>
+            <span class="slider-val" id="valVt">—</span>
+          </div>
+          <input type="range" id="sVt" min="0.3" max="2" step="0.01">
+          <div class="minmax"><span>0.3 V</span><span>2 V</span></div>
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-top">
+            <span class="slider-name">k<sub>n</sub> (= k'<sub>n</sub>·W/L)</span>
+            <span class="slider-val" id="valKn">—</span>
+          </div>
+          <input type="range" id="sKnlog" min="-1" max="1" step="0.01">
+          <div class="minmax"><span>0.2 mA/V²</span><span>20 mA/V²</span></div>
+        </div>
+
+        <button class="reset-btn" id="resetBtn">Reset to defaults</button>
+      </div>
+
+      <div class="panel">
+        <h2>Operating point</h2>
+        <div class="stat-grid">
+          <div class="stat">
+            <div class="stat-label">Region</div>
+            <div class="stat-value" id="statRegion">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">V<sub>OV</sub></div>
+            <div class="stat-value" id="statVOV">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">I<sub>D</sub></div>
+            <div class="stat-value" id="statID">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">V<sub>DS</sub></div>
+            <div class="stat-value" id="statVDS">—</div>
+          </div>
+        </div>
+        <p class="mode-note">
+          <strong>A</strong>: V<sub>GS</sub> = V<sub>t</sub> — max V<sub>DS</sub>, no current.
+          <strong>B</strong>: saturation/triode boundary (V<sub>DS</sub> = V<sub>OV</sub>).
+          <strong>C</strong>: deep triode, V<sub>GS</sub> = V<sub>DD</sub>.
+          Use A→B as an amplifier; A→C as a switch.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <footer>ELEC2005 — Week 6 — for concept exploration, not assessment.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  function solveOP(VDD, RD, Vt, kn, VGS) {
+    if (VGS <= Vt) return { ID: 0, VDS: VDD, region: "cutoff" };
+    const VOV = VGS - Vt;
+    const ID_sat = 0.5 * kn * VOV * VOV;
+    const VDS_sat = VDD - ID_sat * RD;
+    if (VDS_sat >= VOV) return { ID: ID_sat, VDS: VDS_sat, region: "saturation" };
+    const a = 0.5 * RD * kn;
+    const b = -(1 + RD * kn * VOV);
+    const c = VDD;
+    let disc = b * b - 4 * a * c;
+    if (disc < 0) disc = 0;
+    const r1 = (-b + Math.sqrt(disc)) / (2 * a);
+    const r2 = (-b - Math.sqrt(disc)) / (2 * a);
+    const cands = [r1, r2].filter(r => r >= -1e-9 && r <= VOV + 1e-9);
+    let VDS = cands.length ? Math.min(...cands) : Math.min(r1, r2);
+    VDS = Math.max(VDS, 0);
+    const ID = kn * (VOV * VDS - 0.5 * VDS * VDS);
+    return { ID, VDS, region: "triode" };
+  }
+
+  // fixed axis domain (both axes 0..6 V, matching VGS slider max and VDD slider max)
+  const AXIS_MAX = 6;
+  const W = 480, H = 380;
+  const M = { l: 52, r: 16, t: 16, b: 42 };
+  const plotW = W - M.l - M.r;
+  const plotH = H - M.t - M.b;
+
+  function xPix(vgs){ return M.l + (vgs / AXIS_MAX) * plotW; }
+  function yPix(vds){ return M.t + (1 - vds / AXIS_MAX) * plotH; }
+
+  const svgNS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs, parent){
+    const e = document.createElementNS(svgNS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+
+  const vtcSvg = document.getElementById("vtcSvg");
+  const circuitSvg = document.getElementById("circuitSvg");
+
+  const sVGS = document.getElementById("sVGS");
+  const sVDD = document.getElementById("sVDD");
+  const sRDlog = document.getElementById("sRDlog");
+  const sVt = document.getElementById("sVt");
+  const sKnlog = document.getElementById("sKnlog");
+  const resetBtn = document.getElementById("resetBtn");
+
+  const valVGS = document.getElementById("valVGS");
+  const valVDD = document.getElementById("valVDD");
+  const valRD = document.getElementById("valRD");
+  const valVt = document.getElementById("valVt");
+  const valKn = document.getElementById("valKn");
+
+  const statRegion = document.getElementById("statRegion");
+  const statVOV = document.getElementById("statVOV");
+  const statID = document.getElementById("statID");
+  const statVDS = document.getElementById("statVDS");
+
+  const DEFAULTS = { VDD:5, RDlog:Math.log10(2), Vt:1, Knlog:Math.log10(2), VGS:2.0 };
+
+  function setDefaults(){
+    sVDD.value = DEFAULTS.VDD;
+    sRDlog.value = DEFAULTS.RDlog;
+    sVt.value = DEFAULTS.Vt;
+    sKnlog.value = DEFAULTS.Knlog;
+    sVGS.value = DEFAULTS.VGS;
+  }
+  setDefaults();
+
+  function fmt(v, d){ return v.toFixed(d); }
+
+  // ---- static VTC axes: built once, never rebuilt on drag ----
+  function drawStaticAxes(){
+    for (let v = 0; v <= AXIS_MAX; v += 1){
+      el("line", {x1:xPix(v), y1:M.t, x2:xPix(v), y2:M.t+plotH, class:"gridline"}, vtcSvg);
+      el("line", {x1:M.l, y1:yPix(v), x2:M.l+plotW, y2:yPix(v), class:"gridline"}, vtcSvg);
+      el("text", {x:xPix(v), y:M.t+plotH+16, class:"tick-label", "text-anchor":"middle"}, vtcSvg).textContent = v;
+      el("text", {x:M.l-8, y:yPix(v)+4, class:"tick-label", "text-anchor":"end"}, vtcSvg).textContent = v;
+    }
+    el("line", {x1:M.l, y1:M.t, x2:M.l, y2:M.t+plotH, class:"axisline"}, vtcSvg);
+    el("line", {x1:M.l, y1:M.t+plotH, x2:M.l+plotW, y2:M.t+plotH, class:"axisline"}, vtcSvg);
+    el("text", {x:M.l+plotW/2, y:H-4, class:"axis-label", "text-anchor":"middle"}, vtcSvg).textContent = "VGS (V)";
+    el("text", {x:14, y:M.t+plotH/2, class:"axis-label", "text-anchor":"middle",
+      transform:`rotate(-90 14 ${M.t+plotH/2})`}, vtcSvg).textContent = "VDS (V)";
+  }
+  drawStaticAxes();
+  const dynLayer = el("g", {id:"curveLayer"}, vtcSvg);
+
+  // ---- draw the MOSFET symbol (canonical ELEC2005 house style) ----
+  // cx: channel x-position. drainConnY/sourceConnY: where the D/S leads meet the channel.
+  // gateWireEndX: x where the incoming gate wire stops.
+  function drawMosfet(s, cx, drainConnY, sourceConnY, gateWireEndX){
+    const OVERHANG = 8;     // channel bar extends ~8px past D/S connection points
+    const GATE_GAP = 6;     // small insulating gap between gate plate and channel
+    const GATE_LEN = 26;    // length of the short vertical gate plate
+    const chTop = drainConnY - OVERHANG;
+    const chBot = sourceConnY + OVERHANG;
+    const gateY = (drainConnY + sourceConnY) / 2;
+
+    // single solid vertical channel bar
+    el("line", {x1:cx, y1:chTop, x2:cx, y2:chBot, stroke:"var(--ink)", "stroke-width":2.6, "stroke-linecap":"round"}, s);
+
+    // gate: a short vertical plate parallel to the channel, separated by a small gap
+    const gateX = cx - GATE_GAP;
+    const gTop = gateY - GATE_LEN/2, gBot = gateY + GATE_LEN/2;
+    el("line", {x1:gateX, y1:gTop, x2:gateX, y2:gBot, stroke:"var(--ink)", "stroke-width":1.8}, s);
+    // gate wire running in from the input source, meeting the plate
+    el("line", {x1:gateWireEndX, y1:gateY, x2:gateX, y2:gateY, class:"axisline"}, s);
+    // G label, clear of the gate wire (above the plate)
+    el("text", {x:gateX-2, y:gTop-9, class:"axis-label", "text-anchor":"end", "font-weight":"700"}, s).textContent = "G";
+
+    return { gateY, chTop, chBot };
+  }
+
+  function render(){
+    const VDD = parseFloat(sVDD.value);
+    const RD = Math.pow(10, parseFloat(sRDlog.value));
+    const Vt = parseFloat(sVt.value);
+    const kn = Math.pow(10, parseFloat(sKnlog.value));
+    const VGS = Math.min(parseFloat(sVGS.value), AXIS_MAX);
+
+    valVDD.textContent = fmt(VDD,1) + " V";
+    valRD.textContent = fmt(RD,2) + " kΩ";
+    valVt.textContent = fmt(Vt,2) + " V";
+    valKn.textContent = fmt(kn,2) + " mA/V²";
+    valVGS.textContent = fmt(VGS,2) + " V";
+
+    dynLayer.textContent = "";
+    const g = dynLayer;
+
+    // sample VTC curve
+    const N = 220;
+    let pts = [];
+    for (let i=0;i<=N;i++){
+      const vgs = (i/N)*AXIS_MAX;
+      const r = solveOP(VDD, RD, Vt, kn, vgs);
+      pts.push([vgs, Math.min(r.VDS, AXIS_MAX)]);
+    }
+    const d = pts.map((p,i)=> (i===0?"M":"L") + xPix(p[0]).toFixed(2) + " " + yPix(p[1]).toFixed(2)).join(" ");
+    el("path", {d, class:"curve"}, g);
+
+    // A point: VGS = Vt
+    const aX = xPix(Math.min(Vt,AXIS_MAX)), aY = yPix(VDD);
+    el("circle", {cx:aX, cy:aY, r:4, class:"abc-dot"}, g);
+    el("text", {x:aX+6, y:aY-6, class:"abc-text"}, g).textContent = "A";
+
+    // B point: saturation/triode boundary -> find VOV_b via quadratic 0.5*kn*RD*VOV^2 + VOV - VDD = 0
+    const a_ = 0.5*kn*RD, b_ = 1, c_ = -VDD;
+    const discB = b_*b_ - 4*a_*c_;
+    let VOVb = null;
+    if (discB >= 0){
+      const root = (-b_ + Math.sqrt(discB)) / (2*a_);
+      if (root > 0) VOVb = root;
+    }
+    if (VOVb !== null){
+      const vgsB = Vt + VOVb;
+      const rB = solveOP(VDD, RD, Vt, kn, vgsB);
+      if (vgsB <= AXIS_MAX){
+        const bX = xPix(vgsB), bY = yPix(Math.min(rB.VDS,AXIS_MAX));
+        el("circle", {cx:bX, cy:bY, r:4, class:"abc-dot"}, g);
+        el("text", {x:bX+6, y:bY-6, class:"abc-text"}, g).textContent = "B";
+      }
+    }
+
+    // C point: VGS = VDD (deep triode reference, matches Sedra convention)
+    if (VDD <= AXIS_MAX){
+      const rC = solveOP(VDD, RD, Vt, kn, VDD);
+      const cX = xPix(VDD), cY = yPix(Math.min(rC.VDS,AXIS_MAX));
+      el("circle", {cx:cX, cy:cY, r:4, class:"abc-dot"}, g);
+      el("text", {x:cX+6, y:cY+14, class:"abc-text"}, g).textContent = "C";
+    }
+
+    // Q point
+    const opQ = solveOP(VDD, RD, Vt, kn, VGS);
+    const qVDS = Math.min(opQ.VDS, AXIS_MAX);
+    const qX = xPix(VGS), qY = yPix(qVDS);
+    el("circle", {cx:qX, cy:qY, r:5.5, class:"qdot"}, g);
+    el("text", {x:qX+8, y:qY-8, class:"abc-text", fill:"var(--maroon)", stroke:"none"}, g).textContent = "Q";
+
+    // region-band text (top of plot)
+    el("text", {x:M.l+6, y:M.t+12, class:"region-label"}, g).textContent = "Cutoff";
+    if (VOVb !== null && Vt+VOVb < AXIS_MAX){
+      const satMidX = (xPix(Vt) + xPix(Vt+VOVb))/2;
+      el("text", {x:satMidX, y:M.t+12, class:"region-label", "text-anchor":"middle"}, g).textContent = "Saturation";
+      const triMidX = (xPix(Vt+VOVb) + xPix(AXIS_MAX))/2;
+      el("text", {x:triMidX, y:M.t+12, class:"region-label", "text-anchor":"middle"}, g).textContent = "Triode";
+    }
+
+    // stats
+    statRegion.textContent = opQ.region.charAt(0).toUpperCase()+opQ.region.slice(1);
+    statRegion.className = "stat-value region-" + opQ.region;
+    statVOV.textContent = (VGS > Vt) ? fmt(VGS-Vt,3) + " V" : "—";
+    statID.textContent = fmt(opQ.ID,3) + " mA";
+    statVDS.textContent = fmt(opQ.VDS,3) + " V";
+
+    drawCircuit(VDD, RD, VGS, opQ);
+  }
+
+  function drawCircuit(VDD, RD, VGS, op){
+    circuitSvg.textContent = "";
+    const s = circuitSvg;
+    const x0 = 50, yTop = 20, xRail = 230;
+
+    // VDD rail + label
+    el("line", {x1:xRail, y1:yTop, x2:xRail, y2:yTop+22, class:"axisline"}, s);
+    el("line", {x1:xRail-10, y1:yTop, x2:xRail+10, y2:yTop, class:"axisline"}, s);
+    el("text", {x:xRail+14, y:yTop+5, class:"axis-label"}, s).textContent = "VDD = " + fmt(VDD,1) + " V";
+
+    // resistor RD (zigzag) from rail down to drain node
+    const rdTop = yTop+22, rdBot = rdTop+56, rdX = xRail;
+    let zig = `M ${rdX} ${rdTop}`;
+    const teeth = 6, dx=9;
+    for (let i=0;i<teeth;i++){
+      const yy = rdTop + (i+1)*((rdBot-rdTop)/(teeth+1));
+      zig += ` L ${rdX + (i%2===0?dx:-dx)} ${yy}`;
+    }
+    zig += ` L ${rdX} ${rdBot}`;
+    el("path", {d:zig, class:"axisline", fill:"none"}, s);
+    el("text", {x:rdX+16, y:(rdTop+rdBot)/2+4, class:"axis-label"}, s).textContent = "RD = " + fmt(RD,2) + " kΩ";
+
+    // drain node -> output
+    const drainY = rdBot+16;
+    el("line", {x1:rdX, y1:rdBot, x2:rdX, y2:drainY, class:"axisline"}, s);
+    el("circle", {cx:rdX, cy:drainY, r:2.5, fill:"var(--ink)"}, s);
+    el("line", {x1:rdX, y1:drainY, x2:rdX+55, y2:drainY, class:"axisline"}, s);
+    el("circle", {cx:rdX+58, cy:drainY, r:2.5, fill:"none", stroke:"var(--ink)"}, s);
+    el("text", {x:rdX+64, y:drainY+4, class:"axis-label", fill:"var(--focus)"}, s).textContent =
+      "VDS = " + fmt(op.VDS,2) + " V";
+
+    // D lead from drain node down to the channel connection point
+    const drainConnY = drainY + 26;
+    el("line", {x1:rdX, y1:drainY, x2:rdX, y2:drainConnY, class:"axisline"}, s);
+
+    // S lead from channel connection point down to ground
+    const sourceConnY = drainConnY + 46;
+    el("line", {x1:rdX, y1:sourceConnY, x2:rdX, y2:sourceConnY+26, class:"axisline"}, s);
+    const gy = sourceConnY+26;
+    groundHatch(s, rdX, gy);
+
+    // MOSFET symbol (canonical: solid channel bar, short gate plate, 8px overhang)
+    const chX = rdX - 26;
+    el("line", {x1:rdX, y1:drainConnY, x2:chX, y2:drainConnY, class:"axisline"}, s);
+    el("line", {x1:rdX, y1:sourceConnY, x2:chX, y2:sourceConnY, class:"axisline"}, s);
+    // D/S labels close to the symbol (channel end of the leads)
+    el("text", {x:chX+6, y:drainConnY-11, class:"axis-label"}, s).textContent = "D";
+    el("text", {x:chX+6, y:sourceConnY+13, class:"axis-label"}, s).textContent = "S";
+
+    // source-lead arrow: right-hand portion of the S lead, clear of the S label, pointing outward
+    el("path", {d:`M ${chX+15} ${sourceConnY-5} L ${chX+24} ${sourceConnY} L ${chX+15} ${sourceConnY+5}`,
+      fill:"none", stroke:"var(--ink)", "stroke-width":1.5, "stroke-linejoin":"round"}, s);
+
+    const gateWireEndX = x0+30;
+    const { gateY } = drawMosfet(s, chX, drainConnY, sourceConnY, gateWireEndX);
+
+    // gate input (DC) source: circle in series between the gate wire and ground,
+    // "+" terminal on top (wired to the gate), "−" terminal on bottom (wired to ground)
+    const srcR = 13;
+    const srcTopY = gateY + 8;
+    const srcCy = srcTopY + srcR;
+    const srcBotY = srcCy + srcR;
+    el("line", {x1:gateWireEndX, y1:gateY, x2:gateWireEndX, y2:srcTopY, class:"axisline"}, s);
+    el("circle", {cx:gateWireEndX, cy:srcCy, r:srcR, fill:"none", stroke:"var(--ink)", "stroke-width":1.4}, s);
+    el("text", {x:gateWireEndX, y:srcTopY+11, "text-anchor":"middle", class:"axis-label"}, s).textContent = "+";
+    el("text", {x:gateWireEndX, y:srcBotY-5, "text-anchor":"middle", class:"axis-label"}, s).textContent = "\u2212";
+    el("line", {x1:gateWireEndX, y1:srcBotY, x2:gateWireEndX, y2:gy, class:"axisline"}, s);
+    groundHatch(s, gateWireEndX, gy);
+    el("text", {x:gateWireEndX, y:srcTopY-10, class:"axis-label", fill:"var(--maroon)", "text-anchor":"middle"}, s).textContent =
+      "VGS = " + fmt(VGS,2) + " V";
+  }
+
+  function groundHatch(s, x, y){
+    el("line", {x1:x-10, y1:y, x2:x+10, y2:y, class:"axisline"}, s);
+    el("line", {x1:x-6, y1:y+5, x2:x+6, y2:y+5, class:"axisline"}, s);
+    el("line", {x1:x-2, y1:y+10, x2:x+2, y2:y+10, class:"axisline"}, s);
+  }
+
+  let rafPending = false;
+  function scheduleRender(){
+    if (rafPending) return;
+    rafPending = true;
+    requestAnimationFrame(() => { rafPending = false; render(); });
+  }
+
+  [sVGS, sVDD, sRDlog, sVt, sKnlog].forEach(inp => inp.addEventListener("input", scheduleRender));
+  resetBtn.addEventListener("click", () => { setDefaults(); render(); });
+
+  render();
+})();
+</script>
+</body>
+</html>
