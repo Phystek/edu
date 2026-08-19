@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MOSFET Feedback-Bias Amplifier Solver — ELEC2005</title>
+<style>
+  :root{
+    --ink:#1a1512; --paper:#faf7f2; --panel:#ffffff; --maroon:#7a1730;
+    --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a; --mustard:#c98a2c;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:#e6e6e4;font-family:"Helvetica Neue",Arial,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:960px;margin:0 auto;padding:24px 20px 40px;}
+  header{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1px solid var(--grid);padding-bottom:14px;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
+  .eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin-bottom:4px;}
+  h1{font-family:"Iowan Old Style","Georgia",serif;font-weight:700;letter-spacing:-.01em;font-size:23px;margin:0;}
+  .tag{font-size:12px;color:var(--muted);white-space:nowrap;}
+  .intro{font-size:14px;line-height:1.5;color:var(--muted);margin:0 0 18px;max-width:72ch;}
+  .grid{display:grid;grid-template-columns:1.35fr 1fr;gap:18px;}
+  @media (max-width:800px){.grid{grid-template-columns:1fr;}}
+  .panel{background:var(--panel);border:1px solid var(--grid);border-radius:4px;padding:16px;}
+  .panel + .panel{margin-top:18px;}
+  .panel h2{font-family:"Iowan Old Style","Georgia",serif;font-size:15px;margin:0 0 10px;font-weight:700;}
+  .section-label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin:0 0 8px;}
+  svg{display:block;width:100%;height:auto;}
+  .axis-label{font-size:12px;fill:var(--ink);font-family:"Helvetica Neue",Arial,sans-serif;}
+  .axisline{stroke:var(--ink);stroke-width:1.2;fill:none;}
+
+  .controls-group-label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:14px 0 8px;border-top:1px solid var(--grid);padding-top:12px;}
+  .controls-group-label:first-child{border-top:none;padding-top:0;margin-top:0;}
+  .slider-row{margin-bottom:14px;}
+  .slider-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;}
+  .slider-name{font-size:12.5px;color:var(--ink);}
+  .slider-val{font-size:13px;font-weight:700;color:var(--maroon);font-variant-numeric:tabular-nums;}
+  input[type=range]{width:100%;accent-color:var(--maroon);}
+  .minmax{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-top:2px;}
+  .reset-btn{display:block;width:100%;margin-top:6px;padding:8px 10px;font-size:12.5px;font-family:"Helvetica Neue",Arial,sans-serif;border:1px solid var(--ink);background:transparent;color:var(--ink);border-radius:4px;cursor:pointer;}
+  .reset-btn:hover{background:var(--ink);color:#fff;}
+
+  .step{margin-bottom:14px;}
+  .step-title{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin-bottom:6px;}
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .stat{background:var(--paper);border:1px solid var(--grid);border-radius:4px;padding:8px 10px;}
+  .stat-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+  .stat-value{font-size:15px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;}
+  .stat-value.hi{color:var(--maroon);font-size:17px;}
+
+  footer{text-align:center;font-size:11px;color:var(--muted);margin-top:28px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">ELEC2005 — Week 6 companion</div>
+      <h1>MOSFET Feedback-Bias Amplifier Solver</h1>
+    </div>
+    <div class="tag">MOSFET amplifiers · Lecture 6</div>
+  </header>
+
+  <p class="intro">
+    A common-source amplifier biased through a drain-to-gate resistor R<sub>G</sub>. Since the gate
+    draws no current, V<sub>GS</sub> = V<sub>DS</sub> exactly — adjust the circuit and device values
+    below and watch every step of the DC bias and small-signal solution update together.
+  </p>
+
+  <div class="grid">
+    <div>
+      <div class="panel">
+        <div class="section-label">Circuit</div>
+        <svg id="circuitSvg" viewBox="0 0 580 370" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+
+      <div class="panel">
+        <div class="section-label">Step-by-step solution</div>
+
+        <div class="step">
+          <div class="step-title">Step 1 — DC operating point (VGS = VDS, since IG = 0)</div>
+          <div class="stat-grid">
+            <div class="stat"><div class="stat-label">V<sub>OV</sub></div><div class="stat-value" id="statVOV">—</div></div>
+            <div class="stat"><div class="stat-label">I<sub>D</sub></div><div class="stat-value" id="statID">—</div></div>
+            <div class="stat"><div class="stat-label">V<sub>GS</sub> = V<sub>DS</sub></div><div class="stat-value" id="statVGS">—</div></div>
+            <div class="stat"><div class="stat-label">Region</div><div class="stat-value" id="statRegion">—</div></div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-title">Step 2 — small-signal parameters</div>
+          <div class="stat-grid">
+            <div class="stat"><div class="stat-label">g<sub>m</sub> = k<sub>n</sub>V<sub>OV</sub></div><div class="stat-value" id="statGm">—</div></div>
+            <div class="stat"><div class="stat-label">r<sub>o</sub> = V<sub>A</sub>/I<sub>D</sub></div><div class="stat-value" id="statRo">—</div></div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-title">Step 3 — R'L = RD ‖ RL ‖ ro</div>
+          <div class="stat-grid">
+            <div class="stat"><div class="stat-label">R'<sub>L</sub></div><div class="stat-value" id="statRp">—</div></div>
+            <div class="stat"><div class="stat-label">A<sub>v</sub> ≈ −g<sub>m</sub>R'<sub>L</sub></div><div class="stat-value" id="statAvApprox">—</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel controls">
+        <h2>Controls</h2>
+
+        <div class="controls-group-label">Circuit</div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-name">V<sub>DD</sub></span><span class="slider-val" id="valVDD">—</span></div>
+          <input type="range" id="sVDD" min="3" max="20" step="0.1">
+          <div class="minmax"><span>3 V</span><span>20 V</span></div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-name">R<sub>D</sub></span><span class="slider-val" id="valRD">—</span></div>
+          <input type="range" id="sRDlog" min="-0.3" max="1.7" step="0.01">
+          <div class="minmax"><span>0.5 kΩ</span><span>50 kΩ</span></div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-name">R<sub>L</sub></span><span class="slider-val" id="valRL">—</span></div>
+          <input type="range" id="sRLlog" min="-0.3" max="1.7" step="0.01">
+          <div class="minmax"><span>0.5 kΩ</span><span>50 kΩ</span></div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-name">R<sub>G</sub></span><span class="slider-val" id="valRG">—</span></div>
+          <input type="range" id="sRGlog" min="2.7" max="4.3" step="0.01">
+          <div class="minmax"><span>500 kΩ</span><span>20 MΩ</span></div>
+        </div>
+
+        <div class="controls-group-label">Device</div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-name">V<sub>t</sub></span><span class="slider-val" id="valVt">—</span></div>
+          <input type="range" id="sVt" min="0.3" max="2" step="0.01">
+          <div class="minmax"><span>0.3 V</span><span>2 V</span></div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-name">k<sub>n</sub> (= k'<sub>n</sub>·W/L)</span><span class="slider-val" id="valKn">—</span></div>
+          <input type="range" id="sKnlog" min="-1" max="0.7" step="0.01">
+          <div class="minmax"><span>0.1 mA/V²</span><span>5 mA/V²</span></div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-name">V<sub>A</sub> (Early voltage)</span><span class="slider-val" id="valVA">—</span></div>
+          <input type="range" id="sVA" min="10" max="200" step="1">
+          <div class="minmax"><span>10 V</span><span>200 V</span></div>
+        </div>
+
+        <button class="reset-btn" id="resetBtn">Reset to defaults</button>
+      </div>
+
+      <div class="panel">
+        <h2>Step 4 — small-signal gain &amp; Rin</h2>
+        <div class="stat-grid">
+          <div class="stat">
+            <div class="stat-label">A<sub>v</sub> (exact, incl. R<sub>G</sub> feedback)</div>
+            <div class="stat-value hi" id="statAvExact">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">R<sub>in</sub> = R<sub>G</sub>/(1−A<sub>v</sub>)</div>
+            <div class="stat-value hi" id="statRin">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>ELEC2005 — Week 6 — for concept exploration, not assessment.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  function solveBias(VDD, RD, Vt, kn) {
+    const a = 0.5 * kn * RD, b = 1.0, c = Vt - VDD;
+    let disc = b * b - 4 * a * c;
+    if (disc < 0) disc = 0;
+    let VOV = (-b + Math.sqrt(disc)) / (2 * a);
+    VOV = Math.max(VOV, 0);
+    const VGS = Vt + VOV;
+    const ID = 0.5 * kn * VOV * VOV;
+    return { ID, VGS, VOV };
+  }
+  function smallSignal(ID, VOV, kn, VA, RD, RL, RG) {
+    const gm = kn * VOV;
+    const ro = ID > 0 ? VA / ID : Infinity;
+    const Rp = 1 / (1/RD + 1/RL + 1/ro);
+    const Av_approx = -gm * Rp;
+    const num = 1 - 1/(gm*RG);
+    const den = 1 + Rp/RG;
+    const Av_exact = -gm * Rp * num / den;
+    const Rin = RG / (1 - Av_exact);
+    return { gm, ro, Rp, Av_approx, Av_exact, Rin };
+  }
+
+  const svgNS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs, parent){
+    const e = document.createElementNS(svgNS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+
+  const circuitSvg = document.getElementById("circuitSvg");
+
+  const ids = ["sVDD","sRDlog","sRLlog","sRGlog","sVt","sKnlog","sVA"];
+  const s = {}; ids.forEach(id => s[id] = document.getElementById(id));
+  const resetBtn = document.getElementById("resetBtn");
+
+  const val = {};
+  ["valVDD","valRD","valRL","valRG","valVt","valKn","valVA"].forEach(id => val[id] = document.getElementById(id));
+
+  const stat = {};
+  ["statVOV","statID","statVGS","statRegion","statGm","statRo","statRp","statAvApprox","statAvExact","statRin"]
+    .forEach(id => stat[id] = document.getElementById(id));
+
+  const DEFAULTS = { VDD:15, RDlog:1, RLlog:1, RGlog:4, Vt:1.5, Knlog:Math.log10(0.25), VA:50 };
+  function setDefaults(){
+    s.sVDD.value = DEFAULTS.VDD;
+    s.sRDlog.value = DEFAULTS.RDlog;
+    s.sRLlog.value = DEFAULTS.RLlog;
+    s.sRGlog.value = DEFAULTS.RGlog;
+    s.sVt.value = DEFAULTS.Vt;
+    s.sKnlog.value = DEFAULTS.Knlog;
+    s.sVA.value = DEFAULTS.VA;
+  }
+  setDefaults();
+
+  function fmt(v,d){ return v.toFixed(d); }
+  function fmtR(kohm){
+    return kohm >= 1000 ? fmt(kohm/1000,2) + " MΩ" : fmt(kohm,2) + " kΩ";
+  }
+
+  function render(){
+    const VDD = parseFloat(s.sVDD.value);
+    const RD = Math.pow(10, parseFloat(s.sRDlog.value));
+    const RL = Math.pow(10, parseFloat(s.sRLlog.value));
+    const RG = Math.pow(10, parseFloat(s.sRGlog.value));
+    const Vt = parseFloat(s.sVt.value);
+    const kn = Math.pow(10, parseFloat(s.sKnlog.value));
+    const VA = parseFloat(s.sVA.value);
+
+    val.valVDD.textContent = fmt(VDD,1) + " V";
+    val.valRD.textContent = fmtR(RD);
+    val.valRL.textContent = fmtR(RL);
+    val.valRG.textContent = fmtR(RG);
+    val.valVt.textContent = fmt(Vt,2) + " V";
+    val.valKn.textContent = fmt(kn,2) + " mA/V²";
+    val.valVA.textContent = fmt(VA,0) + " V";
+
+    const bias = solveBias(VDD, RD, Vt, kn);
+    const ss = smallSignal(bias.ID, bias.VOV, kn, VA, RD, RL, RG);
+
+    const region = bias.VOV > 0 ? "Saturation" : "Cutoff";
+
+    stat.statVOV.textContent = fmt(bias.VOV,3) + " V";
+    stat.statID.textContent = fmt(bias.ID,3) + " mA";
+    stat.statVGS.textContent = fmt(bias.VGS,3) + " V";
+    stat.statRegion.textContent = region;
+    stat.statGm.textContent = fmt(ss.gm,3) + " mA/V";
+    stat.statRo.textContent = fmtR(ss.ro);
+    stat.statRp.textContent = fmtR(ss.Rp);
+    stat.statAvApprox.textContent = fmt(ss.Av_approx,2);
+    stat.statAvExact.textContent = fmt(ss.Av_exact,2);
+    stat.statRin.textContent = fmtR(ss.Rin);
+
+    drawCircuit(VDD, RD, RL, RG, bias, ss);
+  }
+
+  function drawCircuit(VDD, RD, RL, RG, bias, ss){
+    circuitSvg.textContent = "";
+    const svgEl = circuitSvg;
+
+    const railX = 320;      // VDD rail / RD / drain node / channel, all aligned vertically
+    const rgX = 210;        // RG's vertical zigzag — spaced out to the left of RD
+    const gateWireX = 100;  // where vi taps into the gate/input line
+    const rlX = 410;        // RL's vertical zigzag — spaced out to the right of RD
+    const outX = 470;       // output terminal
+
+    const top = 20;          // VDD rail height
+    const drainY = 160;      // drain node height — connects RD, RL, and RG's top
+
+    // ---- VDD rail ----
+    el("line", {x1:railX-10, y1:top, x2:railX+10, y2:top, class:"axisline"}, svgEl);
+    el("text", {x:railX+16, y:top+5, class:"axis-label"}, svgEl).textContent = "VDD = " + fmt(VDD,1) + " V";
+
+    // ---- RD: VDD rail down to the drain node ----
+    resistorV(svgEl, railX, top, drainY);
+    el("text", {x:railX+14, y:(top+drainY)/2+4, class:"axis-label"}, svgEl).textContent = "RD = " + fmtR(RD);
+
+    // ---- drain node ----
+    el("circle", {cx:railX, cy:drainY, r:2.5, fill:"var(--ink)"}, svgEl);
+
+    // ---- output branch: drain node -> coupling cap -> RL tap -> output terminal ----
+    const capOutX = (railX + rlX) / 2;
+    el("line", {x1:railX, y1:drainY, x2:capOutX-4, y2:drainY, class:"axisline"}, svgEl);
+    capH(svgEl, capOutX, drainY);
+    el("line", {x1:capOutX+4, y1:drainY, x2:outX, y2:drainY, class:"axisline"}, svgEl);
+    const rlBot = drainY+130;
+    resistorV(svgEl, rlX, drainY, rlBot);
+    el("text", {x:rlX+14, y:drainY+69, class:"axis-label"}, svgEl).textContent = "RL = " + fmtR(RL);
+    const rlGndY = rlBot+18;
+    el("line", {x1:rlX, y1:rlBot, x2:rlX, y2:rlGndY, class:"axisline"}, svgEl);
+    groundHatch(svgEl, rlX, rlGndY);
+
+    el("circle", {cx:outX, cy:drainY, r:2.5, fill:"none", stroke:"var(--ink)"}, svgEl);
+    el("text", {x:outX+6, y:drainY+4, class:"axis-label", fill:"var(--focus)"}, svgEl).textContent =
+      "VDS = " + fmt(bias.VGS,2) + " V";
+
+    // ---- MOSFET: D/S leads down from the drain node, aligned under railX ----
+    const drainConnY = drainY + 70;
+    const sourceConnY = drainConnY + 60;
+    el("line", {x1:railX, y1:drainY, x2:railX, y2:drainConnY, class:"axisline"}, svgEl);
+    el("line", {x1:railX, y1:sourceConnY, x2:railX, y2:sourceConnY+26, class:"axisline"}, svgEl);
+    const gy = sourceConnY+26;
+    groundHatch(svgEl, railX, gy);
+
+    const chX = railX - 26;
+    el("line", {x1:railX, y1:drainConnY, x2:chX, y2:drainConnY, class:"axisline"}, svgEl);
+    el("line", {x1:railX, y1:sourceConnY, x2:chX, y2:sourceConnY, class:"axisline"}, svgEl);
+    el("text", {x:chX+6, y:drainConnY-11, class:"axis-label"}, svgEl).textContent = "D";
+    el("text", {x:chX+6, y:sourceConnY+13, class:"axis-label"}, svgEl).textContent = "S";
+    // source-lead arrow: right-hand side of the S lead, clear of the S label
+    el("path", {d:`M ${chX+15} ${sourceConnY-5} L ${chX+24} ${sourceConnY} L ${chX+15} ${sourceConnY+5}`,
+      fill:"none", stroke:"var(--ink)", "stroke-width":1.5, "stroke-linejoin":"round"}, svgEl);
+
+    const gateY = (drainConnY + sourceConnY) / 2;
+    drawMosfetSymbol(svgEl, chX, drainConnY, sourceConnY);
+    const gateX = chX - 6;
+
+    // ---- RG: drain node straight down to the gate/input line ----
+    el("line", {x1:railX, y1:drainY, x2:rgX, y2:drainY, class:"axisline"}, svgEl);
+    resistorV(svgEl, rgX, drainY, gateY);
+    el("text", {x:rgX-14, y:(drainY+gateY)/2+4, class:"axis-label", "text-anchor":"end"}, svgEl).textContent = "RG = " + fmtR(RG);
+    el("circle", {cx:rgX, cy:gateY, r:2.5, fill:"var(--ink)"}, svgEl); // junction dot: RG meets the gate/input line
+
+    // ---- gate/input line: vi -> coupling cap -> RG junction -> gate plate ----
+    const capInX = (gateWireX + rgX) / 2;
+    el("line", {x1:gateWireX, y1:gateY, x2:capInX-4, y2:gateY, class:"axisline"}, svgEl);
+    capH(svgEl, capInX, gateY);
+    el("line", {x1:capInX+4, y1:gateY, x2:gateX-6, y2:gateY, class:"axisline"}, svgEl);
+
+    // ---- vi input source, tapped off the gate/input line ----
+    const srcR = 12;
+    const srcTopY = gateY + 12;
+    const srcCy = srcTopY + srcR;
+    const srcBotY = srcCy + srcR;
+    el("line", {x1:gateWireX, y1:gateY, x2:gateWireX, y2:srcTopY, class:"axisline"}, svgEl);
+    el("circle", {cx:gateWireX, cy:srcCy, r:srcR, fill:"none", stroke:"var(--ink)", "stroke-width":1.4}, svgEl);
+    el("text", {x:gateWireX, y:srcTopY+10, "text-anchor":"middle", class:"axis-label"}, svgEl).textContent = "+";
+    el("text", {x:gateWireX, y:srcBotY-4, "text-anchor":"middle", class:"axis-label"}, svgEl).textContent = "\u2212";
+    const viGndY = srcBotY+18;
+    el("line", {x1:gateWireX, y1:srcBotY, x2:gateWireX, y2:viGndY, class:"axisline"}, svgEl);
+    groundHatch(svgEl, gateWireX, viGndY);
+    el("text", {x:gateWireX-14, y:srcCy+4, class:"axis-label", "text-anchor":"end"}, svgEl).textContent = "vi";
+
+    // VGS = VDS label at the gate — the key DC-bias identity for this circuit
+    el("text", {x:gateX-10, y:gateY+22, class:"axis-label", fill:"var(--maroon)", "text-anchor":"end"}, svgEl).textContent =
+      "VGS = VDS = " + fmt(bias.VGS,2) + " V";
+
+    // region flag
+    if (bias.VOV <= 0){
+      el("text", {x:290, y:325, class:"axis-label", "text-anchor":"middle", fill:"#a3372c"}, svgEl).textContent =
+        "Below threshold — transistor is in cutoff";
+    }
+  }
+
+  // Every resistor uses the exact same zigzag symbol (teeth, segment length, amplitude),
+  // centered within its span. Only the plain connecting leads vary in length.
+  const R_TEETH = 6, R_SEGMENT = 12, R_DX = 8;
+  const R_ZIGZAG_LEN = R_SEGMENT * (R_TEETH + 1);
+  function resistorV(s, x, yTop, yBot){
+    const span = yBot - yTop;
+    const lead = Math.max(8, (span - R_ZIGZAG_LEN) / 2);
+    el("line", {x1:x, y1:yTop, x2:x, y2:yTop+lead, class:"axisline"}, s);
+    zigzagV(s, x, yTop+lead, yBot-lead, R_TEETH, R_DX);
+    el("line", {x1:x, y1:yBot-lead, x2:x, y2:yBot, class:"axisline"}, s);
+  }
+
+  // canonical ELEC2005 MOSFET symbol: solid channel bar + short parallel gate plate
+  function drawMosfetSymbol(s, cx, drainConnY, sourceConnY){
+    const OVERHANG = 8, GATE_GAP = 6, GATE_LEN = 26;
+    const chTop = drainConnY - OVERHANG, chBot = sourceConnY + OVERHANG;
+    const gateY = (drainConnY + sourceConnY) / 2;
+    el("line", {x1:cx, y1:chTop, x2:cx, y2:chBot, stroke:"var(--ink)", "stroke-width":2.6, "stroke-linecap":"round"}, s);
+    const gateX = cx - GATE_GAP;
+    const gTop = gateY - GATE_LEN/2, gBot = gateY + GATE_LEN/2;
+    el("line", {x1:gateX, y1:gTop, x2:gateX, y2:gBot, stroke:"var(--ink)", "stroke-width":1.8}, s);
+    el("text", {x:gateX-2, y:gTop-9, class:"axis-label", "text-anchor":"end", "font-weight":"700"}, s).textContent = "G";
+  }
+
+  // vertical resistor zigzag from (x,y0) to (x,y1)
+  function zigzagV(s, x, y0, y1, teeth, dx){
+    let d = `M ${x} ${y0}`;
+    for (let i=0;i<teeth;i++){
+      const yy = y0 + (i+1)*((y1-y0)/(teeth+1));
+      d += ` L ${x + (i%2===0?dx:-dx)} ${yy}`;
+    }
+    d += ` L ${x} ${y1}`;
+    el("path", {d, class:"axisline"}, s);
+  }
+
+  function groundHatch(svgEl, x, y){
+    el("line", {x1:x-10, y1:y, x2:x+10, y2:y, class:"axisline"}, svgEl);
+    el("line", {x1:x-6, y1:y+5, x2:x+6, y2:y+5, class:"axisline"}, svgEl);
+    el("line", {x1:x-2, y1:y+10, x2:x+2, y2:y+10, class:"axisline"}, svgEl);
+  }
+
+  // coupling capacitor on a horizontal wire: two short vertical plates with a small gap
+  function capH(s, x, y, half){
+    half = half || 15;
+    el("line", {x1:x-4, y1:y-half, x2:x-4, y2:y+half, stroke:"var(--ink)", "stroke-width":1.8}, s);
+    el("line", {x1:x+4, y1:y-half, x2:x+4, y2:y+half, stroke:"var(--ink)", "stroke-width":1.8}, s);
+  }
+
+  ids.forEach(id => s[id].addEventListener("input", render));
+  resetBtn.addEventListener("click", () => { setDefaults(); render(); });
+
+  render();
+})();
+</script>
+</body>
+</html>
