@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MOSFET Small-Signal Gain vs. Swing Explorer — ELEC2005</title>
+<style>
+  :root{
+    --ink:#1a1512; --paper:#faf7f2; --panel:#ffffff; --maroon:#7a1730;
+    --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a; --mustard:#c98a2c;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:#e6e6e4;font-family:"Helvetica Neue",Arial,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:960px;margin:0 auto;padding:24px 20px 40px;}
+  header{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1px solid var(--grid);padding-bottom:14px;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
+  .eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin-bottom:4px;}
+  h1{font-family:"Iowan Old Style","Georgia",serif;font-weight:700;letter-spacing:-.01em;font-size:24px;margin:0;}
+  .tag{font-size:12px;color:var(--muted);white-space:nowrap;}
+  .intro{font-size:14px;line-height:1.5;color:var(--muted);margin:0 0 18px;max-width:72ch;}
+  .grid{display:grid;grid-template-columns:1.35fr 1fr;gap:18px;}
+  @media (max-width:800px){.grid{grid-template-columns:1fr;}}
+  .panel{background:var(--panel);border:1px solid var(--grid);border-radius:4px;padding:16px;}
+  .panel + .panel{margin-top:18px;}
+  .panel h2{font-family:"Iowan Old Style","Georgia",serif;font-size:15px;margin:0 0 10px;font-weight:700;}
+  .section-label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin:0 0 8px;}
+  svg{display:block;width:100%;height:auto;}
+  .axis-label{font-size:12px;fill:var(--ink);font-family:"Helvetica Neue",Arial,sans-serif;}
+  .tick-label{font-size:10px;fill:var(--muted);font-family:"Helvetica Neue",Arial,sans-serif;}
+  .gridline{stroke:var(--grid);stroke-width:1;}
+  .axisline{stroke:var(--ink);stroke-width:1.2;}
+  .curve-exact{fill:none;stroke:var(--maroon);stroke-width:2.3;}
+  .curve-linear{fill:none;stroke:var(--mustard);stroke-width:1.8;stroke-dasharray:5 4;}
+  .curve-input{fill:none;stroke:var(--focus);stroke-width:2;}
+  .limit-line{stroke:#a3372c;stroke-width:1.2;stroke-dasharray:3 3;}
+  .bandtext{font-size:10px;fill:var(--muted);}
+
+  .controls-group-label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:14px 0 8px;border-top:1px solid var(--grid);padding-top:12px;}
+  .controls-group-label:first-child{border-top:none;padding-top:0;margin-top:0;}
+  .slider-row{margin-bottom:14px;}
+  .slider-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;}
+  .slider-name{font-size:12.5px;color:var(--ink);}
+  .slider-val{font-size:13px;font-weight:700;color:var(--maroon);font-variant-numeric:tabular-nums;}
+  input[type=range]{width:100%;accent-color:var(--maroon);}
+  .minmax{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-top:2px;}
+  .reset-btn{display:block;width:100%;margin-top:6px;padding:8px 10px;font-size:12.5px;font-family:"Helvetica Neue",Arial,sans-serif;border:1px solid var(--ink);background:transparent;color:var(--ink);border-radius:4px;cursor:pointer;}
+  .reset-btn:hover{background:var(--ink);color:#fff;}
+
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;}
+  .stat{background:var(--paper);border:1px solid var(--grid);border-radius:4px;padding:8px 10px;}
+  .stat-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+  .stat-value{font-size:16px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;}
+
+  .status-banner{border-radius:4px;padding:9px 12px;font-size:12.5px;font-weight:700;margin-top:10px;text-align:center;}
+  .status-ok{background:#e5f3ea;color:#2f7d4f;border:1px solid #2f7d4f;}
+  .status-warn{background:#f7e9e7;color:#a3372c;border:1px solid #a3372c;}
+
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px;}
+  .legend span{display:inline-flex;align-items:center;gap:5px;}
+  .swatch{width:14px;height:3px;display:inline-block;border-radius:2px;}
+  footer{text-align:center;font-size:11px;color:var(--muted);margin-top:28px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">ELEC2005 — Week 6 companion</div>
+      <h1>MOSFET Small-Signal Gain vs. Swing Explorer</h1>
+    </div>
+    <div class="tag">MOSFET small signals · Lecture 6</div>
+  </header>
+
+  <p class="intro">
+    Bigger V<sub>OV</sub> or R<sub>D</sub> gives more gain — but the Q point has less headroom before
+    V<sub>DS</sub> dips below V<sub>OV</sub> and the transistor leaves saturation. Increase the input
+    amplitude v̂<sub>gs</sub> and watch the exact output part company with the small-signal (linear)
+    approximation as it clips.
+  </p>
+
+  <div class="grid">
+    <div>
+      <div class="panel">
+        <div class="section-label">Output v<sub>DS</sub>(t): exact vs. linear approximation</div>
+        <svg id="mainSvg" viewBox="0 0 480 360" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div class="legend">
+          <span><span class="swatch" style="background:var(--maroon)"></span> exact large-signal V<sub>DS</sub>(t)</span>
+          <span><span class="swatch" style="background:var(--mustard);border-top:2px dashed var(--mustard);height:0;"></span> linear (small-signal) approximation</span>
+          <span><span class="swatch" style="background:var(--focus)"></span> input v<sub>GS</sub>(t)</span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel controls">
+        <h2>Controls</h2>
+
+        <div class="controls-group-label">Signal</div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-name">V<sub>GS</sub> bias (Q point)</span><span class="slider-val" id="valVGS">—</span></div>
+          <input type="range" id="sVGS" min="0.3" max="6" step="0.01">
+          <div class="minmax"><span>0.3 V</span><span>6 V</span></div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-name">v̂<sub>gs</sub> (input amplitude)</span><span class="slider-val" id="valAmp">—</span></div>
+          <input type="range" id="sAmp" min="0" max="1" step="0.002">
+          <div class="minmax"><span>0 mV</span><span>1000 mV</span></div>
+        </div>
+
+        <div class="controls-group-label">Bias &amp; device</div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-name">V<sub>DD</sub></span><span class="slider-val" id="valVDD">—</span></div>
+          <input type="range" id="sVDD" min="2" max="6" step="0.1">
+          <div class="minmax"><span>2 V</span><span>6 V</span></div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-name">R<sub>D</sub></span><span class="slider-val" id="valRD">—</span></div>
+          <input type="range" id="sRDlog" min="-1" max="1" step="0.01">
+          <div class="minmax"><span>0.1 kΩ</span><span>10 kΩ</span></div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-name">V<sub>t</sub></span><span class="slider-val" id="valVt">—</span></div>
+          <input type="range" id="sVt" min="0.3" max="2" step="0.01">
+          <div class="minmax"><span>0.3 V</span><span>2 V</span></div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-name">k<sub>n</sub> (= k'<sub>n</sub>·W/L)</span><span class="slider-val" id="valKn">—</span></div>
+          <input type="range" id="sKnlog" min="-1" max="1" step="0.01">
+          <div class="minmax"><span>0.2 mA/V²</span><span>20 mA/V²</span></div>
+        </div>
+
+        <button class="reset-btn" id="resetBtn">Reset to defaults</button>
+      </div>
+
+      <div class="panel">
+        <h2>Bias point &amp; gain</h2>
+        <div class="stat-grid">
+          <div class="stat"><div class="stat-label">V<sub>OV</sub></div><div class="stat-value" id="statVOV">—</div></div>
+          <div class="stat"><div class="stat-label">A<sub>v</sub> (small-signal)</div><div class="stat-value" id="statAv">—</div></div>
+          <div class="stat"><div class="stat-label">V<sub>DS</sub> (bias)</div><div class="stat-value" id="statVDS">—</div></div>
+          <div class="stat"><div class="stat-label">Max v̂<sub>gs</sub> (linear)</div><div class="stat-value" id="statMaxAmp">—</div></div>
+        </div>
+        <div class="status-banner" id="statusBanner">—</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>ELEC2005 — Week 6 — for concept exploration, not assessment.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  function solveOP(VDD, RD, Vt, kn, VGS) {
+    if (VGS <= Vt) return { ID: 0, VDS: VDD, region: "cutoff" };
+    const VOV = VGS - Vt;
+    const ID_sat = 0.5 * kn * VOV * VOV;
+    const VDS_sat = VDD - ID_sat * RD;
+    if (VDS_sat >= VOV) return { ID: ID_sat, VDS: VDS_sat, region: "saturation" };
+    const a = 0.5 * RD * kn;
+    const b = -(1 + RD * kn * VOV);
+    const c = VDD;
+    let disc = b * b - 4 * a * c;
+    if (disc < 0) disc = 0;
+    const r1 = (-b + Math.sqrt(disc)) / (2 * a);
+    const r2 = (-b - Math.sqrt(disc)) / (2 * a);
+    const cands = [r1, r2].filter(r => r >= -1e-9 && r <= VOV + 1e-9);
+    let VDS = cands.length ? Math.min(...cands) : Math.min(r1, r2);
+    VDS = Math.max(VDS, 0);
+    const ID = kn * (VOV * VDS - 0.5 * VDS * VDS);
+    return { ID, VDS, region: "triode" };
+  }
+
+  const svgNS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs, parent){
+    const e = document.createElementNS(svgNS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+
+  const mainSvg = document.getElementById("mainSvg");
+  const W = 480, H = 360;
+
+  // top subplot: VDS(t)   [y: 0..AXIS_MAX volts]
+  const M1 = { l: 50, r: 14, t: 14, b: 6 };
+  const P1H = 210;
+  // bottom subplot: vgs(t) [y: fixed +-1.2V around 0, showing deviation]
+  const M2 = { l: 50, r: 14, t: 20, b: 30 };
+  const P2H = 110;
+  const GAP = 10;
+
+  const plot1W = W - M1.l - M1.r;
+  const plot1H = P1H - M1.t - M1.b;
+  const plot1Top = 0;
+
+  const plot2Top = P1H + GAP;
+  const plot2W = W - M2.l - M2.r;
+  const plot2H = P2H - M2.t - M2.b;
+
+  const AXIS_MAX = 6; // matches VDD slider max
+  const CYCLES = 2;
+  const THETA_MAX = CYCLES * 2 * Math.PI;
+
+  function x1(theta){ return M1.l + (theta/THETA_MAX)*plot1W; }
+  function y1(vds){ return plot1Top + M1.t + (1 - vds/AXIS_MAX)*plot1H; }
+
+  function x2(theta){ return M2.l + (theta/THETA_MAX)*plot2W; }
+  const AMP_AXIS = 1.2;
+  function y2(dv){ return plot2Top + M2.t + plot2H/2 - (dv/AMP_AXIS)*(plot2H/2); }
+
+  const sVGS = document.getElementById("sVGS");
+  const sAmp = document.getElementById("sAmp");
+  const sVDD = document.getElementById("sVDD");
+  const sRDlog = document.getElementById("sRDlog");
+  const sVt = document.getElementById("sVt");
+  const sKnlog = document.getElementById("sKnlog");
+  const resetBtn = document.getElementById("resetBtn");
+
+  const valVGS = document.getElementById("valVGS");
+  const valAmp = document.getElementById("valAmp");
+  const valVDD = document.getElementById("valVDD");
+  const valRD = document.getElementById("valRD");
+  const valVt = document.getElementById("valVt");
+  const valKn = document.getElementById("valKn");
+
+  const statVOV = document.getElementById("statVOV");
+  const statAv = document.getElementById("statAv");
+  const statVDS = document.getElementById("statVDS");
+  const statMaxAmp = document.getElementById("statMaxAmp");
+  const statusBanner = document.getElementById("statusBanner");
+
+  const DEFAULTS = { VGS:2.0, Amp:0.15, VDD:5, RDlog:Math.log10(2), Vt:1, Knlog:Math.log10(2) };
+  function setDefaults(){
+    sVGS.value = DEFAULTS.VGS;
+    sAmp.value = DEFAULTS.Amp;
+    sVDD.value = DEFAULTS.VDD;
+    sRDlog.value = DEFAULTS.RDlog;
+    sVt.value = DEFAULTS.Vt;
+    sKnlog.value = DEFAULTS.Knlog;
+  }
+  setDefaults();
+
+  function fmt(v,d){ return v.toFixed(d); }
+
+  function drawFrames(){
+    mainSvg.innerHTML = "";
+    // --- top frame (VDS) ---
+    for (let v=0; v<=AXIS_MAX; v+=1){
+      el("line", {x1:M1.l, y1:y1(v), x2:M1.l+plot1W, y2:y1(v), class:"gridline"}, mainSvg);
+      el("text", {x:M1.l-6, y:y1(v)+3, class:"tick-label", "text-anchor":"end"}, mainSvg).textContent = v;
+    }
+    el("line", {x1:M1.l, y1:plot1Top+M1.t, x2:M1.l, y2:plot1Top+M1.t+plot1H, class:"axisline"}, mainSvg);
+    el("line", {x1:M1.l, y1:plot1Top+M1.t+plot1H, x2:M1.l+plot1W, y2:plot1Top+M1.t+plot1H, class:"axisline"}, mainSvg);
+    el("text", {x:14, y:plot1Top+M1.t+plot1H/2, class:"axis-label", "text-anchor":"middle",
+      transform:`rotate(-90 14 ${plot1Top+M1.t+plot1H/2})`}, mainSvg).textContent = "VDS (V)";
+
+    // --- bottom frame (vgs deviation) ---
+    el("line", {x1:M2.l, y1:y2(0), x2:M2.l+plot2W, y2:y2(0), class:"gridline"}, mainSvg);
+    el("line", {x1:M2.l, y1:plot2Top+M2.t, x2:M2.l, y2:plot2Top+M2.t+plot2H, class:"axisline"}, mainSvg);
+    el("line", {x1:M2.l, y1:plot2Top+M2.t+plot2H, x2:M2.l+plot2W, y2:plot2Top+M2.t+plot2H, class:"axisline"}, mainSvg);
+    el("text", {x:14, y:plot2Top+M2.t+plot2H/2, class:"axis-label", "text-anchor":"middle",
+      transform:`rotate(-90 14 ${plot2Top+M2.t+plot2H/2})`}, mainSvg).textContent = "vgs (V)";
+    el("text", {x:M2.l+plot2W/2, y:plot2Top+P2H, class:"axis-label", "text-anchor":"middle"}, mainSvg).textContent = "time";
+  }
+
+  function render(){
+    const VGSb = parseFloat(sVGS.value);
+    const amp = parseFloat(sAmp.value);
+    const VDD = parseFloat(sVDD.value);
+    const RD = Math.pow(10, parseFloat(sRDlog.value));
+    const Vt = parseFloat(sVt.value);
+    const kn = Math.pow(10, parseFloat(sKnlog.value));
+
+    valVGS.textContent = fmt(VGSb,2) + " V";
+    valAmp.textContent = fmt(amp*1000,0) + " mV";
+    valVDD.textContent = fmt(VDD,1) + " V";
+    valRD.textContent = fmt(RD,2) + " kΩ";
+    valVt.textContent = fmt(Vt,2) + " V";
+    valKn.textContent = fmt(kn,2) + " mA/V²";
+
+    drawFrames();
+
+    const opBias = solveOP(VDD, RD, Vt, kn, VGSb);
+    const VOV = VGSb > Vt ? VGSb - Vt : 0;
+    const Av = -kn*RD*VOV;
+
+    statVOV.textContent = VGSb > Vt ? fmt(VOV,3) + " V" : "—";
+    statAv.textContent = (VGSb > Vt) ? fmt(Av,2) : "—";
+    statVDS.textContent = fmt(opBias.VDS,3) + " V";
+
+    const allowedOutSwing = Math.max(opBias.VDS - VOV, 0);
+    const maxAmp = (Math.abs(Av) > 1e-9 && VGSb > Vt) ? allowedOutSwing/Math.abs(Av) : 0;
+    statMaxAmp.textContent = (VGSb > Vt) ? fmt(maxAmp*1000,0) + " mV" : "—";
+
+    // sample waveforms
+    const N = 240;
+    let ptsExact = [], ptsLinear = [], ptsInput = [];
+    let leftSaturation = false;
+    for (let i=0;i<=N;i++){
+      const theta = (i/N)*THETA_MAX;
+      const vgsDev = amp*Math.sin(theta);
+      const vgsInst = VGSb + vgsDev;
+      const opInst = solveOP(VDD, RD, Vt, kn, vgsInst);
+      const vdsExact = Math.min(Math.max(opInst.VDS,0), AXIS_MAX);
+      const vdsLinear = opBias.VDS + Av*vgsDev;
+      ptsExact.push([theta, vdsExact]);
+      ptsLinear.push([theta, Math.min(Math.max(vdsLinear,0),AXIS_MAX)]);
+      ptsInput.push([theta, vgsDev]);
+      if (opInst.region !== "saturation") leftSaturation = true;
+    }
+
+    const g = el("g", {}, mainSvg);
+    const dExact = ptsExact.map((p,i)=>(i===0?"M":"L")+x1(p[0]).toFixed(2)+" "+y1(p[1]).toFixed(2)).join(" ");
+    const dLinear = ptsLinear.map((p,i)=>(i===0?"M":"L")+x1(p[0]).toFixed(2)+" "+y1(p[1]).toFixed(2)).join(" ");
+    const dInput = ptsInput.map((p,i)=>(i===0?"M":"L")+x2(p[0]).toFixed(2)+" "+y2(p[1]).toFixed(2)).join(" ");
+
+    // VOV limit line on top plot (region below this is triode / distortion)
+    if (VGSb > Vt){
+      const limY = y1(Math.min(VOV, AXIS_MAX));
+      el("line", {x1:M1.l, y1:limY, x2:M1.l+plot1W, y2:limY, class:"limit-line"}, g);
+      el("text", {x:M1.l+plot1W-4, y:limY-4, class:"bandtext", "text-anchor":"end"}, g).textContent = "VOV boundary (saturation limit)";
+    }
+
+    el("path", {d:dLinear, class:"curve-linear"}, g);
+    el("path", {d:dExact, class:"curve-exact"}, g);
+    el("path", {d:dInput, class:"curve-input"}, g);
+
+    if (leftSaturation){
+      statusBanner.textContent = "Leaving saturation: VDS dips below VOV (or VGS below Vt) during the cycle \u2014 the linear model no longer applies";
+      statusBanner.className = "status-banner status-warn";
+    } else {
+      statusBanner.textContent = "Within saturation throughout the cycle \u2014 linear approximation holds well";
+      statusBanner.className = "status-banner status-ok";
+    }
+  }
+
+  [sVGS, sAmp, sVDD, sRDlog, sVt, sKnlog].forEach(inp => inp.addEventListener("input", render));
+  resetBtn.addEventListener("click", () => { setDefaults(); render(); });
+
+  render();
+})();
+</script>
+</body>
+</html>
