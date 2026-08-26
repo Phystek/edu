@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B.Eng Electrical &amp; Electronic Engineering — Curriculum Map (2027)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Macquarie University brand palette: charcoal, sand, deep red, bright red, magenta, purple */
+    --ink:#ECEBE8;
+    --panel:#FFFFFF;
+    --panel-2:#FAFAF8;
+    --grid-line: rgba(55,58,54,0.05);
+    --paper:#373A36;
+    --paper-dim:#6B6E68;
+    --muted:#9A9C95;
+    --hair: rgba(55,58,54,0.16);
+
+    --digital:#3D3F3A;
+    --digital-dim: rgba(61,63,58,0.12);
+    --signal:#D6001C;
+    --signal-dim: rgba(214,0,28,0.12);
+    --power:#1F3B57;
+    --power-dim: rgba(31,59,87,0.12);
+    --core:#80225F;
+    --core-dim: rgba(128,34,95,0.12);
+    --common:#9A9C95;
+    --brand:#76232F;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle, rgba(55,58,54,0.05) 1px, transparent 1.2px) 0 0/26px 26px,
+      var(--ink);
+    color:var(--paper);
+    font-family:'IBM Plex Sans', system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+
+  /* ---------- HEADER ---------- */
+  header{
+    padding:38px 42px 22px;
+    border-bottom:1px solid var(--hair);
+    position:relative;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;
+    letter-spacing:0.16em;
+    color:var(--brand);
+    text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  h1{
+    margin:0 0 8px;
+    font-family:'IBM Plex Sans Condensed', sans-serif;
+    font-weight:700;
+    font-size:clamp(24px,3vw,34px);
+    letter-spacing:-0.01em;
+    color:var(--paper);
+  }
+  header p.sub{
+    margin:0;
+    max-width:760px;
+    color:var(--paper-dim);
+    font-size:14.5px;
+    line-height:1.55;
+  }
+  header .code-tag{
+    font-family:'IBM Plex Mono',monospace;
+    color:var(--digital);
+  }
+
+  /* ---------- LEGEND / CONTROLS ---------- */
+  .toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px 22px;
+    align-items:center;
+    padding:16px 42px;
+    border-bottom:1px solid var(--hair);
+    background:rgba(55,58,54,0.065);
+  }
+  .legend-item{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    cursor:pointer;
+    padding:5px 10px 5px 6px;
+    border-radius:20px;
+    border:1px solid transparent;
+    transition:all .15s ease;
+    user-select:none;
+  }
+  .legend-item:hover{ border-color:var(--hair); background:rgba(55,58,54,0.045); }
+  .legend-item.dimmed{ opacity:0.35; }
+  .swatch{
+    width:12px;height:12px;border-radius:3px;flex:none;
+    box-shadow:0 0 0 1px rgba(55,58,54,0.18) inset;
+  }
+  .legend-item .lname{ font-size:12.5px; color:var(--paper-dim); font-weight:500; }
+  .toolbar .spacer{ flex:1 1 auto; }
+  .reset-btn{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.04em;
+    color:var(--muted);
+    background:transparent;
+    border:1px solid var(--hair);
+    padding:7px 12px;
+    border-radius:6px;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .reset-btn:hover{ color:var(--paper); border-color:var(--paper-dim); }
+
+  /* ---------- MAP AREA ---------- */
+  .map-scroll{
+    overflow-x:auto;
+    overflow-y:visible;
+    padding:30px 12px 10px;
+  }
+  .map-wrap{
+    position:relative;
+    width:1360px;
+    margin:0 auto;
+    min-height:900px;
+  }
+  svg.connectors{
+    position:absolute;
+    top:0; left:0;
+    width:100%; height:100%;
+    pointer-events:none;
+    z-index:1;
+  }
+  .connectors path{
+    fill:none;
+    stroke-width:1.6;
+    transition: stroke .2s ease, opacity .2s ease, stroke-width .2s ease;
+  }
+  .connectors path.dim{ opacity:0.1; }
+  .connectors path.lit{ stroke-width:2.6; }
+  .connectors circle{ transition: opacity .2s ease; }
+
+  .year-col-labels{
+    position:relative; z-index:2;
+    display:grid;
+    grid-template-columns: 192px repeat(4, 268px);
+    gap:22px;
+    padding:0 30px 14px;
+  }
+  .year-col-labels .yl{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--muted);
+    border-bottom:1px dashed var(--hair);
+    padding-bottom:8px;
+  }
+  .year-col-labels .yl b{ color:var(--paper); font-weight:600; }
+
+  .grid{
+    position:relative;
+    z-index:2;
+    display:grid;
+    grid-template-columns: 192px repeat(4, 268px);
+    grid-template-rows: repeat(4, 144px);
+    column-gap:22px;
+    row-gap:26px;
+    padding:0 30px 40px;
+    align-items:start;
+  }
+
+  .lane-tag{
+    grid-column:1;
+    display:flex;
+    align-items:center;
+    height:100%;
+    min-height:64px;
+  }
+  .lane-tag span{
+    font-family:'IBM Plex Sans Condensed', sans-serif;
+    font-weight:600;
+    font-size:13px;
+    letter-spacing:0.02em;
+    padding:8px 10px;
+    border-left:3px solid var(--lane-color, var(--muted));
+    color:var(--paper-dim);
+    line-height:1.3;
+  }
+
+  /* ---------- CARDS ---------- */
+  .card{
+    position:relative;
+    height:144px;
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--hair);
+    border-radius:9px;
+    padding:12px 13px 11px;
+    cursor:pointer;
+    overflow:hidden;
+    box-shadow:
+      0 2px 8px -3px rgba(55,58,54,0.14),
+      0 1px 2px rgba(55,58,54,0.06);
+    transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, opacity .2s ease;
+  }
+  .card::before{
+    content:"";
+    position:absolute; top:10px; bottom:10px; left:0;
+    width:3px;
+    background:var(--lane-color, var(--muted));
+    border-radius:0 3px 3px 0;
+  }
+  /* External (non-ELEC) unit borrowed into a stream: split accent bar signals "belongs here, but not owned by EEE" */
+  .card[data-id="MTRN3124"]::before{
+    background:linear-gradient(180deg, var(--core) 0%, var(--core) 50%, var(--muted) 50%, var(--muted) 100%);
+  }
+  .card:hover{
+    transform:translateY(-2px);
+    border-color:var(--lane-color, var(--paper-dim));
+    box-shadow:
+      0 8px 18px -6px rgba(55,58,54,0.18),
+      0 2px 4px rgba(55,58,54,0.08);
+  }
+  .card.dim{ opacity:0.22; }
+  .card.lit{
+    border-color:var(--lane-color);
+    box-shadow:
+      0 0 0 1px var(--lane-color),
+      0 8px 20px -8px rgba(55,58,54,0.22);
+  }
+  .card .code{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.03em;
+    color:var(--lane-color, var(--muted));
+    font-weight:600;
+  }
+  .card .name{
+    font-size:14px;
+    font-weight:600;
+    color:var(--paper);
+    margin-top:3px;
+    line-height:1.28;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .card .hook{
+    font-size:11.5px;
+    color:var(--paper-dim);
+    margin-top:6px;
+    line-height:1.4;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .expand-hint{
+    margin-top:8px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    color:var(--muted);
+    letter-spacing:0.03em;
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    background:none;
+    border:none;
+    padding:3px 0;
+    cursor:pointer;
+    text-decoration:underline;
+    text-underline-offset:3px;
+    text-decoration-color:transparent;
+    transition:color .15s ease, text-decoration-color .15s ease;
+  }
+  .expand-hint:hover{
+    color:var(--lane-color, var(--paper));
+    text-decoration-color:var(--lane-color, var(--paper-dim));
+  }
+  .node-mini .expand-hint{ margin-top:6px; font-size:9.5px; }
+
+  /* small / external nodes (year-1 gateway units, MTRN3024) */
+  .node-mini{
+    position:relative;
+    background:transparent;
+    border:1px dashed var(--hair);
+    border-radius:8px;
+    padding:10px 12px;
+    cursor:pointer;
+    transition: border-color .16s ease, opacity .2s ease;
+  }
+  .node-mini:hover{ border-color:var(--paper-dim); }
+  .node-mini.dim{ opacity:0.18; }
+  .node-mini.lit{ border-color:var(--lane-color); border-style:solid; }
+  .node-mini .code{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    color:var(--muted);
+    font-weight:600;
+  }
+  .node-mini .name{
+    font-size:12px;
+    color:var(--paper-dim);
+    margin-top:2px;
+    line-height:1.3;
+  }
+
+  .yr1-controls{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    padding-top:2px;
+  }
+  .yr1-toggle{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    background:none;
+    border:1px dashed var(--hair);
+    border-radius:8px;
+    padding:9px 12px;
+    cursor:pointer;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:0.03em;
+    color:var(--muted);
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .yr1-toggle:hover{ color:var(--paper); border-color:var(--paper-dim); }
+  .yr1-toggle .chev{ transition:transform .2s ease; font-size:9px; }
+  .yr1-controls.expanded .yr1-toggle .chev{ transform:rotate(180deg); }
+  .yr1-extra{
+    display:none;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .yr1-controls.expanded .yr1-extra{ display:grid; }
+  .yr1-extra .card{ height:auto; padding:9px 10px 8px; }
+  .yr1-extra .card .name{ font-size:11.5px; line-height:1.25; -webkit-line-clamp:2; }
+  .yr1-extra .card .hook{ font-size:10px; -webkit-line-clamp:4; }
+  .yr1-extra .card .code{ font-size:9.5px; }
+  .yr1-extra .card .expand-hint{ font-size:8.5px; margin-top:5px; }
+
+  .yr1-note{
+    font-family:'IBM Plex Sans Condensed',sans-serif;
+    font-size:11.5px;
+    color:var(--muted);
+    line-height:1.5;
+    border-top:1px dashed var(--hair);
+    padding-top:9px;
+    margin-top:2px;
+  }
+
+  /* ---------- DETAIL PANEL ---------- */
+  .scrim{
+    position:fixed; inset:0;
+    background:rgba(30,28,26,0.5);
+    backdrop-filter: blur(2px);
+    opacity:0; pointer-events:none;
+    transition:opacity .2s ease;
+    z-index:10;
+  }
+  .scrim.open{ opacity:1; pointer-events:auto; }
+
+  .panel{
+    position:fixed;
+    top:0; right:0;
+    height:100vh;
+    width:min(460px, 100vw);
+    background:var(--panel);
+    border-left:1px solid var(--hair);
+    transform:translateX(100%);
+    transition:transform .28s cubic-bezier(.2,.8,.2,1);
+    z-index:11;
+    overflow-y:auto;
+    padding:30px 28px 60px;
+  }
+  .panel.open{ transform:translateX(0); }
+  .panel .close-btn{
+    position:absolute; top:22px; right:24px;
+    width:30px; height:30px;
+    border-radius:50%;
+    border:1px solid var(--hair);
+    background:transparent;
+    color:var(--paper-dim);
+    cursor:pointer;
+    font-size:16px;
+    line-height:1;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .panel .close-btn:hover{ color:var(--paper); border-color:var(--paper-dim); }
+  .panel .p-lane{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--lane-color,var(--signal));
+    margin-bottom:12px;
+  }
+  .panel .p-code{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    color:var(--muted);
+  }
+  .panel h2{
+    margin:6px 0 4px;
+    font-family:'IBM Plex Sans Condensed', sans-serif;
+    font-size:23px;
+    color:var(--paper);
+    line-height:1.2;
+  }
+  .panel .p-meta{
+    display:flex; flex-wrap:wrap; gap:8px;
+    margin:14px 0 20px;
+  }
+  .p-chip{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    padding:5px 9px;
+    border-radius:20px;
+    border:1px solid var(--hair);
+    color:var(--paper-dim);
+  }
+  .panel h3{
+    font-family:'IBM Plex Sans Condensed', sans-serif;
+    font-size:12.5px;
+    letter-spacing:0.09em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin:26px 0 10px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .panel h3::before{
+    content:"";
+    width:14px; height:1px;
+    background:var(--lane-color, var(--hair));
+  }
+  .panel .p-desc{
+    font-size:13.5px;
+    line-height:1.65;
+    color:var(--paper-dim);
+  }
+  .panel ul.topics{
+    list-style:none; margin:0; padding:0;
+    display:flex; flex-wrap:wrap; gap:7px;
+  }
+  .panel ul.topics li{
+    font-size:11.5px;
+    padding:6px 10px;
+    background:rgba(55,58,54,0.035);
+    border:1px solid var(--hair);
+    border-radius:6px;
+    color:var(--paper);
+  }
+  .panel ol.ulos{
+    margin:0; padding:0; list-style:none;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .panel ol.ulos li{
+    font-size:13px;
+    line-height:1.5;
+    color:var(--paper-dim);
+    display:flex; gap:10px;
+  }
+  .panel ol.ulos li .n{
+    font-family:'IBM Plex Mono',monospace;
+    color:var(--lane-color, var(--signal));
+    font-size:11.5px;
+    flex:none;
+    padding-top:2px;
+  }
+  .panel .p-req-line{
+    font-size:13px;
+    color:var(--paper-dim);
+    line-height:1.6;
+  }
+  .panel .p-req-line b{ color:var(--paper); }
+  .panel .jump{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--lane-color, var(--signal));
+    background:none; border:none; cursor:pointer; padding:0;
+    text-decoration:underline; text-underline-offset:3px;
+  }
+
+
+  @media (max-width:720px){
+    header{padding:26px 20px 18px;}
+    .toolbar{padding:14px 20px;}
+    footer{padding:22px 20px 36px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Macquarie University · School of Engineering · 2027 Curriculum</div>
+  <h1>B.Eng Electrical &amp; Electronic Engineering — Unit Flow Map</h1>
+  <p class="sub">A common first year leads into four specialised streams across Years 2–4. Click a unit to trace its prerequisite chain — click again to clear it. Click <span class="code-tag">+ details</span> for a full description, core topics and learning outcomes.</p>
+</header>
+
+<div class="toolbar" id="toolbar">
+  <div class="legend-item" data-lane="digital">
+    <span class="swatch" style="background:var(--digital)"></span>
+    <span class="lname">Digital Electronics &amp; Embedded Systems</span>
+  </div>
+  <div class="legend-item" data-lane="signal">
+    <span class="swatch" style="background:var(--signal)"></span>
+    <span class="lname">Analog Electronics &amp; Signal Processing</span>
+  </div>
+  <div class="legend-item" data-lane="core">
+    <span class="swatch" style="background:var(--core)"></span>
+    <span class="lname">Systems &amp; Power Electronics</span>
+  </div>
+  <div class="legend-item" data-lane="power">
+    <span class="swatch" style="background:var(--power)"></span>
+    <span class="lname">Electrical Power &amp; Energy Networks</span>
+  </div>
+  <div class="legend-item" data-lane="common">
+    <span class="swatch" style="background:var(--common);border-radius:50%"></span>
+    <span class="lname">Common core / external unit</span>
+  </div>
+  <div class="spacer"></div>
+  <button class="reset-btn" id="resetBtn">RESET VIEW</button>
+</div>
+
+<div class="map-scroll">
+  <div class="map-wrap" id="mapWrap">
+    <svg class="connectors" id="connectors"></svg>
+
+    <div class="year-col-labels">
+      <div></div>
+      <div class="yl"><b>Year 1</b> — Common Foundation</div>
+      <div class="yl"><b>Year 2</b> — Core Specialisation</div>
+      <div class="yl"><b>Year 3</b> — Applied Specialisation</div>
+      <div class="yl"><b>Year 4</b> — Advanced &amp; Capstone</div>
+    </div>
+
+    <div class="grid" id="grid">
+      <!-- lane tags (4 theme rows) -->
+      <div class="lane-tag" style="grid-row:1; --lane-color:var(--digital);"><span>Digital Electronics &amp; Embedded Systems</span></div>
+      <div class="lane-tag" style="grid-row:2; --lane-color:var(--signal);"><span>Analog Electronics &amp; Signal Processing</span></div>
+      <div class="lane-tag" style="grid-row:3; --lane-color:var(--core);"><span>Systems &amp; Power Electronics</span></div>
+      <div class="lane-tag" style="grid-row:4; --lane-color:var(--power);"><span>Electrical Power &amp; Energy Networks</span></div>
+
+      <!-- YEAR 1: ENGG1140/1150 align with their matching rows; toggle+extras live in row 3 -->
+      <div class="card" data-id="ENGG1140" style="grid-column:2; grid-row:1; --lane-color:var(--digital);"></div>
+      <div class="card" data-id="ENGG1150" style="grid-column:2; grid-row:2; --lane-color:var(--signal);"></div>
+
+      <div class="yr1-controls" id="yr1Block" style="grid-column:2; grid-row:3;">
+        <button type="button" class="yr1-toggle" id="yr1Toggle">
+          <span class="chev">▾</span>
+          <span class="label">Show 5 more Year 1 units</span>
+        </button>
+
+        <div class="yr1-extra">
+          <div class="card" data-id="ENGG1100" style="--lane-color:var(--common);"></div>
+          <div class="card" data-id="ENGG1160" style="--lane-color:var(--common);"></div>
+          <div class="card" data-id="ENGG1110" style="--lane-color:var(--common);"></div>
+          <div class="card" data-id="ENGG1120" style="--lane-color:var(--common);"></div>
+          <div class="card" data-id="ENGG1130" style="--lane-color:var(--common);"></div>
+        </div>
+
+        <div class="yr1-note">Common Year 1 (School of Engineering spine + maths/physics-integrated units). <b style="color:var(--digital)">ENGG1140</b> and <b style="color:var(--signal)">ENGG1150</b> are the two units with a documented prerequisite link into Year&nbsp;2 EEE units — traced arrows run from these two only.</div>
+      </div>
+
+
+      <!-- Digital Electronics -->
+      <div class="card" data-id="ELEC2110" style="grid-column:3; grid-row:1; --lane-color:var(--digital);"></div>
+      <div class="card" data-id="ELEC3110" style="grid-column:4; grid-row:1; --lane-color:var(--digital);"></div>
+      <div class="card" data-id="ELEC4110" style="grid-column:5; grid-row:1; --lane-color:var(--digital);"></div>
+
+      <!-- Analog Electronics & Signal Processing -->
+      <div class="card" data-id="ELEC2120" style="grid-column:3; grid-row:2; --lane-color:var(--signal);"></div>
+      <div class="card" data-id="ELEC3120" style="grid-column:4; grid-row:2; --lane-color:var(--signal);"></div>
+      <div class="card" data-id="ELEC4120" style="grid-column:5; grid-row:2; --lane-color:var(--signal);"></div>
+
+      <!-- Systems & Power Electronics -->
+      <div class="card" data-id="ELEC2140" style="grid-column:3; grid-row:3; --lane-color:var(--core);"></div>
+      <div class="card" data-id="MTRN3124" style="grid-column:4; grid-row:3; --lane-color:var(--core);"></div>
+      <div class="card" data-id="ELEC4140" style="grid-column:5; grid-row:3; --lane-color:var(--core);"></div>
+
+      <!-- Electrical Power & Energy Networks -->
+      <div class="card" data-id="ELEC2130" style="grid-column:3; grid-row:4; --lane-color:var(--power);"></div>
+      <div class="card" data-id="ELEC3130" style="grid-column:4; grid-row:4; --lane-color:var(--power);"></div>
+      <div class="card" data-id="ELEC4130" style="grid-column:5; grid-row:4; --lane-color:var(--power);"></div>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="panel" id="panel">
+  <button class="close-btn" id="closeBtn">&times;</button>
+  <div id="panelContent"></div>
+</div>
+
+<script>
+/* ---------------------------------------------------------------
+   DATA — extracted from EPIC_B.Eng ELECTRICAL Redesigned Summary
+--------------------------------------------------------------- */
+const NODES = {
+  ENGG1100: {
+    kind:'card', lane:'common', code:'ENGG1100', name:'Introduction to Engineering', year:1,
+    prereqs:[],
+    grading:'Graded — HD/D/CR/P/F',
+    hook:'Begin building your identity as an engineer through a collaborative, cross-disciplinary team project.',
+    desc:"In this first year spine unit, you will begin building your identity and practice as an engineer through an engineering project with collaborative problem solving. Working in teams, you will engage with problems that draw on the breadth of engineering disciplines — civil, mechanical, mechatronic, electrical, electronic, and software engineering — and connect your work to contemporary industry and community contexts, grappling with the social, ethical, and sustainability dimensions of engineering.",
+    topics:['Engineering identity & disciplines','Collaborative team project','Foundational design thinking','Ethics, sustainability & safety','Reflective practice'],
+    ulos:[
+      'Describe the scope, roles, and interrelationships of various engineering disciplines within the broader context of engineering practice.',
+      'Apply foundational theoretical knowledge and practical skills to design and prototype basic engineering solutions.',
+      'Demonstrate effective communication, teamwork, self-reflection, and independent working skills.',
+      'Communicate foundational engineering design ideas and solutions in written and oral formats.',
+      'Identify sustainability considerations, safe working and ethical responsibilities in contemporary engineering practice.',
+      'Reflect on ethical issues and personal experiences to support professional growth as an emerging engineer.'
+    ],
+  },
+  ENGG1110: {
+    kind:'card', lane:'common', code:'ENGG1110', name:'Engineering in Balance', year:1,
+    prereqs:[],
+    grading:'Graded — HD/D/CR/P/F',
+    hook:'Statics and linear algebra — how and why structures remain balanced, stable and safe.',
+    desc:"You will learn how and why structures remain balanced, stable, and safe throughout their design life by developing core skills in statics and linear algebra. You will draw and interpret free-body diagrams, calculate forces and moments, apply equilibrium conditions, and use linear algebra techniques to solve the systems of equations that appear in structural analysis, building and testing simple truss models to connect theory with real engineering behaviour.",
+    topics:['Statics & equilibrium','Free-body diagrams','Forces, moments & reactions','Linear algebra for structural analysis','Truss model testing'],
+    ulos:[
+      'Explain and apply the fundamental principles of statics and equilibrium to analyse how engineering systems remain balanced and stable.',
+      'Draw and interpret free-body diagrams for a range of structures and mechanical components.',
+      'Calculate forces, moments, and support reactions in static engineering systems using appropriate analytical methods.',
+      'Analyse internal forces to evaluate structural behaviour.',
+      'Use linear algebra techniques to solve systems of equations that arise in engineering analysis.'
+    ],
+  },
+  ENGG1120: {
+    kind:'card', lane:'common', code:'ENGG1120', name:'Engineering with Heat and Fluids', year:1,
+    prereqs:[],
+    grading:'Graded — HD/D/CR/P/F',
+    hook:'Design and test a heat-exchanger system to learn how heat and fluids behave in engineering applications.',
+    desc:"You will design and explore a heat-exchanger system to learn how heat and fluids behave in engineering applications, investigating essential thermofluid parameters such as pressure, temperature, flow, and energy, and using mathematical tools like functions, equations, and derivatives to predict system performance. You will test predictions on a benchtop heat-exchanger using sensors, analyse the data, and refine your design choices.",
+    topics:['Thermofluid parameters (P, T, flow, energy)','Heat-exchanger design','Hydrostatics & energy balances','Transient thermal modelling','Sensor-based experimentation'],
+    ulos:[
+      'Describe how pressure, temperature, flow, and energy behave in simple thermofluid systems.',
+      'Apply appropriate mathematical methods to analyse conservation of energy and hydrostatic fluid pressure distributions.',
+      'Model transient thermal processes using exponential functions.',
+      'Analyse and interpret multivariable state relationships using algebraic methods.',
+      'Formulate and solve mass and energy balance models for steady engineering systems.',
+      'Design and evaluate a heat-exchanger by making predictions, analysing sensor data, and comparing design options.'
+    ],
+  },
+  ENGG1130: {
+    kind:'card', lane:'common', code:'ENGG1130', name:'Engineering in Motion', year:1,
+    prereqs:[],
+    grading:'Graded — HD/D/CR/P/F',
+    hook:'Design and instrument a projectile experiment to learn how calculus explains motion and forces.',
+    desc:"You will design and instrument a projectile experiment to learn how calculus helps explain motion and forces in engineering systems, building intuition for how position, speed, and acceleration relate, and how forces change motion. Through a strong emphasis on graphical interpretation, you'll extract quantities such as displacement, change in velocity, impulse, and work from time-based graphs, comparing sensor data against mathematical predictions.",
+    topics:['Kinematics via calculus','Motion graphs & data analysis',"Newton's laws & projectiles",'Sensor instrumentation','Displacement, velocity, impulse & work'],
+    ulos:[
+      'Describe how position, velocity, and acceleration relate, and explain how forces influence motion in simple engineering situations.',
+      'Use calculus to analyse changes in motion and energy from graphs, data, or equations.',
+      'Interpret and construct motion graphs to determine quantities such as displacement, change in velocity, impulse, and work.',
+      "Apply basic dynamics principles (e.g., Newton's second law) to predict motion in one- and two-dimensional scenarios, including simple projectiles.",
+      'Instrument and test a projectile system, process sensor data to reconstruct its motion, and compare your measurements with mathematical predictions.'
+    ],
+  },
+  ENGG1140: {
+    kind:'card', lane:'common', code:'ENGG1140', name:'Fundamentals of Digital Computing', year:1,
+    prereqs:[],
+    grading:'Graded — HD/D/CR/P/F',
+    hook:'Build a 4-bit CPU from logic gates upward while developing the discrete maths that underpins digital systems.',
+    desc:"You will explore how computers work at the most fundamental level by building a 4-bit CPU and developing discrete mathematical skills that underpin digital systems. You will implement a complete CPU, starting with logic gates and building to a fully functioning (but very small) computer, learning the mathematical principles that enable machines to represent information and solve problems along the way.",
+    topics:['Boolean algebra & logic design','Building a 4-bit CPU','Discrete maths (sets, functions, relations)','Digital subsystem design','Design verification & debugging'],
+    ulos:[
+      'Analyse the behaviour of digital circuits using fundamental mathematical principles such as logic, Boolean algebra, and data representation.',
+      'Design simple digital subsystems, including adders, registers, counters, and control circuits, by applying hardware design methods and mathematical reasoning.',
+      'Construct working digital circuits that implement core CPU operations using discrete components.',
+      'Apply discrete mathematical concepts, such as sets, functions, and relations, to solve problems relevant to digital systems.',
+      'Validate digital designs through testing, debugging, and logical justification.',
+      'Communicate technical reasoning and design decisions using diagrams, formal logic and structured explanations.'
+    ],
+  },
+  ENGG1150: {
+    kind:'card', lane:'common', code:'ENGG1150', name:'Foundations of Signals and Circuits', year:1,
+    prereqs:[],
+    grading:'Graded — HD/D/CR/P/F',
+    hook:'How electrical circuits operate, respond to change, and can be designed — from DC to AC and transient response.',
+    desc:"Electrical circuits are part of almost all advanced engineering systems, from buildings to vehicles, from mobile networks to robots. You will learn how electrical circuits operate, how they respond when conditions change, and how they can be designed — beginning with steady-state (DC) behaviour and extending to time-varying (AC) and transient responses — modelling system behaviour using nodal analysis, phasors, and first-order differential equations, culminating in a scaffolded project designing a circuit for an energy conversion application.",
+    topics:["Ohm's & Kirchhoff's laws",'Nodal analysis','Steady-state & transient RLC response','First-order differential equations','Phasors & complex numbers'],
+    ulos:[
+      "Analyse simple engineering systems by applying fundamental physical laws and systematic analysis techniques, including Ohm's Law, Kirchhoff's Laws, and nodal analysis.",
+      'Formulate mathematical models of engineering systems and solve them using linear algebra methods to derive and analyse nodal equations.',
+      'Model and predict system behaviour involving energy storage and dissipation, including steady-state and transient responses of systems containing resistive, capacitive, and inductive elements.',
+      'Formulate and solve first-order ordinary differential equations to describe and predict the time-domain behaviour of engineering systems.',
+      'Represent and interpret time-varying sinusoidal signals using complex numbers and phasor notation.',
+      'Formulate and perform complex number operations to analyse and solve problems involving sinusoidal signals in engineering systems.'
+    ],
+  },
+  ENGG1160: {
+    kind:'card', lane:'common', code:'ENGG1160', name:'Programming and Proof', year:1,
+    prereqs:[],
+    grading:'Graded — HD/D/CR/P/F',
+    hook:'A practical introduction to programming in Python alongside the discrete maths that underpins it.',
+    desc:"This unit provides a practical introduction to basic computing and programming concepts in Python. You will gain understanding of and practical experience in computer programming, implementing formal descriptions of problem solutions using a high-level language, and the principle of incremental development, alongside related concepts from discrete mathematics — functions, relations, induction, graph theory, and recursion.",
+    topics:['Python programming fundamentals','Algorithms & incremental development','Variables, loops, functions, conditionals','Discrete maths for computing (relations, induction, recursion)'],
+    ulos:[
+      'Apply problem solving skills to develop algorithms that solve small to medium-sized computational problems.',
+      'Design and write code to implement a program description in a high-level programming language.',
+      'Understand and apply the taught concepts of variables, loops, functions, conditionals and compound data in the implementation of well-designed programs.',
+      'Demonstrate knowledge of basic concepts of discrete mathematics and how they relate to computer science and programming, including variables, functions, and recursion.',
+      'Relate discrete math concepts of functions, relations, Boolean algebra, counting, and recursion to programming in a high-level language.'
+    ],
+  },
+  MTRN3124: {
+    kind:'card', lane:'core', code:'MTRN3124', name:'Control Systems', year:3,
+    prereqs:[],
+    grading:'Graded — HD/D/CR/P/F',
+    hook:'A Mechatronic Engineering unit on feedback control — modelling, stability, and PID design. Prerequisite for Power Electronics & Renewables.',
+    desc:"A Mechatronic Engineering unit (not owned by the EEE specialisation) offering a foundational introduction to the analysis and design of feedback control systems. You will build skills in mathematical modelling of dynamic systems through differential equations and transfer functions, covering system stability, transient and steady-state response, classical control design, PID controllers, and an introduction to digital control, using MATLAB/Simulink for modelling and simulation on physical SISO systems.",
+    topics:['Differential equations & transfer functions','Time & frequency-domain analysis','Stability, root locus & Bode plots','PID controller design','MATLAB/Simulink simulation'],
+    ulos:[
+      'Model dynamic systems using differential equations, transfer functions, and block diagrams to analyse mechanical, electrical, and thermal systems in the time and frequency domains.',
+      'Evaluate system stability and performance by applying root locus, Bode plots, and stability criteria to assess transient response, steady-state error, and robustness.',
+      'Design and tune feedback controllers using classical methods, including PID strategies, to meet specified performance requirements.',
+      'Implement and validate control systems through MATLAB/Simulink simulation and experimental testing, interpreting results to troubleshoot system behaviour.',
+      'Characterise the transient and steady-state behaviour of practical feedback-controlled systems.'
+    ],
+  },
+
+  ELEC2110: {
+    kind:'card', lane:'digital', code:'ELEC2110', name:'Digital Electronics', year:2,
+    prereqs:['ENGG1140'],
+    grading:'Graded — HD/D/CR/P/F',
+    hook:'Design and implement modern digital systems and the microprocessors that underpin computing, mobile and embedded devices.',
+    desc:"This unit develops the principles and practice required to design and implement modern digital systems and the microprocessors that underpin modern computing environments, mobile devices, and embedded systems. Through an exploration of sequential logic and finite-state machines, you'll uncover how timing signals, data transfers, race conditions, and critical path analysis ensure the reliability of complex systems. You'll gain practical expertise with hardware description languages (HDL) to model, simulate, and verify digital designs, put into practice using field-programmable gate arrays (FPGAs), and be introduced to microprocessor organisation, instruction sets and datapath/control/memory systems.",
+    topics:['FSM design','Timing & race conditions','HDL simulation & verification','FPGA implementation','Microprocessor datapath basics'],
+    ulos:[
+      'Design and implement finite-state machines (FSMs) from problem specifications (state diagram/table, encoding, outputs).',
+      'Apply timing concepts to digital system design, including timing signals/data transfers, critical-path analysis and identification/mitigation of race conditions and related reliability issues.',
+      'Develop, simulate, and verify digital systems using HDL, including writing testbenches and interpreting waveforms to debug designs.',
+      'Articulate core computer architecture concepts, such as datapath and control, instruction format/ISA basics, instruction cycle, and memory/register organisation, and relate these concepts to microprocessor design.',
+      'Design and implement simple microprocessors using HDL and FPGAs.'
+    ],
+  },
+  ELEC3110: {
+    kind:'card', lane:'digital', code:'ELEC3110', name:'Embedded Systems', year:3,
+    prereqs:['ELEC2110'],
+    grading:'Graded — HD/D/CR/P/F',
+    hook:'Hands-on skills for digital hardware design — data/arithmetic processing, timing and microcontroller peripherals.',
+    desc:"This unit is designed to ignite your curiosity and equip you with the skills to tackle challenges in digital hardware design. Through hands-on learning, you'll gain experience in digital data processing, arithmetic processing, timing, and configuring internal and external peripherals on a microcontroller, including the practical implementation of state machines. You will design programs that transform raw data into actionable outcomes using interrupts, timers and analog-to-digital converters, and interact with external peripherals through serial interfaces — a launchpad for robotics, IoT and automated-industry applications.",
+    topics:['Embedded system architecture','Internal/external interfaces','CPU peripheral interfacing','C programming','Hardware state machines'],
+    ulos:[
+      'Describe the various components that comprise a modern embedded system, including those that are essential and those that are optional.',
+      'Distinguish between the different external and internal interfaces and select which is most appropriate for a given circumstance.',
+      'Interface a CPU with both internal and external functional units.',
+      'Program an embedded system in C languages.',
+      'Construct state machines on an embedded system.'
+    ],
+  },
+  ELEC4110: {
+    kind:'card', lane:'digital', code:'ELEC4110', name:'Systems on Chip', year:4,
+    prereqs:['ELEC3110'],
+    grading:'Graded — HD/D/CR/P/F',
+    hook:'Master the concepts, architectures and tools behind System-on-Chip (SoC) design, from IP blocks to a full hardware/software co-design project.',
+    desc:"This unit is your opportunity to master the concepts, architectures, and cutting-edge tools that underpin System-on-Chip (SoC) solutions. You will learn about high-level synthesis used to design Intellectual Property (IP) blocks, cover topics from configuring hardware platforms to implementing software applications, and examine the integration of programmable logic with processing systems and the challenges of hardware/software co-design. The unit culminates in a major project taking a SoC from concept to a fully designed, implemented and tested solution on real hardware.",
+    topics:['SoC architecture','High-level synthesis & IP blocks','HW/SW co-design','Programmable logic integration','Major SoC project'],
+    ulos:[
+      'Articulate a mature knowledge of what a System-on-Chip system is, and its constituent components.',
+      'Design and test System-on-Chip solutions on real hardware using standard hardware description and software programming languages.',
+      'Design, configure and analyze hardware/software interfaces for reliable execution at high performance.',
+      'Work within the constraints imposed by the availability of resources on the System-on-Chip platform to produce designs that meet user requirements.',
+      'Prepare design documents and reports to communicate and explain design decisions and products.'
+    ],
+  },
+
+  ELEC2120: {
+    kind:'card', lane:'signal', code:'ELEC2120', name:'Analog Electronics', year:2,
+    prereqs:['ENGG1150'],
+    grading:'Graded — HD/D/CR/P/F',
+    hook:'Condition, amplify and shape analog signals — diode/BJT/MOSFET behaviour, biasing, op-amps and frequency response.',
+    desc:"This unit invites you to explore the principles and techniques used to condition, amplify, and shape analog signals with precision and reliability. You will examine how non-ideal semiconductor devices — diodes, BJTs, and MOSFETs — behave at the circuit level, and how biasing, modelling, and feedback achieve predictable, stable operation. The unit introduces operational amplifiers and transistor-based amplifiers as practical signal-conditioning building blocks, with emphasis on small-signal models, frequency response, and performance trade-offs, developed through analysis, simulation and hands-on experimentation.",
+    topics:['Diode/BJT/MOSFET modelling','Biasing & small-signal analysis','Op-amps as building blocks','Frequency response (Bode)','Circuit simulation & prototyping'],
+    ulos:[
+      'Apply operational amplifiers as signal-conditioning building blocks with an understanding of non-ideal behaviour and performance limitations in practical applications.',
+      'Analyse and interpret frequency response of analog circuits using Bode plots, identifying the influence of device characteristics, loading, and feedback.',
+      'Explain and predict the circuit-level behaviour of semiconductor devices, including diodes, BJTs, and MOSFETs, using appropriate models.',
+      'Design and bias transistor-based analog circuits by applying DC operating-point analysis and small-signal models to meet specified performance requirements.',
+      'Prototype, test, and refine analog circuits by combining mathematical modelling, simulation, and measurement to evaluate linear and non-linear behaviour.'
+    ],
+  },
+  ELEC2140: {
+    kind:'card', lane:'signal', code:'ELEC2140', name:'Signals and Systems', year:2,
+    prereqs:['ENGG1150'],
+    grading:'Graded — HD/D/CR/P/F',
+    hook:'The cornerstone of EEE systems thinking — time/frequency analysis, convolution, Fourier and Laplace transforms.',
+    desc:"This unit offers a comprehensive introduction to the principles and techniques that make communication systems, amplifiers, control systems, and electronic circuits possible. You'll explore time and frequency analysis for continuous-time signals, Linear Time-Invariant systems, Convolution, and Fourier and Laplace Transforms — seeing how the Fourier Transform brings clarity to communication systems and how the Laplace Transform does the same for linear RLC circuits and feedback systems.",
+    topics:['Continuous-time signal analysis','Convolution & LTI systems','Fourier & Laplace transforms','Frequency-domain circuit analysis','MATLAB problem solving'],
+    ulos:[
+      'Process common signals (including sinusoids, rectangular, and impulses) using the operations of time-reversal and delay, and evaluate signal properties including average level, energy, and power.',
+      'Determine the output of a linear time-invariant system for a given input signal, using convolution.',
+      'Convert signals between the time and frequency domains using the Fourier transform and the Laplace transform.',
+      'Apply signal processing techniques (convolution and transforms) to analyze RLC circuits and communication systems.',
+      'Determine the stability of a linear time-invariant system from the location of the poles of the system response.',
+      'Use Matlab to solve problems in Signals and Systems.'
+    ],
+  },
+  ELEC3120: {
+    kind:'card', lane:'signal', code:'ELEC3120', name:'Mixed-Signal Electronics', year:3,
+    prereqs:['ELEC2120','ELEC2140'],
+    grading:'Graded — HD/D/CR/P/F',
+    hook:'Where analog and digital domains meet — differential/power amplifiers, sampling, quantisation and ADC/DAC signal chains.',
+    desc:"This unit develops advanced understanding and design capability in mixed-signal electronic systems, where analog and digital domains meet. You will extend prior knowledge of transistor-level circuits into high-performance analog front-end applications (differential and power amplifiers, noise-aware design, frequency-selective behaviour, frequency translation), then be introduced to sampling, quantisation, and mixed-signal system performance — Nyquist theory, aliasing, and converter requirements — analysing complete signal chains from sensors and analog conditioning through to ADC and DAC stages.",
+    topics:['Differential & power amplifiers','Noise-aware / high-frequency design','Sampling & quantisation (Nyquist)','ADC/DAC signal chains','Simulation-based design'],
+    ulos:[
+      'Design and analyse single-ended, differential, and power amplifier circuits, including gain, bias, frequency response and efficiency considerations.',
+      'Evaluate high-frequency circuit behaviour and implement frequency mixing and filtering for signal shaping and frequency translation.',
+      'Perform circuit simulations to predict behaviour, validate designs and investigate trade-offs for real components and operating conditions.',
+      'Model and implement digital sampling of analog signals, taking into account bandwidth considerations (Nyquist rate, aliasing, quantisation).',
+      'Model and implement analog signal reconstruction from digital samples.'
+    ],
+  },
+  ELEC4120: {
+    kind:'card', lane:'signal', code:'ELEC4120', name:'Digital Signal Processing', year:4,
+    prereqs:['ELEC3120'],
+    grading:'Graded — HD/D/CR/P/F',
+    hook:'Sample, filter, modify, store and analyse signals — from DFT and digital filters through to machine-learning basics.',
+    desc:"This unit equips you with cutting-edge techniques to sample, filter, modify, store, and analyse signals, unlocking their potential in applications ranging from communications to machine learning. You'll explore the Discrete Fourier Transform, digital filters, multirate signal processing, audio and image signal processing and digital modulation schemes, plus the basics of signal compression, feature extraction, pattern recognition and machine learning — implemented on a DSP simulation platform, culminating in a MATLAB program that processes real-world data.",
+    topics:['DFT & z-transform','FIR/IIR filter design','Multirate, audio & image processing','Compression & feature extraction','Digital modulation basics'],
+    ulos:[
+      'Analyse the response of discrete-time linear systems to signal inputs.',
+      'Convert signals between the time and frequency domains using the z-transform.',
+      'Analyse the effect of quantization on signal processing.',
+      'Apply the Discrete Fourier Transform to real-life signals to extract frequency components.',
+      'Analyse and design finite and infinite impulse response filters.',
+      'Digitally process audio signals and images.',
+      'Analyze the relationship between bandwidth, signal-to-noise ratio, and data rate in point-to-point communication channels, including concepts of modulation, symbol error rate, and bit error rate.'
+    ],
+  },
+
+  ELEC2130: {
+    kind:'card', lane:'power', code:'ELEC2130', name:'Electrical & Magnetic Circuits', year:2,
+    prereqs:['ENGG1150'],
+    grading:'Graded — HD/D/CR/P/F',
+    hook:'From circuit theory to real-world power systems — AC power, three-phase configurations and magnetic circuits.',
+    desc:"This unit takes circuit theory into real-world applications that power modern technology. Building on foundational knowledge, you will investigate the behaviour of real circuits when power, switching, and non-linear effects are introduced, mastering AC power systems — single-phase and three-phase configurations, power calculations, and power factor correction. The unit also introduces magnetic devices and circuits, laying the groundwork for electromechanical energy conversion, from electrical machines to power electronic converters.",
+    topics:['Steady-state & transient analysis','Phasors & power factor correction','Single/three-phase AC power','Magnetic circuits & transformers','Lab measurement & analysis'],
+    ulos:[
+      'Analyse the behaviour of electrical circuits under steady-state and transient conditions.',
+      'Apply phasor methods to AC circuits to determine impedance, reactive power, complex power, power factor and its correction according to given specifications.',
+      'Analyse single-phase and three-phase power circuits including star-delta configurations, and solution techniques for balanced and unbalanced systems.',
+      'Demonstrate knowledge of key magnetic principles and calculation of inductors and single-phase transformers.',
+      'Conduct laboratory experiments to measure, observe, and analyse the behaviour of electrical and magnetic systems.'
+    ],
+  },
+  ELEC3130: {
+    kind:'card', lane:'power', code:'ELEC3130', name:'Electrical Machines', year:3,
+    prereqs:['ELEC2130'],
+    grading:'Graded — HD/D/CR/P/F',
+    hook:'Design, analyse, control and select motors and generators — DC, AC and special machines for real applications.',
+    desc:"This unit empowers you with the skills to design, analyse, control, and select motors and generators for diverse applications, ensuring safe, efficient, and economical operation. You'll explore DC machines (self-, separately-excited and permanent-magnet types), single- and three-phase AC machines (induction and synchronous), and special machines (reluctance, stepper, brushless DC), engaging with real-world applications like electric/hybrid vehicles, renewable energy systems and high-speed drives.",
+    topics:['DC machine types','Induction & synchronous AC machines','Special machines (stepper, BLDC, reluctance)','Machine control & selection','EV & renewable applications'],
+    ulos:[
+      'Identify operational characteristics of typical electrical machines for a range of industrial applications.',
+      'Analyze and critically assess key aspects of DC and AC machines for a range of typical applications.',
+      'Design, model and analyze a complete electrical machine application and its control based on a set of specifications.',
+      'Work effectively in teams by identifying individual roles and responsibilities, sharing knowledge through peer-led learning, writing technical reports and logbooks, and communicating effectively.'
+    ],
+  },
+  ELEC4130: {
+    kind:'card', lane:'power', code:'ELEC4130', name:'Electrical Energy Networks', year:4,
+    prereqs:['ELEC3130'],
+    grading:'Graded — HD/D/CR/P/F',
+    hook:'Analyse and optimise power systems under steady-state and transient conditions, including faults, stability and protection.',
+    desc:"This unit equips you with essential techniques to analyse and optimise power systems under both steady-state and transient conditions, addressing challenges posed by large-scale distributed generation and energy storage. You'll build a foundation in classical and modern power system analysis — phasors, complex power, three-phase systems, the per-unit method, network matrices and power flow analysis — plus fault calculations, stability, control, protection principles and voltage stability in smart grids.",
+    topics:['Per-unit & network matrix methods','Power flow analysis','Fault & stability analysis','Protection principles','Transmission, distribution & smart grids'],
+    ulos:[
+      'Identify the operational characteristics of different transmission lines for electrical power networks.',
+      'Calculate the steady-state and dynamic stability of power systems with the application of network matrix techniques and power flow analysis.',
+      'Analyze the stability of power systems in the presence of symmetrical and unsymmetrical faults.',
+      'Demonstrate knowledge and understanding of power system protection principles, transmission and distribution systems, insulators and substations.',
+      'Work effectively in teams by identifying individual roles and responsibilities, sharing knowledge through peer-led learning, writing technical reports and logbooks, and effective communication.'
+    ],
+  },
+  ELEC4140: {
+    kind:'card', lane:'core', code:'ELEC4140', name:'Power Electronics & Renewable Energy Systems', year:4,
+    prereqs:['MTRN3124'],
+    grading:'Graded — HD/D/CR/P/F',
+    hook:'Power electronic converters at the heart of the transition to sustainable energy — DC-DC, inverters and renewables.',
+    desc:"Explore the world of power electronic converters — technologies at the heart of modern energy systems and the transition to a sustainable future. Building on passive components, semiconductor devices, circuit analysis and feedback control, you'll examine power semiconductors and converters and their role in efficient energy transformation, covering harmonic distortion, power quality, DC-DC converters, switched-mode power supplies, and single- and three-phase inverters and rectifiers, with applications from solar panels to electric vehicles.",
+    topics:['Power semiconductor devices','DC-DC converters & SMPS','Single/three-phase inverters & rectifiers','Power quality & harmonics','Renewable energy applications'],
+    ulos:[
+      'Describe the relationship between physical structure and performance characteristics of passive electrical components and active semiconductor power electronic devices.',
+      'Analyze and simulate power electronic converter circuits and derive accepted performance parameters, including power quality metrics.',
+      'Design and critically assess key aspects of power converters such as AC-DC, DC-DC and DC-AC converters.',
+      'Model, design, prototype and test a power electronic converter and its control based on a set of user-defined specifications.',
+      'Demonstrate knowledge of emerging applications of power electronics in renewable energy systems.'
+    ],
+  },
+};
+
+const LANE_VARS = { digital:'--digital', signal:'--signal', power:'--power', core:'--core', common:'--common' };
+
+/* ---------------------------------------------------------------
+   RENDER CARDS
+--------------------------------------------------------------- */
+function renderCards(){
+  document.querySelectorAll('.card[data-id]').forEach(el=>{
+    const id = el.dataset.id;
+    const n = NODES[id];
+    if(!n) return;
+    el.innerHTML = `
+      <div class="code">${n.code}</div>
+      <div class="name">${n.name}</div>
+      <div class="hook">${n.hook}</div>
+      <button type="button" class="expand-hint">+ details</button>
+    `;
+  });
+}
+renderCards();
+
+/* ---------------------------------------------------------------
+   CONNECTORS (SVG bezier routing between prerequisite nodes)
+--------------------------------------------------------------- */
+const svg = document.getElementById('connectors');
+const wrap = document.getElementById('mapWrap');
+
+function elFor(id){ return document.querySelector(`[data-id="${id}"]`); }
+
+function computeEdges(){
+  const edges = [];
+  Object.keys(NODES).forEach(id=>{
+    NODES[id].prereqs.forEach(pid=>{
+      if(NODES[pid]) edges.push([pid, id]);
+    });
+  });
+  return edges;
+}
+const EDGES = computeEdges();
+
+function drawConnectors(){
+  const wrapRect = wrap.getBoundingClientRect();
+  svg.setAttribute('width', wrapRect.width);
+  svg.setAttribute('height', wrapRect.height);
+  svg.innerHTML = '';
+
+  EDGES.forEach(([fromId,toId])=>{
+    const fromEl = elFor(fromId), toEl = elFor(toId);
+    if(!fromEl || !toEl) return;
+    const fr = fromEl.getBoundingClientRect();
+    const tr = toEl.getBoundingClientRect();
+
+    const x1 = fr.right - wrapRect.left;
+    const y1 = fr.top - wrapRect.top + fr.height/2;
+    const x2 = tr.left - wrapRect.left;
+    const y2 = tr.top - wrapRect.top + tr.height/2;
+
+    const dx = Math.max(40, (x2-x1)*0.5);
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    // Same-row connections: draw a genuinely straight line rather than a flattened
+    // bezier, whose control points can overshoot the endpoints on short gaps and
+    // render as a subtly different (slightly bulging) line than a true straight one.
+    const sameRow = Math.abs(y1 - y2) < 1;
+    const d = sameRow
+      ? `M ${x1} ${y1} L ${x2} ${y2}`
+      : `M ${x1} ${y1} C ${x1+dx} ${y1}, ${x2-dx} ${y2}, ${x2} ${y2}`;
+    path.setAttribute('d', d);
+    const laneColorVar = LANE_VARS[NODES[toId].lane] || '--muted';
+    path.setAttribute('stroke', `var(${laneColorVar})`);
+    path.dataset.from = fromId;
+    path.dataset.to = toId;
+    path.setAttribute('opacity', '0.55');
+    svg.appendChild(path);
+
+    // small connector dot at start/end
+    [ [x1,y1], [x2,y2] ].forEach(([cx,cy])=>{
+      const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', 2.6);
+      c.setAttribute('fill', `var(${laneColorVar})`);
+      c.dataset.from = fromId; c.dataset.to = toId;
+      svg.appendChild(c);
+    });
+  });
+}
+
+/* ---------------------------------------------------------------
+   TRACE / HIGHLIGHT logic
+--------------------------------------------------------------- */
+function upstreamChain(id, acc){
+  acc.add(id);
+  const n = NODES[id];
+  if(n && n.prereqs) n.prereqs.forEach(p=>{ if(!acc.has(p)) upstreamChain(p, acc); });
+  return acc;
+}
+
+let activeTrace = null;
+let activeLaneFilter = null;
+
+function applyHighlight(){
+  const allNodeEls = document.querySelectorAll('.card, .node-mini');
+  const allEdgeEls = svg.querySelectorAll('path, circle');
+
+  if(!activeTrace && !activeLaneFilter){
+    allNodeEls.forEach(el=>el.classList.remove('dim','lit'));
+    allEdgeEls.forEach(el=>{ el.classList.remove('dim','lit'); el.setAttribute('opacity','0.55'); });
+    return;
+  }
+
+  let chain = null;
+  if(activeTrace){
+    chain = upstreamChain(activeTrace, new Set());
+  }
+
+  allNodeEls.forEach(el=>{
+    const id = el.dataset.id;
+    const n = NODES[id];
+    let show = true;
+    if(chain) show = chain.has(id);
+    if(activeLaneFilter) show = show && (n.lane === activeLaneFilter);
+    el.classList.toggle('dim', !show);
+    el.classList.toggle('lit', show && !!activeTrace);
+  });
+
+  allEdgeEls.forEach(el=>{
+    const f = el.dataset.from, t = el.dataset.to;
+    let show = true;
+    if(chain) show = chain.has(f) && chain.has(t);
+    if(activeLaneFilter) show = show && (NODES[t].lane === activeLaneFilter);
+    el.classList.toggle('dim', !show);
+    if(el.tagName === 'path'){
+      el.classList.toggle('lit', show && !!activeTrace);
+      el.setAttribute('opacity', show ? '0.85' : '0.08');
+    }
+  });
+}
+
+/* ---------------------------------------------------------------
+   DETAIL PANEL
+--------------------------------------------------------------- */
+const panel = document.getElementById('panel');
+const scrim = document.getElementById('scrim');
+const panelContent = document.getElementById('panelContent');
+
+const LANE_LABEL = {
+  digital:'Digital Electronics & Embedded Systems',
+  signal:'Analog Electronics & Signal Processing',
+  power:'Electrical Power & Energy Networks',
+  core:'Systems & Power Electronics',
+  common:'Common core / external unit'
+};
+
+function openPanel(id){
+  const n = NODES[id];
+  if(!n) return;
+  panel.style.setProperty('--lane-color', `var(${LANE_VARS[n.lane]})`);
+
+  const prereqLine = n.prereqs.length
+    ? n.prereqs.map(p => `<b>${NODES[p].code}</b> ${NODES[p].name}`).join(' + ')
+    : 'None (Year 1 entry unit)';
+
+  let html = `
+    <div class="p-lane">${LANE_LABEL[n.lane] || ''}</div>
+    <div class="p-code">${n.code} · Year ${n.year}</div>
+    <h2>${n.name}</h2>
+    <div class="p-meta">
+      ${n.grading ? `<span class="p-chip">${n.grading}</span>` : ''}
+      <span class="p-chip">Year ${n.year}</span>
+    </div>
+    <div class="p-req-line"><b>Prerequisite(s):</b> ${prereqLine}</div>
+  `;
+
+  if(n.desc){
+    html += `<h3>Unit description</h3><div class="p-desc">${n.desc}</div>`;
+  }
+  if(n.topics){
+    html += `<h3>Core topics</h3><ul class="topics">${n.topics.map(t=>`<li>${t}</li>`).join('')}</ul>`;
+  }
+  if(n.ulos){
+    html += `<h3>Unit learning outcomes</h3><ol class="ulos">${n.ulos.map((u,i)=>`<li><span class="n">ULO${i+1}</span><span>${u}</span></li>`).join('')}</ol>`;
+  }
+
+  const dependents = Object.keys(NODES).filter(k => NODES[k].prereqs.includes(id));
+  if(dependents.length){
+    html += `<h3>Leads into</h3><div class="p-req-line">${dependents.map(d=>`<button class="jump" data-jump="${d}">${NODES[d].code} — ${NODES[d].name}</button>`).join('<br>')}</div>`;
+  }
+
+  panelContent.innerHTML = html;
+  panel.classList.add('open');
+  scrim.classList.add('open');
+
+  activeTrace = id;
+  applyHighlight();
+
+  panelContent.querySelectorAll('[data-jump]').forEach(btn=>{
+    btn.addEventListener('click', ()=> openPanel(btn.dataset.jump));
+  });
+}
+
+function closePanel(){
+  panel.classList.remove('open');
+  scrim.classList.remove('open');
+}
+
+document.getElementById('closeBtn').addEventListener('click', closePanel);
+scrim.addEventListener('click', closePanel);
+document.addEventListener('keydown', e=>{ if(e.key === 'Escape') closePanel(); });
+
+function toggleTrace(id){
+  activeTrace = (activeTrace === id) ? null : id;
+  applyHighlight();
+}
+
+// Clicking the card/node itself: highlight its prerequisite chain on the map (no panel).
+document.querySelectorAll('.card[data-id], .node-mini[data-id]').forEach(el=>{
+  el.addEventListener('click', ()=> toggleTrace(el.dataset.id));
+});
+
+// Clicking "+ details": open the full detail panel (independent of tracing).
+document.querySelectorAll('.expand-hint').forEach(btn=>{
+  btn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    const host = btn.closest('[data-id]');
+    if(host) openPanel(host.dataset.id);
+  });
+});
+
+/* ---------------------------------------------------------------
+   LEGEND / LANE FILTER
+--------------------------------------------------------------- */
+document.querySelectorAll('.legend-item').forEach(item=>{
+  item.addEventListener('click', ()=>{
+    const lane = item.dataset.lane;
+    if(activeLaneFilter === lane){
+      activeLaneFilter = null;
+      document.querySelectorAll('.legend-item').forEach(i=>i.classList.remove('dimmed'));
+    } else {
+      activeLaneFilter = lane;
+      document.querySelectorAll('.legend-item').forEach(i=>{
+        i.classList.toggle('dimmed', i.dataset.lane !== lane);
+      });
+    }
+    applyHighlight();
+  });
+});
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  activeLaneFilter = null;
+  activeTrace = null;
+  document.querySelectorAll('.legend-item').forEach(i=>i.classList.remove('dimmed'));
+  closePanel();
+  applyHighlight();
+});
+
+/* ---------------------------------------------------------------
+   YEAR 1 TOGGLE — show/hide the 5 non-gateway common-core units
+--------------------------------------------------------------- */
+const yr1Block = document.getElementById('yr1Block');
+const yr1Toggle = document.getElementById('yr1Toggle');
+yr1Toggle.addEventListener('click', ()=>{
+  const expanded = yr1Block.classList.toggle('expanded');
+  yr1Toggle.querySelector('.label').textContent = expanded
+    ? 'Hide extra Year 1 units'
+    : 'Show 5 more Year 1 units';
+  // extra units have no prerequisite edges, but redraw defensively in case layout shifts
+  requestAnimationFrame(drawConnectors);
+});
+
+/* ---------------------------------------------------------------
+   INIT / RESIZE
+--------------------------------------------------------------- */
+function init(){
+  drawConnectors();
+}
+window.addEventListener('load', init);
+window.addEventListener('resize', ()=> { drawConnectors(); applyHighlight(); });
+// fallback in case fonts/layout shift after initial paint
+setTimeout(drawConnectors, 350);
+</script>
+</body>
+</html>
