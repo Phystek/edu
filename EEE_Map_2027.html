@@ -137,7 +137,10 @@
     top:0; left:0;
     width:100%; height:100%;
     pointer-events:none;
-    z-index:1;
+    z-index:3; /* above .grid (z-index:2) so edge-hit paths (pointer-events:stroke)
+                  can receive hover even over the grid gutters; the svg element and
+                  every child except .edge-hit stay pointer-events:none, so card
+                  clicks still pass straight through untouched. */
   }
   .connectors path{
     fill:none;
@@ -465,6 +468,139 @@
     margin:0; padding:0; list-style:none;
     display:flex; flex-direction:column; gap:10px;
   }
+  /* ---------- EDGE TOOLTIP (prereq hover) ---------- */
+  .edge-tooltip{
+    position:fixed;
+    z-index:50;
+    width:320px;
+    max-width:calc(100vw - 32px);
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--hair);
+    border-radius:10px;
+    box-shadow:0 10px 30px rgba(55,58,54,0.18);
+    padding:14px 16px;
+    pointer-events:none;
+    opacity:0;
+    transform:translateY(4px);
+    transition:opacity .12s ease, transform .12s ease;
+    max-height:min(420px, 70vh);
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  .edge-tooltip.show{ opacity:1; transform:translateY(0); pointer-events:auto; }
+  .edge-tooltip .et-close{
+    display:none; /* shown only on touch devices, via .is-touch on <html> */
+    position:sticky;
+    top:-14px;
+    float:right;
+    margin:-14px -16px 0 8px;
+    width:32px; height:32px;
+    align-items:center; justify-content:center;
+    background:transparent;
+    border:none;
+    border-radius:0 10px 0 8px;
+    font-size:20px;
+    line-height:1;
+    color:var(--muted);
+    cursor:pointer;
+  }
+  html.is-touch .edge-tooltip .et-close{ display:flex; }
+  .edge-tooltip::before{
+    content:"";
+    position:absolute;
+    left:16px; top:-4px;
+    width:8px; height:8px;
+    background:var(--panel);
+    border-left:1px solid var(--hair);
+    border-top:1px solid var(--hair);
+    transform:rotate(45deg);
+  }
+  .edge-tooltip .et-flow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:0.05em;
+    color:var(--muted);
+    text-transform:uppercase;
+    margin-bottom:8px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .edge-tooltip .et-flow .et-code{
+    color:var(--paper);
+    font-weight:600;
+  }
+  .edge-tooltip .et-flow svg{ flex:none; opacity:0.6; }
+  .edge-tooltip .et-name{
+    font-family:'IBM Plex Sans Condensed', sans-serif;
+    font-weight:600;
+    font-size:14.5px;
+    color:var(--paper);
+    margin-bottom:6px;
+    line-height:1.3;
+  }
+  .edge-tooltip .et-desc{
+    font-size:12.5px;
+    line-height:1.55;
+    color:var(--paper-dim);
+    margin-bottom:10px;
+  }
+  .edge-tooltip .et-topics{
+    display:flex; flex-wrap:wrap; gap:5px;
+  }
+  .edge-tooltip .et-topics span{
+    font-size:10.5px;
+    padding:3px 8px;
+    background:rgba(55,58,54,0.04);
+    border:1px solid var(--hair);
+    border-radius:5px;
+    color:var(--paper);
+  }
+  .edge-tooltip .et-lane-bar{
+    position:absolute;
+    left:0; top:0; bottom:0;
+    width:3px;
+    border-radius:10px 0 0 10px;
+    background:var(--lane-color, var(--muted));
+  }
+  .edge-tooltip .et-notes{
+    list-style:none; margin:0; padding:0;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .edge-tooltip .et-notes li{
+    padding-top:9px;
+    border-top:1px solid var(--hair);
+  }
+  .edge-tooltip .et-notes li:first-child{
+    padding-top:0;
+    border-top:none;
+  }
+  .edge-tooltip .et-need{
+    font-family:'IBM Plex Sans Condensed', sans-serif;
+    font-weight:600;
+    font-size:12.5px;
+    color:var(--paper);
+    margin-bottom:3px;
+  }
+  .edge-tooltip .et-give{
+    font-size:11.5px;
+    line-height:1.45;
+    color:var(--paper-dim);
+  }
+  .edge-tooltip .et-use{
+    font-size:11.5px;
+    line-height:1.45;
+    color:var(--paper);
+    margin-top:3px;
+    font-weight:500;
+  }
+  .edge-tooltip .et-flag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:9px;
+    letter-spacing:0.03em;
+    color:var(--muted);
+    font-weight:400;
+    text-transform:none;
+  }
+
   .panel ol.ulos li{
     font-size:13px;
     line-height:1.5;
@@ -505,7 +641,7 @@
 <header>
   <div class="eyebrow">Macquarie University · School of Engineering · 2027 Curriculum</div>
   <h1>B.Eng Electrical &amp; Electronic Engineering — Unit Flow Map</h1>
-  <p class="sub">A common first year leads into four specialised streams across Years 2–4. Click a unit to trace its prerequisite chain — click again to clear it. Click <span class="code-tag">+ details</span> for a full description, core topics and learning outcomes.</p>
+  <p class="sub">A common first year leads into four specialised streams across Years 2–4. Click a unit to trace its prerequisite chain — click again to clear it. Click <span class="code-tag">+ details</span> for a full description, core topics and learning outcomes. Hover over a connecting line to see exactly what the downstream unit needs from that prerequisite.</p>
 </header>
 
 <div class="toolbar" id="toolbar">
@@ -536,6 +672,7 @@
 <div class="map-scroll">
   <div class="map-wrap" id="mapWrap">
     <svg class="connectors" id="connectors"></svg>
+    <div class="edge-tooltip" id="edgeTooltip"></div>
 
     <div class="year-col-labels">
       <div></div>
@@ -907,6 +1044,73 @@ const NODES = {
 const LANE_VARS = { digital:'--digital', signal:'--signal', power:'--power', core:'--core', common:'--common' };
 
 /* ---------------------------------------------------------------
+   EDGE NOTES — what a downstream unit specifically needs from each
+   prerequisite, one entry per documented prereq link ("FROM>TO").
+
+   Method: each item was checked against the prereq unit's actual ULOs
+   and the downstream unit's actual ULOs — only genuine textual/content
+   matches are listed as "builds on"; where the link is real but the
+   ULO wording doesn't overlap directly, it's marked "continues" rather
+   than overstated as a direct match. Nothing here is inferred from a
+   plausible-sounding unit title alone.
+--------------------------------------------------------------- */
+const EDGE_NOTES = {
+  'ENGG1140>ELEC2110': { items: [
+    { need:'Digital subsystem design', give:'Building adders, registers, counters & control circuits from logic gates', use:'direct foundation for datapath, control & register/memory organisation' },
+    { need:'Boolean algebra & logic', give:'Formal logic and Boolean reasoning used to analyse gate-level circuits', use:'underpins state-encoding and output logic in FSM design' },
+    { need:'Gate-level build experience', give:'Took a design from logic gates to a working small CPU', use:'baseline circuit literacy before moving to HDL/FPGA workflows' },
+  ]},
+  'ENGG1150>ELEC2130': { items: [
+    { need:'Steady-state & transient RLC response', give:'Modelling energy storage/dissipation in resistive, capacitive & inductive circuits', use:'extended directly to power, switching & non-linear circuit behaviour' },
+    { need:'Phasors & complex numbers', give:'Representing sinusoidal signals with complex-number/phasor notation', use:'the exact toolkit used for impedance, reactive power & power-factor calculations' },
+    { need:'Nodal analysis', give:"Ohm's/Kirchhoff's laws and systematic circuit-solving technique", use:'the general method reused throughout for circuit analysis' },
+  ]},
+  'ENGG1150>ELEC2120': { items: [
+    { need:'Nodal analysis', give:"Ohm's/Kirchhoff's laws and systematic node-based circuit solving", use:'applied to bias-point and op-amp circuit analysis' },
+    { need:'Phasors & complex numbers', give:'Frequency-domain representation of sinusoidal signals', use:'needed to interpret Bode plots and frequency response' },
+  ]},
+  'ENGG1150>ELEC2140': { items: [
+    { need:'First-order differential equations', give:'Formulating & solving ODEs for circuit time-domain behaviour', use:'generalised via the Laplace transform to broader LTI system analysis' },
+    { need:'Steady-state & transient RLC response', give:'The specific circuit class analysed in this unit', use:'the worked example transform techniques are applied to' },
+    { need:'Phasors & complex numbers', give:'Complex-number representation of sinusoidal signals', use:'groundwork for Fourier-domain signal representation' },
+  ]},
+  'ELEC2130>ELEC3130': { items: [
+    { need:'Magnetic circuits & transformers', give:'Inductor/transformer calculation and magnetic-circuit principles', use:'the electromechanical foundation motors & generators are built on' },
+    { need:'Three-phase AC power', give:'Star-delta configurations and balanced/unbalanced system analysis', use:'reused directly for three-phase induction & synchronous machines' },
+    { need:'Phasor power calculations', give:'Impedance, reactive/complex power and power-factor methods', use:'carried into machine performance & efficiency analysis' },
+  ]},
+  'ELEC3130>ELEC4130': { items: [
+    { need:'Three-phase machine behaviour', give:'How generators/motors behave as three-phase electrical devices', use:'continued (rather than a direct ULO match) into treating machines as elements within a wider power network', unconfirmed:true },
+  ]},
+  'MTRN3124>ELEC4140': { items: [
+    { need:'Transfer functions & PID design', give:'Modelling dynamic systems and tuning classical feedback controllers', use:'the control-loop design method applied to power-converter control' },
+    { need:'Stability analysis (root locus/Bode)', give:'Assessing transient response and closed-loop stability', use:'used to keep converter control loops stable' },
+    { need:'MATLAB/Simulink modelling', give:'Simulation & experimental validation of controlled systems', use:'reused directly for converter circuit simulation' },
+  ]},
+  'ELEC2110>ELEC3110': { items: [
+    { need:'Microprocessor datapath & ISA basics', give:'Datapath/control, instruction cycle and memory/register organisation', use:'the CPU architecture knowledge needed to interface a CPU with peripherals' },
+    { need:'FSM design', give:'State diagrams, encoding and output logic for finite-state machines', use:'directly reused, now implemented in C on a microcontroller instead of HDL' },
+  ]},
+  'ELEC3110>ELEC4110': { items: [
+    { need:'CPU–peripheral interfacing', give:'Interfacing a CPU with internal & external functional units', use:'scaled up into hardware/software interface design for SoC platforms' },
+    { need:'Embedded C programming', give:'Programming an embedded system in C', use:'the software side of SoC hardware/software co-design' },
+  ]},
+  'ELEC2120>ELEC3120': { items: [
+    { need:'Transistor biasing & small-signal design', give:'DC operating-point analysis and small-signal models', use:'extended to differential and power-amplifier topologies' },
+    { need:'Frequency response / Bode plots', give:'Analysing frequency response of analog circuits', use:'extended to high-frequency and frequency-mixing behaviour' },
+    { need:'Simulation-based prototyping', give:'Design–simulate–measure–refine workflow for analog circuits', use:'the same workflow, now applied to mixed-signal circuits' },
+  ]},
+  'ELEC2140>ELEC3120': { items: [
+    { need:'Fourier-domain representation', give:'Converting signals between time and frequency domains', use:'the mathematical basis for understanding sampling, aliasing & the Nyquist limit' },
+    { need:'LTI systems & convolution', give:'General continuous-time signal-processing framework', use:'applied to full ADC/DAC signal-chain analysis' },
+  ]},
+  'ELEC3120>ELEC4120': { items: [
+    { need:'Sampling, quantisation & Nyquist theory', give:'Modelling digital sampling of analog signals with bandwidth constraints', use:'the exact foundation for discrete-time analysis, the z-transform & the DFT' },
+    { need:'ADC/DAC signal chains', give:'Reconstructing analog signals from digital samples', use:'the practical context digital filters and the DFT are applied within' },
+  ]},
+};
+
+/* ---------------------------------------------------------------
    RENDER CARDS
 --------------------------------------------------------------- */
 function renderCards(){
@@ -929,6 +1133,13 @@ renderCards();
 --------------------------------------------------------------- */
 const svg = document.getElementById('connectors');
 const wrap = document.getElementById('mapWrap');
+
+// Touch/coarse-pointer detection: true for devices whose primary input
+// can't hover (phones, tablets). Drives tap-to-toggle behaviour, a wider
+// tap target on connectors, and the tooltip's close button.
+const isTouch = !(typeof window.matchMedia === 'function' && window.matchMedia('(hover: hover)').matches);
+if(isTouch) document.documentElement.classList.add('is-touch');
+const EDGE_HIT_WIDTH = isTouch ? 28 : 16;
 
 function elFor(id){ return document.querySelector(`[data-id="${id}"]`); }
 
@@ -985,8 +1196,144 @@ function drawConnectors(){
       c.dataset.from = fromId; c.dataset.to = toId;
       svg.appendChild(c);
     });
+
+    // Invisible wide "hit area" path, drawn on top, so hovering near a thin
+    // connector line is easy without changing its visible thickness.
+    const hit = document.createElementNS('http://www.w3.org/2000/svg','path');
+    hit.setAttribute('d', d);
+    hit.setAttribute('stroke', 'transparent');
+    hit.setAttribute('stroke-width', String(EDGE_HIT_WIDTH));
+    hit.setAttribute('fill', 'none');
+    hit.setAttribute('pointer-events', 'stroke');
+    hit.style.cursor = 'pointer';
+    hit.dataset.from = fromId;
+    hit.dataset.to = toId;
+    hit.classList.add('edge-hit');
+    svg.appendChild(hit);
   });
 }
+
+/* ---------------------------------------------------------------
+   EDGE TOOLTIP (hover a connector for prereq specifics)
+   Renders the EDGE_NOTES entry for this link when one exists (grounded
+   in an actual ULO comparison — see EDGE_NOTES comment above); falls
+   back to the prereq unit's general hook/topics for any edge that
+   hasn't been analysed yet, so nothing silently breaks.
+--------------------------------------------------------------- */
+const tooltipEl = document.getElementById('edgeTooltip');
+const arrowIcon = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h13M13 6l6 6-6 6"/></svg>`;
+
+function buildTooltipHTML(fromId, toId){
+  const from = NODES[fromId], to = NODES[toId];
+  if(!from || !to) return '';
+  const laneVar = LANE_VARS[from.lane] || '--muted';
+  const note = EDGE_NOTES[`${fromId}>${toId}`];
+
+  if(note && note.items && note.items.length){
+    const itemsHTML = note.items.map(it => `
+      <li>
+        <div class="et-need">${it.need}${it.unconfirmed ? ' <span class="et-flag">continuity, not a direct ULO match</span>' : ''}</div>
+        <div class="et-give">${it.give}</div>
+        <div class="et-use">→ ${it.use}</div>
+      </li>`).join('');
+    return `
+      <button type="button" class="et-close" aria-label="Close">&times;</button>
+      <div class="et-lane-bar" style="--lane-color:var(${laneVar})"></div>
+      <div class="et-flow"><span class="et-code">${from.code}</span> ${arrowIcon} <span class="et-code">${to.code}</span></div>
+      <div class="et-name">What ${to.code} needs from ${from.code}</div>
+      <ul class="et-notes">${itemsHTML}</ul>
+    `;
+  }
+
+  // Fallback: no analysed edge note yet for this link.
+  const topicsHTML = (from.topics || []).slice(0,4)
+    .map(t=>`<span>${t}</span>`).join('');
+  return `
+    <button type="button" class="et-close" aria-label="Close">&times;</button>
+    <div class="et-lane-bar" style="--lane-color:var(${laneVar})"></div>
+    <div class="et-flow"><span class="et-code">${from.code}</span> ${arrowIcon} <span>${to.code}</span></div>
+    <div class="et-name">${from.name}</div>
+    <div class="et-desc">${from.hook}</div>
+    ${topicsHTML ? `<div class="et-topics">${topicsHTML}</div>` : ''}
+  `;
+}
+
+function positionTooltip(evt){
+  const pad = 16;
+  const ttRect = tooltipEl.getBoundingClientRect();
+  let left = evt.clientX + pad;
+  let top = evt.clientY + pad;
+  if(left + ttRect.width > window.innerWidth - 8) left = evt.clientX - ttRect.width - pad;
+  if(top + ttRect.height > window.innerHeight - 8) top = evt.clientY - ttRect.height - pad;
+  tooltipEl.style.left = `${Math.max(8,left)}px`;
+  tooltipEl.style.top = `${Math.max(8,top)}px`;
+}
+
+function showEdgeTooltip(fromId, toId, evt){
+  hoveredEdge = `${fromId}>${toId}`;
+  tooltipEl.innerHTML = buildTooltipHTML(fromId, toId);
+  tooltipEl.classList.add('show');
+  positionTooltip(evt);
+}
+function hideEdgeTooltip(){
+  hoveredEdge = null;
+  tooltipEl.classList.remove('show');
+}
+
+let hoveredEdge = null;
+
+// --- Desktop / mouse-hover path (skipped entirely on touch devices) ---
+svg.addEventListener('mouseover', (evt)=>{
+  if(isTouch) return;
+  const t = evt.target;
+  if(!t.classList || !t.classList.contains('edge-hit')) return;
+  showEdgeTooltip(t.dataset.from, t.dataset.to, evt);
+});
+svg.addEventListener('mousemove', (evt)=>{
+  if(isTouch) return;
+  const t = evt.target;
+  if(!t.classList || !t.classList.contains('edge-hit')) return;
+  positionTooltip(evt);
+});
+svg.addEventListener('mouseout', (evt)=>{
+  if(isTouch) return;
+  const t = evt.target;
+  if(!t.classList || !t.classList.contains('edge-hit')) return;
+  // only hide if we're not moving onto another part of the same hit-path
+  if(evt.relatedTarget && evt.relatedTarget.classList && evt.relatedTarget.classList.contains('edge-hit')) return;
+  hideEdgeTooltip();
+});
+
+// --- Touch / tap-to-toggle path ---
+// Tapping a connector toggles its tooltip; tapping it again, tapping the
+// close button, or tapping anywhere else on the page dismisses it. Mouse
+// hover listeners above are fully disabled on these devices so a tap can't
+// double-trigger both code paths.
+svg.addEventListener('click', (evt)=>{
+  if(!isTouch) return;
+  const t = evt.target;
+  if(!t.classList || !t.classList.contains('edge-hit')) return;
+  evt.stopPropagation();
+  const key = `${t.dataset.from}>${t.dataset.to}`;
+  if(hoveredEdge === key && tooltipEl.classList.contains('show')){
+    hideEdgeTooltip();
+  } else {
+    showEdgeTooltip(t.dataset.from, t.dataset.to, evt);
+  }
+});
+tooltipEl.addEventListener('click', (evt)=>{
+  if(evt.target.closest('.et-close')){
+    evt.stopPropagation();
+    hideEdgeTooltip();
+  }
+});
+document.addEventListener('click', (evt)=>{
+  if(!isTouch) return;
+  if(!tooltipEl.classList.contains('show')) return;
+  if(tooltipEl.contains(evt.target)) return;
+  if(evt.target.classList && evt.target.classList.contains('edge-hit')) return;
+  hideEdgeTooltip();
+});
 
 /* ---------------------------------------------------------------
    TRACE / HIGHLIGHT logic
