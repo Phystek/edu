@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thyristor (SCR) State Explorer — ELEC2005</title>
+<style>
+  :root{
+    --ink:#1a1512; --paper:#faf7f2; --panel:#ffffff; --maroon:#7a1730;
+    --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a;
+    --cutoff-fill:#e3eef4; --cutoff-bd:#1c5f7a;
+    --active-fill:#e5f3ea; --active-bd:#2f7d4f;
+    --sat-fill:#f7e9e7; --sat-bd:#a3372c;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:#e6e6e4; color:var(--ink); font-family:"Iowan Old Style","Georgia",serif;}
+  .wrap{max-width:960px; margin:0 auto; padding:20px 20px 40px;}
+  header{border-bottom:1px solid var(--grid); padding-bottom:14px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:8px;}
+  .eyebrow{font-family:"Helvetica Neue",Arial,sans-serif; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--maroon); font-weight:700; margin:0 0 4px;}
+  h1{margin:0; font-size:26px; font-weight:700; letter-spacing:-0.01em;}
+  .tag{font-family:"Helvetica Neue",Arial,sans-serif; font-size:12px; color:var(--muted);}
+  .intro{font-family:"Helvetica Neue",Arial,sans-serif; font-size:14px; color:var(--muted); line-height:1.5; margin:0 0 16px;}
+  .callout{background:#fbe9c6; border:1px solid #e0be6f; color:#5c4a12; font-family:"Helvetica Neue",Arial,sans-serif; font-size:12.5px; line-height:1.5; border-radius:4px; padding:10px 14px; margin-bottom:16px;}
+  .grid{display:grid; grid-template-columns:1.35fr 1fr; gap:16px;}
+  @media (max-width:800px){.grid{grid-template-columns:1fr;}}
+  .panel{background:var(--panel); border:1px solid var(--grid); border-radius:4px; padding:16px;}
+  .section-label{font-family:"Helvetica Neue",Arial,sans-serif; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--maroon); font-weight:700; margin:0 0 10px;}
+  svg{width:100%; height:auto; display:block;}
+  .ctrl{margin-bottom:18px;}
+  .ctrl:last-of-type{margin-bottom:0;}
+  .row{display:flex; justify-content:space-between; align-items:baseline; font-family:"Helvetica Neue",Arial,sans-serif;}
+  .lbl{font-size:13px; color:var(--ink);}
+  .val{font-size:14px; color:var(--maroon); font-weight:700; font-variant-numeric:tabular-nums;}
+  .minmax{display:flex; justify-content:space-between; font-family:"Helvetica Neue",Arial,sans-serif; font-size:10.5px; color:var(--muted); margin-top:2px;}
+  input[type=range]{width:100%; accent-color:var(--maroon); margin-top:6px;}
+  .mode-toggle{display:flex; border:1px solid var(--grid); border-radius:4px; overflow:hidden; margin-top:6px;}
+  .mode-btn{flex:1; font-family:"Helvetica Neue",Arial,sans-serif; font-size:12.5px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; padding:8px 6px; background:var(--paper); color:var(--muted); border:none; cursor:pointer;}
+  .mode-btn.active{background:var(--maroon); color:#fff;}
+  .fire-btn{width:100%; margin-top:4px; font-family:"Helvetica Neue",Arial,sans-serif; font-size:13px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; color:#fff; background:var(--focus); border:none; border-radius:4px; padding:11px 10px; cursor:pointer; transition:filter .15s;}
+  .fire-btn:hover{filter:brightness(1.08);}
+  .fire-btn:active{filter:brightness(0.92);}
+  .fire-btn:disabled{background:var(--grid); color:var(--muted); cursor:not-allowed;}
+  .stats{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px;}
+  .stat{background:var(--paper); border:1px solid var(--grid); border-radius:4px; padding:10px 12px;}
+  .stat .slabel{font-family:"Helvetica Neue",Arial,sans-serif; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:0 0 4px;}
+  .stat .sval{font-family:"Helvetica Neue",Arial,sans-serif; font-size:16px; font-weight:700; color:var(--ink);}
+  .stat .sval em{color:var(--maroon); font-style:normal;}
+  button.reset{margin-top:16px; width:100%; font-family:"Helvetica Neue",Arial,sans-serif; font-size:12.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; color:var(--ink); background:transparent; border:1px solid var(--ink); border-radius:4px; padding:9px 10px; cursor:pointer; transition:all .15s;}
+  button.reset:hover{background:var(--ink); color:var(--paper);}
+  footer{text-align:center; font-family:"Helvetica Neue",Arial,sans-serif; font-size:11px; color:var(--muted); margin-top:22px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">Thyristors</p>
+      <h1>Thyristor (SCR) State Explorer</h1>
+    </div>
+    <div class="tag">ELEC2005 — Week 7</div>
+  </header>
+  <p class="intro">An SCR is a bistable, semi-controllable switch. Set the anode–cathode polarity and voltage, then try firing the gate. Notice that once conducting, the gate has no further effect — only reversing the polarity turns it off.</p>
+  <div class="callout">Simplified model: on-state voltage drop, holding current, and dV/dt-triggered false turn-on are not modelled. Turn-off is shown as immediate on polarity reversal; in a real circuit it depends on external commutation and the reverse-recovery interval.</div>
+
+  <div class="grid">
+    <div class="panel">
+      <p class="section-label">Device State</p>
+      <svg id="plot" viewBox="0 0 620 450" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+
+    <div class="panel">
+      <p class="section-label">Controls</p>
+
+      <div class="ctrl">
+        <div class="row"><span class="lbl">Anode–cathode polarity</span></div>
+        <div class="mode-toggle">
+          <button class="mode-btn active" id="btnForward" data-pol="forward">Forward</button>
+          <button class="mode-btn" id="btnReverse" data-pol="reverse">Reverse</button>
+        </div>
+      </div>
+
+      <div class="ctrl">
+        <div class="row"><span class="lbl">|V<sub>AK</sub>| magnitude</span><span class="val" id="vVal">100 V</span></div>
+        <input type="range" id="vSlider" min="0" max="100" value="20" step="1">
+        <div class="minmax"><span>0 V</span><span>500 V</span></div>
+      </div>
+
+      <div class="ctrl">
+        <button class="fire-btn" id="fireBtn">Fire gate pulse</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><p class="slabel">State</p><p class="sval" id="statState"><em>—</em></p></div>
+        <div class="stat"><p class="slabel">Anode current I<sub>A</sub></p><p class="sval" id="statI"><em>—</em></p></div>
+      </div>
+
+      <button class="reset" id="resetBtn">Reset to defaults</button>
+    </div>
+  </div>
+  <footer>ELEC2005 — Week 7, Power Semiconductors · for concept exploration, not assessment</footer>
+</div>
+
+<script>
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs){
+  const e = document.createElementNS(NS, tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+const V_BO = 400; // breakover voltage (fixed, labelled on axis)
+const vSlider = document.getElementById('vSlider');
+const btnForward = document.getElementById('btnForward');
+const btnReverse = document.getElementById('btnReverse');
+const fireBtn = document.getElementById('fireBtn');
+const resetBtn = document.getElementById('resetBtn');
+
+let polarity = 'forward';
+let state = 'forward_blocking'; // forward_blocking | conducting | reverse_blocking
+let flashTimer = null;
+
+function vMag(){ return +vSlider.value / 100 * 500; }
+
+function setPolarity(p){
+  polarity = p;
+  btnForward.classList.toggle('active', p === 'forward');
+  btnReverse.classList.toggle('active', p === 'reverse');
+  recompute();
+}
+
+function recompute(){
+  const v = vMag();
+  if(polarity === 'reverse'){
+    state = 'reverse_blocking';
+  } else {
+    if(state === 'conducting'){
+      state = 'conducting'; // stays latched while forward-biased
+    } else if(v >= V_BO){
+      state = 'conducting'; // breakover conduction
+    } else {
+      state = 'forward_blocking';
+    }
+  }
+  render();
+}
+
+function fireGate(){
+  if(polarity === 'forward' && state !== 'conducting'){
+    state = 'conducting';
+  }
+  // flash gate lead regardless (visual feedback), even if it had no effect
+  flashGate();
+  render();
+}
+
+function flashGate(){
+  const g = document.getElementById('gatePulseGlow');
+  if(!g) return;
+  g.setAttribute('opacity', '1');
+  if(flashTimer) clearTimeout(flashTimer);
+  flashTimer = setTimeout(()=>{ g.setAttribute('opacity','0'); }, 350);
+}
+
+vSlider.addEventListener('input', recompute);
+btnForward.addEventListener('click', ()=>setPolarity('forward'));
+btnReverse.addEventListener('click', ()=>setPolarity('reverse'));
+fireBtn.addEventListener('click', fireGate);
+resetBtn.addEventListener('click', ()=>{
+  vSlider.value = 20; setPolarity('forward'); state = 'forward_blocking'; render();
+});
+
+const STATE_LABEL = {
+  forward_blocking: 'Forward blocking',
+  conducting: 'Conducting (latched)',
+  reverse_blocking: 'Reverse blocking'
+};
+
+function render(){
+  document.getElementById('vVal').textContent = vMag().toFixed(0) + " V";
+  document.getElementById('statState').innerHTML = '<em>' + STATE_LABEL[state] + '</em>';
+  const iText = state === 'conducting' ? 'high (external-circuit limited)' : 'leakage (µA–mA)';
+  document.getElementById('statI').innerHTML = '<em>' + iText + '</em>';
+  fireBtn.disabled = (polarity === 'reverse');
+  drawDiagram();
+}
+
+// --- geometry ---
+const W = 620, H = 450;
+
+function stateBox(cx, cy, w, h, label, sub, active, fillActive, bdActive){
+  const g = el('g', {});
+  const fill = active ? fillActive : 'var(--paper)';
+  const bd = active ? bdActive : 'var(--grid)';
+  const sw = active ? 2.5 : 1;
+  g.appendChild(el('rect', {x:cx-w/2, y:cy-h/2, width:w, height:h, rx:5, fill, stroke:bd, 'stroke-width':sw}));
+  const t1 = el('text', {x:cx, y:cy-4, 'text-anchor':'middle', 'font-size':14, 'font-weight':700, fill:'var(--ink)', 'font-family':'Helvetica Neue,Arial,sans-serif'});
+  t1.textContent = label;
+  g.appendChild(t1);
+  const t2 = el('text', {x:cx, y:cy+14, 'text-anchor':'middle', 'font-size':10.5, fill:'var(--muted)', 'font-family':'Helvetica Neue,Arial,sans-serif'});
+  t2.textContent = sub;
+  g.appendChild(t2);
+  return g;
+}
+
+function arrow(x1,y1,x2,y2, active, label){
+  const g = el('g', {});
+  const stroke = active ? 'var(--maroon)' : 'var(--grid)';
+  const sw = active ? 2.2 : 1.3;
+  g.appendChild(el('line', {x1,y1,x2,y2, stroke, 'stroke-width':sw, 'marker-end':'url(#arrowhead' + (active?'Active':'Dim') + ')'}));
+  if(label){
+    const mx = (x1+x2)/2, my = (y1+y2)/2;
+    const t = el('text', {x:mx, y:my-6, 'text-anchor':'middle', 'font-size':9.5, fill: active?'var(--maroon)':'var(--muted)', 'font-family':'Helvetica Neue,Arial,sans-serif'});
+    t.textContent = label;
+    g.appendChild(t);
+  }
+  return g;
+}
+
+function drawDiagram(){
+  const svg = document.getElementById('plot');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  while(svg.firstChild) svg.removeChild(svg.firstChild);
+
+  // defs: arrowheads
+  const defs = el('defs', {});
+  ['Active','Dim'].forEach(kind=>{
+    const marker = el('marker', {id:'arrowhead'+kind, markerWidth:8, markerHeight:8, refX:6, refY:3, orient:'auto'});
+    const path = el('path', {d:'M0,0 L6,3 L0,6 Z', fill: kind==='Active' ? 'var(--maroon)':'var(--grid)'});
+    marker.appendChild(path);
+    defs.appendChild(marker);
+  });
+  svg.appendChild(defs);
+
+  // --- state machine (top area) ---
+  const fbActive = state==='forward_blocking';
+  const conActive = state==='conducting';
+  const rbActive = state==='reverse_blocking';
+
+  const fbBox = {cx:130, cy:85, w:180, h:66};
+  const conBox = {cx:490, cy:85, w:180, h:66};
+  const rbBox = {cx:310, cy:210, w:200, h:66};
+
+  svg.appendChild(stateBox(fbBox.cx, fbBox.cy, fbBox.w, fbBox.h, 'Forward Blocking', 'small leakage only', fbActive, 'var(--cutoff-fill)', 'var(--cutoff-bd)'));
+  svg.appendChild(stateBox(conBox.cx, conBox.cy, conBox.w, conBox.h, 'Conducting', 'latched ON', conActive, 'var(--active-fill)', 'var(--active-bd)'));
+  svg.appendChild(stateBox(rbBox.cx, rbBox.cy, rbBox.w, rbBox.h, 'Reverse Blocking', 'small leakage only', rbActive, 'var(--sat-fill)', 'var(--sat-bd)'));
+
+  // transitions
+  svg.appendChild(arrow(fbBox.cx+fbBox.w/2, fbBox.cy, conBox.cx-conBox.w/2, conBox.cy, fbActive || conActive, 'gate pulse OR V≥V_BO'));
+  svg.appendChild(arrow(conBox.cx-30, conBox.cy+conBox.h/2, rbBox.cx+60, rbBox.cy-rbBox.h/2, conActive || rbActive, 'reverse bias'));
+  svg.appendChild(arrow(rbBox.cx-40, rbBox.cy-rbBox.h/2, fbBox.cx+30, fbBox.cy+fbBox.h/2, rbActive || fbActive, 'polarity → forward'));
+
+  // --- device schematic (bottom area) ---
+  const baseY = 358;
+  const symX = 310;
+  svg.appendChild(el('line', {x1:symX, y1:baseY-70, x2:symX, y2:baseY-30, stroke:'var(--ink)', 'stroke-width':2}));
+  svg.appendChild(el('line', {x1:symX-26, y1:baseY-30, x2:symX+26, y2:baseY-30, stroke:'var(--ink)', 'stroke-width':2}));
+  svg.appendChild(el('path', {d:`M${symX-26},${baseY-30} L${symX+26},${baseY-30} L${symX},${baseY+8} Z`, fill:'var(--ink)'}));
+  svg.appendChild(el('line', {x1:symX, y1:baseY+8, x2:symX, y2:baseY+48, stroke:'var(--ink)', 'stroke-width':2}));
+  // gate lead
+  svg.appendChild(el('line', {x1:symX+26, y1:baseY-15, x2:symX+70, y2:baseY-15, stroke:'var(--ink)', 'stroke-width':1.6}));
+  const gateGlow = el('circle', {id:'gatePulseGlow', cx:symX+70, cy:baseY-15, r:7, fill:'var(--mustard)', opacity:0});
+  svg.appendChild(gateGlow);
+  svg.appendChild(el('circle', {cx:symX+70, cy:baseY-15, r:3, fill:'var(--ink)'}));
+
+  const anodeLbl = el('text', {x:symX, y:baseY-78, 'text-anchor':'middle', 'font-size':12, 'font-weight':700, fill:'var(--ink)', 'font-family':'Helvetica Neue,Arial,sans-serif'});
+  anodeLbl.textContent = 'Anode';
+  svg.appendChild(anodeLbl);
+  const catLbl = el('text', {x:symX, y:baseY+64, 'text-anchor':'middle', 'font-size':12, 'font-weight':700, fill:'var(--ink)', 'font-family':'Helvetica Neue,Arial,sans-serif'});
+  catLbl.textContent = 'Cathode';
+  svg.appendChild(catLbl);
+  const gateLbl = el('text', {x:symX+78, y:baseY-19, 'text-anchor':'start', 'font-size':12, 'font-weight':700, fill:'var(--ink)', 'font-family':'Helvetica Neue,Arial,sans-serif'});
+  gateLbl.textContent = 'Gate';
+  svg.appendChild(gateLbl);
+
+  const vLbl = el('text', {x:symX-90, y:baseY-32, 'text-anchor':'middle', 'font-size':13, 'font-weight':700, fill:'var(--maroon)', 'font-family':'Helvetica Neue,Arial,sans-serif'});
+  vLbl.textContent = 'V_AK = ' + (polarity==='reverse' ? '-' : '') + vMag().toFixed(0) + ' V';
+  svg.appendChild(vLbl);
+
+  const polLbl = el('text', {x:symX-90, y:baseY-14, 'text-anchor':'middle', 'font-size':12, fill:'var(--muted)', 'font-family':'Helvetica Neue,Arial,sans-serif'});
+  polLbl.textContent = polarity === 'forward' ? '(forward biased)' : '(reverse biased)';
+  svg.appendChild(polLbl);
+}
+
+render();
+</script>
+</body>
+</html>

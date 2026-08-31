@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Switching Loss Explorer — ELEC2005</title>
+<style>
+  :root{
+    --ink:#1a1512; --paper:#faf7f2; --panel:#ffffff; --maroon:#7a1730;
+    --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a; --mustard:#c98a2c;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:#e6e6e4; color:var(--ink); font-family:"Iowan Old Style","Georgia",serif;}
+  .wrap{max-width:960px; margin:0 auto; padding:20px 20px 40px;}
+  header{border-bottom:1px solid var(--grid); padding-bottom:14px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:8px;}
+  .eyebrow{font-family:"Helvetica Neue",Arial,sans-serif; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--maroon); font-weight:700; margin:0 0 4px;}
+  h1{margin:0; font-size:26px; font-weight:700; letter-spacing:-0.01em;}
+  .tag{font-family:"Helvetica Neue",Arial,sans-serif; font-size:12px; color:var(--muted);}
+  .intro{font-family:"Helvetica Neue",Arial,sans-serif; font-size:14px; color:var(--muted); line-height:1.5; margin:0 0 16px;}
+  .callout{background:#fbe9c6; border:1px solid #e0be6f; color:#5c4a12; font-family:"Helvetica Neue",Arial,sans-serif; font-size:12.5px; line-height:1.5; border-radius:4px; padding:10px 14px; margin-bottom:16px;}
+  .grid{display:grid; grid-template-columns:1.35fr 1fr; gap:16px;}
+  @media (max-width:800px){.grid{grid-template-columns:1fr;}}
+  .panel{background:var(--panel); border:1px solid var(--grid); border-radius:4px; padding:16px;}
+  .section-label{font-family:"Helvetica Neue",Arial,sans-serif; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--maroon); font-weight:700; margin:0 0 10px;}
+  svg{width:100%; height:auto; display:block;}
+  .ctrl{margin-bottom:16px;}
+  .ctrl:last-of-type{margin-bottom:0;}
+  .row{display:flex; justify-content:space-between; align-items:baseline; font-family:"Helvetica Neue",Arial,sans-serif;}
+  .lbl{font-size:13px; color:var(--ink);}
+  .val{font-size:14px; color:var(--maroon); font-weight:700; font-variant-numeric:tabular-nums;}
+  .minmax{display:flex; justify-content:space-between; font-family:"Helvetica Neue",Arial,sans-serif; font-size:10.5px; color:var(--muted); margin-top:2px;}
+  input[type=range]{width:100%; accent-color:var(--maroon); margin-top:6px;}
+  .stats{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px;}
+  .stat{background:var(--paper); border:1px solid var(--grid); border-radius:4px; padding:10px 12px;}
+  .stat .slabel{font-family:"Helvetica Neue",Arial,sans-serif; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:0 0 4px;}
+  .stat .sval{font-family:"Helvetica Neue",Arial,sans-serif; font-size:19px; font-weight:700; color:var(--ink);}
+  .stat .sval em{color:var(--maroon); font-style:normal;}
+  button.reset{margin-top:16px; width:100%; font-family:"Helvetica Neue",Arial,sans-serif; font-size:12.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; color:var(--ink); background:transparent; border:1px solid var(--ink); border-radius:4px; padding:9px 10px; cursor:pointer; transition:all .15s;}
+  button.reset:hover{background:var(--ink); color:var(--paper);}
+  .legend{display:flex; gap:16px; flex-wrap:wrap; font-family:"Helvetica Neue",Arial,sans-serif; font-size:11.5px; color:var(--muted); margin-top:10px;}
+  .legend span{display:inline-flex; align-items:center; gap:5px;}
+  .swatch{width:14px; height:3px; display:inline-block;}
+  .swatch.dash{background:repeating-linear-gradient(90deg,var(--muted) 0 4px, transparent 4px 7px);}
+  .capnote{font-family:"Helvetica Neue",Arial,sans-serif; font-size:11px; color:var(--maroon); margin-top:8px; min-height:14px;}
+  footer{text-align:center; font-family:"Helvetica Neue",Arial,sans-serif; font-size:11px; color:var(--muted); margin-top:22px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">Switching Loss</p>
+      <h1>Switching Loss Explorer</h1>
+    </div>
+    <div class="tag">ELEC2005 — Week 7</div>
+  </header>
+  <p class="intro">A practical switch takes a finite time t<sub>c</sub> to transition between on and off. During that crossover, voltage and current are non-zero at the same time — the shaded overlap is energy lost as heat. The ideal switch (dashed) has no crossover and no loss. Drag the sliders to see how transition time and switching frequency drive power loss.</p>
+  <div class="callout" id="simplifyNote">Simplified model: linear V/I ramps during the crossover, zero on-state conduction drop, zero off-state leakage, and a fixed 50% on/off duty split. Real devices also lose energy from conduction and leakage — this widget isolates switching loss only.</div>
+
+  <div class="grid">
+    <div class="panel">
+      <p class="section-label">Voltage &amp; Current vs. Time (one switching period)</p>
+      <svg id="plot" viewBox="0 0 620 400" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="legend">
+        <span><span class="swatch" style="background:var(--maroon)"></span>V(t) — practical</span>
+        <span><span class="swatch" style="background:var(--focus)"></span>I(t) — practical</span>
+        <span><span class="swatch dash"></span>ideal switch</span>
+        <span><span class="swatch" style="background:var(--mustard)"></span>loss region</span>
+      </div>
+      <p class="capnote" id="capNote">&nbsp;</p>
+    </div>
+
+    <div class="panel">
+      <p class="section-label">Controls</p>
+
+      <div class="ctrl">
+        <div class="row"><span class="lbl">Blocking voltage V<sub>off</sub></span><span class="val" id="vVal">400 V</span></div>
+        <input type="range" id="vSlider" min="0" max="100" value="60" step="1">
+        <div class="minmax"><span>12 V</span><span>1000 V</span></div>
+      </div>
+
+      <div class="ctrl">
+        <div class="row"><span class="lbl">On-state current I<sub>on</sub></span><span class="val" id="iVal">10.0 A</span></div>
+        <input type="range" id="iSlider" min="0" max="100" value="60" step="1">
+        <div class="minmax"><span>0.5 A</span><span>50 A</span></div>
+      </div>
+
+      <div class="ctrl">
+        <div class="row"><span class="lbl">Crossover time t<sub>c</sub></span><span class="val" id="tcVal">200 ns</span></div>
+        <input type="range" id="tcSlider" min="0" max="100" value="52" step="1">
+        <div class="minmax"><span>10 ns</span><span>5 µs</span></div>
+      </div>
+
+      <div class="ctrl">
+        <div class="row"><span class="lbl">Switching frequency f<sub>sw</sub></span><span class="val" id="fVal">100 kHz</span></div>
+        <input type="range" id="fSlider" min="0" max="100" value="67" step="1">
+        <div class="minmax"><span>1 kHz</span><span>1 MHz</span></div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><p class="slabel">Energy / transition</p><p class="sval" id="statE"><em>—</em></p></div>
+        <div class="stat"><p class="slabel">Avg. switching power</p><p class="sval" id="statP"><em>—</em></p></div>
+        <div class="stat"><p class="slabel">Peak instant. power</p><p class="sval" id="statPk"><em>—</em></p></div>
+        <div class="stat"><p class="slabel">% period in transition</p><p class="sval" id="statPct"><em>—</em></p></div>
+      </div>
+
+      <button class="reset" id="resetBtn">Reset to defaults</button>
+    </div>
+  </div>
+  <footer>ELEC2005 — Week 7, Power Semiconductors · for concept exploration, not assessment</footer>
+</div>
+
+<script>
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs){
+  const e = document.createElementNS(NS, tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+const vSlider = document.getElementById('vSlider');
+const iSlider = document.getElementById('iSlider');
+const tcSlider = document.getElementById('tcSlider');
+const fSlider = document.getElementById('fSlider');
+const resetBtn = document.getElementById('resetBtn');
+
+const DEFAULTS = { v:60, i:60, tc:52, f:67 };
+
+// log-scale mapping helpers: slider 0-100 -> [lo,hi] log
+function logMap(pos, lo, hi){ return lo*Math.pow(hi/lo, pos/100); }
+function linMap(pos, lo, hi){ return lo + (hi-lo)*(pos/100); }
+
+function getParams(){
+  const V = linMap(+vSlider.value, 12, 1000);
+  const I = linMap(+iSlider.value, 0.5, 50);
+  const tc = logMap(+tcSlider.value, 10e-9, 5e-6);
+  const f = logMap(+fSlider.value, 1e3, 1e6);
+  return {V, I, tc, f};
+}
+
+function fmtSI(val, unit){
+  const abs = Math.abs(val);
+  if(abs === 0) return "0 " + unit;
+  if(abs < 1e-9) return (val*1e12).toFixed(1) + " p" + unit;
+  if(abs < 1e-6) return (val*1e9).toFixed(1) + " n" + unit;
+  if(abs < 1e-3) return (val*1e6).toFixed(1) + " µ" + unit;
+  if(abs < 1) return (val*1e3).toFixed(1) + " m" + unit;
+  if(abs < 1e3) return val.toFixed(val < 10 ? 2 : 1) + " " + unit;
+  if(abs < 1e6) return (val/1e3).toFixed(1) + " k" + unit;
+  return (val/1e6).toFixed(2) + " M" + unit;
+}
+
+function buildWaveform(V, I, tc, f){
+  const T = 1/f;
+  let tcFrac = tc/T;
+  let capped = false;
+  if(2*tcFrac > 0.9){ tcFrac = 0.45; capped = true; }
+  const remaining = 1 - 2*tcFrac;
+  const flatOn = remaining/2;
+  const flatOff = remaining/2;
+  // segments in normalized x (0..1): [0,flatOn]=ON, [flatOn,flatOn+tcFrac]=turn-off,
+  // [.., +flatOff]=OFF, [.., 1]=turn-on
+  const s1 = flatOn;
+  const s2 = s1 + tcFrac;
+  const s3 = s2 + flatOff;
+  return {T, tcFrac, flatOn, flatOff, s1, s2, s3, capped};
+}
+
+function vOfX(x, seg, V){
+  if(x <= seg.s1) return 0;
+  if(x <= seg.s2){ const frac=(x-seg.s1)/(seg.s2-seg.s1); return V*frac; }
+  if(x <= seg.s3) return V;
+  const frac = (x-seg.s3)/(1-seg.s3);
+  return V*(1-frac);
+}
+function iOfX(x, seg, I){
+  if(x <= seg.s1) return I;
+  if(x <= seg.s2){ const frac=(x-seg.s1)/(seg.s2-seg.s1); return I*(1-frac); }
+  if(x <= seg.s3) return 0;
+  const frac = (x-seg.s3)/(1-seg.s3);
+  return I*frac;
+}
+
+// --- SVG geometry (fixed plot frame) ---
+const W = 620, H = 400;
+const M = {l:52, r:52, t:24, b:56};
+const plotW = W - M.l - M.r;
+const plotH = H - M.t - M.b;
+const VMAX_AXIS = 1000; // fixed axis ceiling, matches V slider max
+const IMAX_AXIS = 50;   // fixed axis ceiling, matches I slider max
+
+function xPix(xNorm){ return M.l + xNorm*plotW; }
+function yPixV(v){ return M.t + plotH*(1 - v/VMAX_AXIS); }
+function yPixI(i){ return M.t + plotH*(1 - i/IMAX_AXIS); }
+
+function render(){
+  const {V, I, tc, f} = getParams();
+  document.getElementById('vVal').textContent = V.toFixed(0) + " V";
+  document.getElementById('iVal').textContent = I.toFixed(1) + " A";
+  document.getElementById('tcVal').textContent = fmtSI(tc, "s");
+  document.getElementById('fVal').textContent = fmtSI(f, "Hz");
+
+  const seg = buildWaveform(V, I, tc, f);
+  document.getElementById('capNote').textContent = seg.capped
+    ? "Crossover time capped at 45% of the period — t_c cannot exceed the switching period. Energy/power below use the capped value."
+    : "\u00A0";
+
+  // stats: use the effective (possibly capped) crossover time so displayed numbers
+  // always match the waveform actually drawn — using the raw slider value here would
+  // let t_c exceed the switching period, giving physically impossible energy figures.
+  const tcEff = seg.tcFrac * seg.T;
+  const E = V*I*tcEff/6;
+  const Pavg = V*I*tcEff*f/3;
+  const Ppk = V*I/4;
+  const pct = 2*seg.tcFrac*100;
+  document.getElementById('statE').innerHTML = "<em>" + fmtSI(E,"J") + "</em>";
+  document.getElementById('statP').innerHTML = "<em>" + fmtSI(Pavg,"W") + "</em>";
+  document.getElementById('statPk').innerHTML = "<em>" + fmtSI(Ppk,"W") + "</em>";
+  document.getElementById('statPct').innerHTML = "<em>" + pct.toFixed(1) + "%</em>";
+
+  drawPlot(V, I, seg);
+}
+
+function drawPlot(V, I, seg){
+  const svg = document.getElementById('plot');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  while(svg.firstChild) svg.removeChild(svg.firstChild);
+
+  // axes frame
+  svg.appendChild(el('rect', {x:M.l, y:M.t, width:plotW, height:plotH, fill:'none', stroke:'var(--grid)', 'stroke-width':1}));
+
+  // y ticks - voltage (left, maroon)
+  [0,0.25,0.5,0.75,1].forEach(f=>{
+    const val = f*VMAX_AXIS;
+    const y = yPixV(val);
+    svg.appendChild(el('line', {x1:M.l-4, x2:M.l, y1:y, y2:y, stroke:'var(--maroon)', 'stroke-width':1}));
+    const t = el('text', {x:M.l-8, y:y+3, 'text-anchor':'end', 'font-size':10, fill:'var(--maroon)', 'font-family':'Helvetica Neue,Arial,sans-serif'});
+    t.textContent = val>=1000? (val/1000)+'k' : val;
+    svg.appendChild(t);
+  });
+  const vAxisLbl = el('text', {x:14, y:M.t+plotH/2, 'text-anchor':'middle', 'font-size':11, fill:'var(--maroon)', 'font-family':'Helvetica Neue,Arial,sans-serif', transform:`rotate(-90 14 ${M.t+plotH/2})`});
+  vAxisLbl.textContent = 'V (V)';
+  svg.appendChild(vAxisLbl);
+
+  // y ticks - current (right, focus/teal)
+  [0,0.25,0.5,0.75,1].forEach(f=>{
+    const val = f*IMAX_AXIS;
+    const y = yPixI(val);
+    svg.appendChild(el('line', {x1:W-M.r, x2:W-M.r+4, y1:y, y2:y, stroke:'var(--focus)', 'stroke-width':1}));
+    const t = el('text', {x:W-M.r+8, y:y+3, 'text-anchor':'start', 'font-size':10, fill:'var(--focus)', 'font-family':'Helvetica Neue,Arial,sans-serif'});
+    t.textContent = val.toFixed(0);
+    svg.appendChild(t);
+  });
+  const iAxisLbl = el('text', {x:W-14, y:M.t+plotH/2, 'text-anchor':'middle', 'font-size':11, fill:'var(--focus)', 'font-family':'Helvetica Neue,Arial,sans-serif', transform:`rotate(90 ${W-14} ${M.t+plotH/2})`});
+  iAxisLbl.textContent = 'I (A)';
+  svg.appendChild(iAxisLbl);
+
+  // x-axis
+  svg.appendChild(el('line', {x1:M.l, x2:W-M.r, y1:M.t+plotH, y2:M.t+plotH, stroke:'var(--ink)', 'stroke-width':1}));
+  const xLbl = el('text', {x:M.l+plotW/2, y:H-14, 'text-anchor':'middle', 'font-size':11, fill:'var(--muted)', 'font-family':'Helvetica Neue,Arial,sans-serif'});
+  xLbl.textContent = 'time (fraction of one switching period, t/T)';
+  svg.appendChild(xLbl);
+
+  // shaded loss regions (turn-off and turn-on crossovers): use min(v-scaled, i-scaled) overlap band
+  // draw as filled polygon under both curves within crossover x-range, sampled
+  function lossPolygon(xStart, xEnd){
+    const pts = [];
+    const n = 24;
+    for(let k=0;k<=n;k++){
+      const x = xStart + (xEnd-xStart)*k/n;
+      const v = vOfX(x, seg, V);
+      const vy = yPixV(v);
+      pts.push(`${xPix(x)},${vy}`);
+    }
+    for(let k=n;k>=0;k--){
+      const x = xStart + (xEnd-xStart)*k/n;
+      const i = iOfX(x, seg, I);
+      const iy = yPixI(i);
+      pts.push(`${xPix(x)},${iy}`);
+    }
+    return pts.join(' ');
+  }
+  svg.appendChild(el('polygon', {points:lossPolygon(seg.s1, seg.s2), fill:'var(--mustard)', 'fill-opacity':0.35, stroke:'none'}));
+  svg.appendChild(el('polygon', {points:lossPolygon(seg.s3, 1), fill:'var(--mustard)', 'fill-opacity':0.35, stroke:'none'}));
+
+  // practical V(t) curve
+  const nSamp = 160;
+  let vPath = '', iPath = '';
+  for(let k=0;k<=nSamp;k++){
+    const x = k/nSamp;
+    const v = vOfX(x, seg, V);
+    const i = iOfX(x, seg, I);
+    const px = xPix(x);
+    vPath += (k===0?'M':'L') + px + ' ' + yPixV(v) + ' ';
+    iPath += (k===0?'M':'L') + px + ' ' + yPixI(i) + ' ';
+  }
+  svg.appendChild(el('path', {d:vPath, fill:'none', stroke:'var(--maroon)', 'stroke-width':2.4}));
+  svg.appendChild(el('path', {d:iPath, fill:'none', stroke:'var(--focus)', 'stroke-width':2.4}));
+
+  // ideal switch overlay: step functions at midpoint of each transition
+  const idealSwitch1 = (seg.s1+seg.s2)/2;
+  const idealSwitch2 = (seg.s3+1)/2;
+  function idealPath(kind){ // kind: 'v' or 'i'
+    const highVal = kind==='v'? V : I;
+    let d = `M ${xPix(0)} ${kind==='v'?yPixV(0):yPixI(highVal)} `;
+    d += `L ${xPix(idealSwitch1)} ${kind==='v'?yPixV(0):yPixI(highVal)} `;
+    d += `L ${xPix(idealSwitch1)} ${kind==='v'?yPixV(V):yPixI(0)} `;
+    d += `L ${xPix(idealSwitch2)} ${kind==='v'?yPixV(V):yPixI(0)} `;
+    d += `L ${xPix(idealSwitch2)} ${kind==='v'?yPixV(0):yPixI(highVal)} `;
+    d += `L ${xPix(1)} ${kind==='v'?yPixV(0):yPixI(highVal)} `;
+    return d;
+  }
+  const vIdeal = el('path', {d:idealPath('v'), fill:'none', stroke:'var(--maroon)', 'stroke-width':1.3, 'stroke-dasharray':'5 4', opacity:0.75});
+  const iIdeal = el('path', {d:idealPath('i'), fill:'none', stroke:'var(--focus)', 'stroke-width':1.3, 'stroke-dasharray':'5 4', opacity:0.75});
+  svg.appendChild(vIdeal);
+  svg.appendChild(iIdeal);
+}
+
+vSlider.addEventListener('input', render);
+iSlider.addEventListener('input', render);
+tcSlider.addEventListener('input', render);
+fSlider.addEventListener('input', render);
+resetBtn.addEventListener('click', ()=>{
+  vSlider.value = DEFAULTS.v; iSlider.value = DEFAULTS.i;
+  tcSlider.value = DEFAULTS.tc; fSlider.value = DEFAULTS.f;
+  render();
+});
+
+render();
+</script>
+</body>
+</html>

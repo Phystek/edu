@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Device Comparison Radar — ELEC2005</title>
+<style>
+  :root{
+    --ink:#1a1512; --paper:#faf7f2; --panel:#ffffff; --maroon:#7a1730;
+    --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a; --mustard:#c98a2c; --olive:#6b7a3f;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:#e6e6e4; color:var(--ink); font-family:"Iowan Old Style","Georgia",serif;}
+  .wrap{max-width:960px; margin:0 auto; padding:20px 20px 40px;}
+  header{border-bottom:1px solid var(--grid); padding-bottom:14px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:8px;}
+  .eyebrow{font-family:"Helvetica Neue",Arial,sans-serif; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--maroon); font-weight:700; margin:0 0 4px;}
+  h1{margin:0; font-size:26px; font-weight:700; letter-spacing:-0.01em;}
+  .tag{font-family:"Helvetica Neue",Arial,sans-serif; font-size:12px; color:var(--muted);}
+  .intro{font-family:"Helvetica Neue",Arial,sans-serif; font-size:14px; color:var(--muted); line-height:1.5; margin:0 0 16px;}
+  .callout{background:#fbe9c6; border:1px solid #e0be6f; color:#5c4a12; font-family:"Helvetica Neue",Arial,sans-serif; font-size:12.5px; line-height:1.5; border-radius:4px; padding:10px 14px; margin-bottom:16px;}
+  .grid{display:grid; grid-template-columns:1.35fr 1fr; gap:16px;}
+  @media (max-width:800px){.grid{grid-template-columns:1fr;}}
+  .panel{background:var(--panel); border:1px solid var(--grid); border-radius:4px; padding:16px;}
+  .section-label{font-family:"Helvetica Neue",Arial,sans-serif; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--maroon); font-weight:700; margin:0 0 10px;}
+  svg{width:100%; height:auto; display:block;}
+  .devlist{display:flex; flex-direction:column; gap:8px;}
+  .devrow{display:flex; align-items:center; gap:10px; font-family:"Helvetica Neue",Arial,sans-serif; font-size:13.5px; padding:8px 10px; border:1px solid var(--grid); border-radius:4px; background:var(--paper); cursor:pointer; user-select:none;}
+  .devrow input{accent-color:var(--maroon); width:16px; height:16px; cursor:pointer;}
+  .swatch{width:14px; height:14px; border-radius:3px; flex-shrink:0;}
+  .devrow .name{font-weight:700; flex:1;}
+  .stats{margin-top:16px;}
+  .stat{background:var(--paper); border:1px solid var(--grid); border-radius:4px; padding:10px 12px; margin-bottom:8px;}
+  .stat .slabel{font-family:"Helvetica Neue",Arial,sans-serif; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:0 0 4px;}
+  .stat .sval{font-family:"Helvetica Neue",Arial,sans-serif; font-size:13px; color:var(--ink); line-height:1.5;}
+  button.reset{margin-top:10px; width:100%; font-family:"Helvetica Neue",Arial,sans-serif; font-size:12.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; color:var(--ink); background:transparent; border:1px solid var(--ink); border-radius:4px; padding:9px 10px; cursor:pointer; transition:all .15s;}
+  button.reset:hover{background:var(--ink); color:var(--paper);}
+  footer{text-align:center; font-family:"Helvetica Neue",Arial,sans-serif; font-size:11px; color:var(--muted); margin-top:22px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">Power Semiconductors</p>
+      <h1>Device Comparison Radar</h1>
+    </div>
+    <div class="tag">ELEC2005 — Week 7</div>
+  </header>
+  <p class="intro">Toggle devices on and off to compare their trade-offs across five dimensions. No single device wins on every axis — that's the whole point of the summary table.</p>
+  <div class="callout">Ratings are relative, illustrative estimates (1–5 scale) synthesised from this lecture's content and typical device data, not exact datasheet benchmarks. MCT values are especially approximate — this lecture didn't cover specific MCT ratings.</div>
+
+  <div class="grid">
+    <div class="panel">
+      <p class="section-label">Relative Capability (1&nbsp;=&nbsp;low, 5&nbsp;=&nbsp;high)</p>
+      <svg id="plot" viewBox="0 0 520 400" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+
+    <div class="panel">
+      <p class="section-label">Devices</p>
+      <div class="devlist" id="devList"></div>
+
+      <div class="stats" id="statBox"></div>
+
+      <button class="reset" id="resetBtn">Reset to defaults</button>
+    </div>
+  </div>
+  <footer>ELEC2005 — Week 7, Power Semiconductors · for concept exploration, not assessment</footer>
+</div>
+
+<script>
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs){
+  const e = document.createElementNS(NS, tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+const AXES = ["Voltage Rating","Current Rating","Switching Frequency","Drive Simplicity","Affordability"];
+const N = AXES.length;
+
+const DEVICES = {
+  BJT:    {color:"var(--maroon)", vals:[2,2,2,2,4]},
+  MOSFET: {color:"var(--focus)",  vals:[1,2,5,5,5]},
+  IGBT:   {color:"var(--mustard)",vals:[5,5,2,4,3]},
+  GTO:    {color:"var(--olive)",  vals:[5,5,1,1,1]},
+  MCT:    {color:"var(--muted)",  vals:[3,2,3,4,2]},
+};
+const DEFAULT_ON = {BJT:true, MOSFET:true, IGBT:true, GTO:false, MCT:false};
+let on = Object.assign({}, DEFAULT_ON);
+
+// build device checklist UI
+const devListEl = document.getElementById('devList');
+Object.keys(DEVICES).forEach(name=>{
+  const row = document.createElement('label');
+  row.className = 'devrow';
+  row.innerHTML = `<input type="checkbox" data-dev="${name}"> <span class="swatch" style="background:${DEVICES[name].color}"></span> <span class="name">${name}</span>`;
+  devListEl.appendChild(row);
+});
+function syncCheckboxes(){
+  devListEl.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.checked = !!on[cb.dataset.dev];
+  });
+}
+devListEl.addEventListener('change', (e)=>{
+  if(e.target.matches('input[type=checkbox]')){
+    on[e.target.dataset.dev] = e.target.checked;
+    render();
+  }
+});
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  on = Object.assign({}, DEFAULT_ON);
+  syncCheckboxes();
+  render();
+});
+
+// --- geometry (fixed pentagon frame) ---
+const W = 520, H = 400;
+const cx = 260, cy = 205, R = 148;
+
+function axisPoint(i, frac){
+  const angle = -Math.PI/2 + i*(2*Math.PI/N);
+  const r = R*frac;
+  return [cx + r*Math.cos(angle), cy + r*Math.sin(angle)];
+}
+
+function drawStatic(svg){
+  // grid rings at 1..5
+  for(let ring=1; ring<=5; ring++){
+    const pts = [];
+    for(let i=0;i<N;i++){ pts.push(axisPoint(i, ring/5).join(',')); }
+    svg.appendChild(el('polygon', {points:pts.join(' '), fill:'none', stroke:'var(--grid)', 'stroke-width': ring===5?1.4:1}));
+  }
+  // spokes
+  for(let i=0;i<N;i++){
+    const [x,y] = axisPoint(i,1);
+    svg.appendChild(el('line', {x1:cx, y1:cy, x2:x, y2:y, stroke:'var(--grid)', 'stroke-width':1}));
+  }
+  // axis labels (two-line wrap for long labels)
+  AXES.forEach((label,i)=>{
+    const [x,y] = axisPoint(i, 1.24);
+    const words = label.split(' ');
+    const g = el('g', {});
+    words.forEach((w,li)=>{
+      const t = el('text', {x, y: y + li*12 - (words.length-1)*6, 'text-anchor':'middle', 'font-size':11, fill:'var(--muted)', 'font-family':'Helvetica Neue,Arial,sans-serif', 'font-weight':600});
+      t.textContent = w;
+      g.appendChild(t);
+    });
+    svg.appendChild(g);
+  });
+  // ring value labels along the vertical (first) axis
+  for(let ring=1; ring<=5; ring++){
+    const [x,y] = axisPoint(0, ring/5);
+    const t = el('text', {x:x+6, y:y-3, 'font-size':9, fill:'var(--muted)', 'font-family':'Helvetica Neue,Arial,sans-serif'});
+    t.textContent = ring;
+    svg.appendChild(t);
+  }
+}
+
+function drawDevice(svg, name){
+  const {color, vals} = DEVICES[name];
+  const pts = vals.map((v,i)=>axisPoint(i, v/5));
+  svg.appendChild(el('polygon', {points:pts.map(p=>p.join(',')).join(' '), fill:color, 'fill-opacity':0.16, stroke:color, 'stroke-width':2.2}));
+  pts.forEach(([x,y])=>{
+    svg.appendChild(el('circle', {cx:x, cy:y, r:3.4, fill:color}));
+  });
+}
+
+function render(){
+  const svg = document.getElementById('plot');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  while(svg.firstChild) svg.removeChild(svg.firstChild);
+  drawStatic(svg);
+  Object.keys(DEVICES).forEach(name=>{
+    if(on[name]) drawDevice(svg, name);
+  });
+
+  // stats: list active devices' strongest/weakest axis
+  const statBox = document.getElementById('statBox');
+  statBox.innerHTML = '';
+  const active = Object.keys(DEVICES).filter(d=>on[d]);
+  if(active.length === 0){
+    const s = document.createElement('div');
+    s.className = 'stat';
+    s.innerHTML = '<p class="slabel">Selection</p><p class="sval">No devices selected — toggle one above.</p>';
+    statBox.appendChild(s);
+    return;
+  }
+  active.forEach(name=>{
+    const vals = DEVICES[name].vals;
+    let maxI=0, minI=0;
+    vals.forEach((v,i)=>{ if(v>vals[maxI]) maxI=i; if(v<vals[minI]) minI=i; });
+    const s = document.createElement('div');
+    s.className = 'stat';
+    s.innerHTML = `<p class="slabel">${name}</p><p class="sval">Strongest: <b>${AXES[maxI]}</b> (${vals[maxI]}/5) &nbsp;·&nbsp; Weakest: <b>${AXES[minI]}</b> (${vals[minI]}/5)</p>`;
+    statBox.appendChild(s);
+  });
+}
+
+syncCheckboxes();
+render();
+</script>
+</body>
+</html>
