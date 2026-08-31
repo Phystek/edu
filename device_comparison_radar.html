@@ -7,7 +7,7 @@
 <style>
   :root{
     --ink:#1a1512; --paper:#faf7f2; --panel:#ffffff; --maroon:#7a1730;
-    --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a; --mustard:#c98a2c; --olive:#6b7a3f;
+    --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a; --mustard:#c98a2c; --olive:#6b7a3f; --terracotta:#a8502e;
   }
   *{box-sizing:border-box;}
   body{margin:0; background:#e6e6e4; color:var(--ink); font-family:"Iowan Old Style","Georgia",serif;}
@@ -47,7 +47,7 @@
     <div class="tag">ELEC2005 — Week 7</div>
   </header>
   <p class="intro">Toggle devices on and off to compare their trade-offs across five dimensions. No single device wins on every axis — that's the whole point of the summary table.</p>
-  <div class="callout">Ratings are relative, illustrative estimates (1–5 scale) synthesised from this lecture's content and typical device data, not exact datasheet benchmarks. MCT values are especially approximate — this lecture didn't cover specific MCT ratings.</div>
+  <div class="callout">Ratings are relative, illustrative estimates (1–5 scale), calibrated against the voltage/current/frequency chart and this lecture's content — not exact datasheet benchmarks. MCT values are especially approximate — this lecture didn't cover specific MCT ratings.</div>
 
   <div class="grid">
     <div class="panel">
@@ -79,13 +79,14 @@ const AXES = ["Voltage Rating","Current Rating","Switching Frequency","Drive Sim
 const N = AXES.length;
 
 const DEVICES = {
-  BJT:    {color:"var(--maroon)", vals:[2,2,2,2,4]},
-  MOSFET: {color:"var(--focus)",  vals:[1,2,5,5,5]},
-  IGBT:   {color:"var(--mustard)",vals:[5,5,2,4,3]},
-  GTO:    {color:"var(--olive)",  vals:[5,5,1,1,1]},
-  MCT:    {color:"var(--muted)",  vals:[3,2,3,4,2]},
+  BJT:       {color:"var(--maroon)",     vals:[2,3,2,2,4]},
+  MOSFET:    {color:"var(--focus)",      vals:[1,1,5,5,5]},
+  IGBT:      {color:"var(--mustard)",    vals:[3,2,2,4,3]},
+  GTO:       {color:"var(--olive)",      vals:[4,5,1,1,1]},
+  MCT:       {color:"var(--muted)",      vals:[3,2,3,4,2]},
+  Thyristor: {color:"var(--terracotta)", vals:[5,5,1,2,4]},
 };
-const DEFAULT_ON = {BJT:true, MOSFET:true, IGBT:true, GTO:false, MCT:false};
+const DEFAULT_ON = {BJT:true, MOSFET:true, IGBT:false, GTO:false, MCT:false, Thyristor:true};
 let on = Object.assign({}, DEFAULT_ON);
 
 // build device checklist UI
