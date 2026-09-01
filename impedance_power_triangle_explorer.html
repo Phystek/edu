@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Impedance &amp; Power Triangle Explorer — ELEC2005</title>
+<style>
+  :root{
+    --ink:#1a1512; --paper:#faf7f2; --panel:#ffffff; --maroon:#7a1730;
+    --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a; --mustard:#c98a2c;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; padding:24px 16px 40px; background:#e6e6e4; font-family:"Helvetica Neue",Arial,sans-serif; color:var(--ink);}
+  .wrap{max-width:960px; margin:0 auto;}
+  header{display:flex; justify-content:space-between; align-items:flex-end; border-bottom:1px solid var(--grid); padding-bottom:14px; margin-bottom:6px;}
+  .eyebrow{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--maroon); font-weight:700; margin:0 0 4px;}
+  h1{font-family:"Iowan Old Style","Georgia",serif; font-weight:700; font-size:28px; letter-spacing:-0.01em; margin:0; color:var(--ink);}
+  .tag{font-size:12px; color:var(--muted); white-space:nowrap; padding-bottom:4px;}
+  .intro{font-size:14px; line-height:1.5; color:var(--muted); margin:14px 0 20px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  @media (max-width:800px){ .grid2{grid-template-columns:1fr;} }
+  .panel{background:var(--panel); border:1px solid var(--grid); border-radius:4px; padding:14px 16px;}
+  .panel + .panel{margin-top:14px;}
+  .panel h2{font-family:"Iowan Old Style","Georgia",serif; font-size:15px; font-weight:700; margin:0 0 8px; color:var(--ink);}
+  svg{display:block; width:100%; height:auto;}
+  .axis-label{font-size:14px; fill:var(--muted);}
+  .tick-label{font-size:13px; fill:var(--muted);}
+  .legend-label{font-size:14px;}
+  .tri-label{font-size:15px; font-weight:700;}
+
+  .controls .row{margin-bottom:16px;}
+  .controls label{display:flex; justify-content:space-between; align-items:baseline; font-size:13px; margin-bottom:4px;}
+  .controls .val{font-weight:700; color:var(--maroon); font-variant-numeric:tabular-nums;}
+  .controls input[type=range]{width:100%; accent-color:var(--maroon); margin:2px 0 3px;}
+  .minmax{display:flex; justify-content:space-between; font-size:10px; color:var(--muted);}
+  button{
+    display:block; width:100%; padding:8px 10px; background:var(--paper); border:1px solid var(--ink); border-radius:3px;
+    color:var(--ink); font-size:13px; font-family:"Helvetica Neue",Arial,sans-serif; cursor:pointer; transition:background .15s,color .15s;
+  }
+  button:hover{background:var(--ink); color:var(--paper);}
+
+  .stats{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px;}
+  .stat{background:var(--paper); border:1px solid var(--grid); border-radius:4px; padding:8px 10px;}
+  .stat .lbl{font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:2px;}
+  .stat .num{font-size:16px; font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums;}
+  .stat .unit{font-size:11px; color:var(--muted); font-weight:400;}
+  .stateflag{grid-column:1/-1; text-align:center; padding:7px 8px; border-radius:4px; font-size:13px; font-weight:700; border:1px solid transparent;}
+
+  .samefi{text-align:center; font-size:12px; color:var(--focus); font-style:italic; margin-top:6px;}
+  footer{text-align:center; font-size:11px; color:var(--muted); margin-top:22px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">ELEC2005 — Week 8</p>
+      <h1>Impedance &amp; Power Triangle Explorer</h1>
+    </div>
+    <div class="tag">Impedance · Complex Power</div>
+  </header>
+  <p class="intro">
+    Build up an impedance Z = R + jX with the sliders below, and watch the impedance triangle and the power
+    triangle move together — they're always similar triangles, sharing the exact same angle φ. That's not a
+    coincidence: φ is simultaneously the impedance angle, the V–I phase difference, and the power-factor angle.
+  </p>
+
+  <div class="grid2">
+    <div class="panel">
+      <h2>Impedance triangle</h2>
+      <svg id="z-plot" viewBox="0 0 320 350"></svg>
+    </div>
+    <div class="panel">
+      <h2>Power triangle</h2>
+      <svg id="s-plot" viewBox="0 0 320 350"></svg>
+    </div>
+  </div>
+  <p class="samefi">▲ same angle φ in both triangles ▲</p>
+
+  <div class="panel controls" style="margin-top:14px;">
+    <h2>Controls</h2>
+    <div class="grid2">
+      <div>
+        <div class="row">
+          <label>resistance R <span class="val" id="rVal">10 Ω</span></label>
+          <input type="range" id="rSlider" min="5" max="20" step="0.5" value="10">
+          <div class="minmax"><span>5 Ω</span><span>20 Ω</span></div>
+        </div>
+        <div class="row">
+          <label>reactance X <span class="val" id="xVal">+8 Ω</span></label>
+          <input type="range" id="xSlider" min="-20" max="20" step="1" value="8">
+          <div class="minmax"><span>−20 Ω (capacitive)</span><span>+20 Ω (inductive)</span></div>
+        </div>
+        <div class="row">
+          <label>source rms voltage V <span class="val" id="vVal">230 V</span></label>
+          <input type="range" id="vSlider" min="150" max="300" step="10" value="230">
+          <div class="minmax"><span>150 V</span><span>300 V</span></div>
+        </div>
+        <button id="resetBtn">Reset to defaults</button>
+      </div>
+      <div>
+        <div class="stats">
+          <div class="stat"><div class="lbl">Impedance Z</div><div class="num" id="statZ">—</div></div>
+          <div class="stat"><div class="lbl">Current I</div><div class="num" id="statI">—</div></div>
+          <div class="stat"><div class="lbl">Active power P</div><div class="num" id="statP">—</div></div>
+          <div class="stat"><div class="lbl">Reactive power Q</div><div class="num" id="statQ">—</div></div>
+          <div class="stat"><div class="lbl">Apparent power S</div><div class="num" id="statS">—</div></div>
+          <div class="stat"><div class="lbl">Power factor</div><div class="num" id="statPF">—</div></div>
+          <div class="stateflag" id="stateFlag">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>ELEC2005 — Week 8 · for concept exploration, not assessment</footer>
+</div>
+
+<script>
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs={}, children=[]){
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  for (const c of children) e.appendChild(c);
+  return e;
+}
+
+const R_FRAME = 20;      // ohms
+const X_FRAME = 20;      // ohms, symmetric
+const P_FRAME = 18000;   // watts
+const Q_FRAME = 9000;    // VAr, symmetric
+
+const COL_R = "#1c5f7a";   // teal
+const COL_X = "#c98a2c";   // mustard
+const COL_Z = "#7a1730";   // maroon
+const COL_ARC = "#1c5f7a";
+
+function drawTriangle(svgId, horizVal, vertVal, hypMag, angleRad, horizFrame, vertFrame, horizLabel, vertLabel, hypLabel){
+  const svg = document.getElementById(svgId);
+  svg.innerHTML = "";
+  const w=320, h=300;
+  const M = {l:50, r:20, t:20, b:40};
+  const innerW = w-M.l-M.r, innerH = h-M.t-M.b;
+  const cx = M.l, cy = M.t + innerH/2;
+  const pxPerUnitX = innerW/horizFrame;
+  const pxPerUnitY = (innerH/2)/vertFrame;
+
+  // axes
+  svg.appendChild(el("line",{x1:cx,y1:cy,x2:w-M.r,y2:cy,stroke:"#c9c2b4","stroke-width":1}));
+  svg.appendChild(el("line",{x1:cx,y1:M.t,x2:cx,y2:h-M.b,stroke:"#c9c2b4","stroke-width":1}));
+  svg.appendChild(el("text",{x:w-M.r,y:cy+16,class:"axis-label","text-anchor":"end"},[document.createTextNode(horizLabel+" \u2192")]));
+  svg.appendChild(el("text",{x:cx+4,y:M.t+2,class:"axis-label"},[document.createTextNode(vertLabel)]));
+  svg.appendChild(el("text",{x:cx,y:h-M.b+16,class:"tick-label","text-anchor":"middle"},[document.createTextNode("0")]));
+  svg.appendChild(el("text",{x:w-M.r,y:h-M.b+16,class:"tick-label","text-anchor":"end"},[document.createTextNode(horizFrame.toLocaleString())]));
+
+  const px = cx + horizVal*pxPerUnitX;
+  const py = cy - vertVal*pxPerUnitY;
+
+  // triangle: horizontal leg, vertical leg, hypotenuse
+  svg.appendChild(el("line",{x1:cx,y1:cy,x2:px,y2:cy,stroke:COL_R,"stroke-width":3}));
+  svg.appendChild(el("line",{x1:px,y1:cy,x2:px,y2:py,stroke:COL_X,"stroke-width":3}));
+  svg.appendChild(el("line",{x1:cx,y1:cy,x2:px,y2:py,stroke:COL_Z,"stroke-width":3.2}));
+  svg.appendChild(el("circle",{cx:px,cy:py,r:4,fill:COL_Z}));
+
+  // angle arc at origin (small, fixed radius, tucked into the corner regardless of angle steepness).
+  // The endpoint is computed from the *actual on-screen direction* of the Z/S line (in pixel space),
+  // not from the true physical angle — R and X (or P and Q) can have different px-per-unit scales
+  // depending on the frame sizes, which would otherwise make the arc visibly diverge from the line.
+  const arcR = 18;
+  const lineLen = Math.hypot(px-cx, py-cy) || 1;
+  const dirx = (px-cx)/lineLen, diry = (py-cy)/lineLen;
+  const largeArc = Math.abs(angleRad) > Math.PI/2 ? 1 : 0;
+  const sweep = angleRad >= 0 ? 0 : 1;
+  const ax = cx + arcR, ay = cy;
+  const bx = cx + arcR*dirx, by = cy + arcR*diry;
+  svg.appendChild(el("path",{d:`M ${ax} ${ay} A ${arcR} ${arcR} 0 ${largeArc} ${sweep} ${bx} ${by}`, fill:"none", stroke:COL_ARC, "stroke-width":1.6}));
+  // label placed on the true screen-space bisector between the R-axis and the line direction
+  const bisectx = (1+dirx)/2, bisecty = (0+diry)/2;
+  const bisectLen = Math.hypot(bisectx,bisecty) || 1;
+  const lx = cx + (arcR+13)*(bisectx/bisectLen), ly = cy + (arcR+13)*(bisecty/bisectLen);
+  svg.appendChild(el("text",{x:lx,y:ly+4,class:"legend-label","text-anchor":"middle",fill:COL_ARC},[document.createTextNode("\u03c6")]));
+}
+
+function render(){
+  const R = parseFloat(document.getElementById("rSlider").value);
+  const X = parseFloat(document.getElementById("xSlider").value);
+  const V = parseFloat(document.getElementById("vSlider").value);
+
+  document.getElementById("rVal").textContent = R.toFixed(1)+" \u03a9";
+  document.getElementById("xVal").textContent = (X>=0?"+":"")+X.toFixed(0)+" \u03a9";
+  document.getElementById("vVal").textContent = V.toFixed(0)+" V";
+
+  const magZ = Math.sqrt(R*R+X*X);
+  const angZ = Math.atan2(X,R);
+  const I = V/magZ;
+  const P = I*I*R;
+  const Q = I*I*X;
+  const S = V*I;
+  const pf = P/S;
+
+  document.getElementById("statZ").innerHTML = magZ.toFixed(1)+'\u2220'+(angZ*180/Math.PI).toFixed(0)+'\u00b0<span class="unit"> \u03a9</span>';
+  document.getElementById("statI").innerHTML = I.toFixed(2)+'<span class="unit"> A</span>';
+  document.getElementById("statP").innerHTML = P.toFixed(0)+'<span class="unit"> W</span>';
+  document.getElementById("statQ").innerHTML = Q.toFixed(0)+'<span class="unit"> VAr</span>';
+  document.getElementById("statS").innerHTML = S.toFixed(0)+'<span class="unit"> VA</span>';
+  document.getElementById("statPF").textContent = pf.toFixed(3);
+
+  const flag = document.getElementById("stateFlag");
+  if (Math.abs(X) < 1e-6){
+    flag.textContent = "Purely resistive — unity power factor";
+    flag.style.background = "#e5f3ea"; flag.style.color = "#2f7d4f"; flag.style.borderColor="#2f7d4f";
+  } else if (X > 0){
+    flag.textContent = "Inductive-type — lagging power factor";
+    flag.style.background = "#e3eef4"; flag.style.color = "#1c5f7a"; flag.style.borderColor="#1c5f7a";
+  } else {
+    flag.textContent = "Capacitive-type — leading power factor";
+    flag.style.background = "#f7e9e7"; flag.style.color = "#a3372c"; flag.style.borderColor="#a3372c";
+  }
+
+  drawTriangle("z-plot", R, X, magZ, angZ, R_FRAME, X_FRAME, "R", "X", "Z");
+  drawTriangle("s-plot", P, Q, S, angZ, P_FRAME, Q_FRAME, "P", "Q", "S");
+
+  // legends with live values
+  const zItems = [["R", R.toFixed(1)+" \u03a9", COL_R], ["X", X.toFixed(1)+" \u03a9", COL_X], ["Z", magZ.toFixed(1)+" \u03a9", COL_Z]];
+  const sItems = [["P", P.toFixed(0)+" W", COL_R], ["Q", Q.toFixed(0)+" VAr", COL_X], ["S", S.toFixed(0)+" VA", COL_Z]];
+  for (const [svgId, items] of [["z-plot", zItems], ["s-plot", sItems]]){
+    const svg = document.getElementById(svgId);
+    let ly = 296;
+    for (const [label,val,color] of items){
+      svg.appendChild(el("rect",{x:50,y:ly-9,width:14,height:2.8,fill:color}));
+      svg.appendChild(el("text",{x:69,y:ly-4,class:"legend-label"},[document.createTextNode(label+" = "+val)]));
+      ly += 20;
+    }
+  }
+}
+
+document.getElementById("rSlider").addEventListener("input", render);
+document.getElementById("xSlider").addEventListener("input", render);
+document.getElementById("vSlider").addEventListener("input", render);
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  document.getElementById("rSlider").value = 10;
+  document.getElementById("xSlider").value = 8;
+  document.getElementById("vSlider").value = 230;
+  render();
+});
+
+render();
+</script>
+</body>
+</html>

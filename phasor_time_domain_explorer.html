@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phasor ↔ Time-Domain Explorer — ELEC2005</title>
+<style>
+  :root{
+    --ink:#1a1512; --paper:#faf7f2; --panel:#ffffff; --maroon:#7a1730;
+    --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a; --mustard:#c98a2c;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; padding:24px 16px 40px; background:#e6e6e4; font-family:"Helvetica Neue",Arial,sans-serif; color:var(--ink);}
+  .wrap{max-width:960px; margin:0 auto;}
+  header{display:flex; justify-content:space-between; align-items:flex-end; border-bottom:1px solid var(--grid); padding-bottom:14px; margin-bottom:6px;}
+  .eyebrow{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--maroon); font-weight:700; margin:0 0 4px;}
+  h1{font-family:"Iowan Old Style","Georgia",serif; font-weight:700; font-size:28px; letter-spacing:-0.01em; margin:0; color:var(--ink);}
+  .tag{font-size:12px; color:var(--muted); white-space:nowrap; padding-bottom:4px;}
+  .intro{font-size:14px; line-height:1.5; color:var(--muted); margin:14px 0 20px;}
+  .grid{display:grid; grid-template-columns:1.35fr 1fr; gap:18px;}
+  @media (max-width:800px){ .grid{grid-template-columns:1fr;} }
+  .panel{background:var(--panel); border:1px solid var(--grid); border-radius:4px; padding:14px 16px;}
+  .panel + .panel{margin-top:14px;}
+  .panel h2{font-family:"Iowan Old Style","Georgia",serif; font-size:15px; font-weight:700; margin:0 0 8px; color:var(--ink);}
+  svg{display:block; width:100%; height:auto;}
+  .axis-label{font-size:14px; fill:var(--muted);}
+  .tick-label{font-size:13px; fill:var(--muted);}
+  .legend-label{font-size:14px;}
+  .readout-label{font-size:13px; fill:var(--muted);}
+
+  .controls .row{margin-bottom:16px;}
+  .controls label{display:flex; justify-content:space-between; align-items:baseline; font-size:13px; margin-bottom:4px;}
+  .controls .val{font-weight:700; color:var(--maroon); font-variant-numeric:tabular-nums;}
+  .controls input[type=range]{width:100%; accent-color:var(--maroon); margin:2px 0 3px;}
+  .minmax{display:flex; justify-content:space-between; font-size:10px; color:var(--muted);}
+
+  .btnrow{display:flex; gap:8px; margin-top:4px;}
+  button{
+    flex:1; padding:8px 10px; background:var(--paper); border:1px solid var(--ink); border-radius:3px;
+    color:var(--ink); font-size:13px; font-family:"Helvetica Neue",Arial,sans-serif; cursor:pointer;
+    transition:background .15s,color .15s;
+  }
+  button:hover{background:var(--ink); color:var(--paper);}
+  button.active{background:var(--maroon); color:#fff; border-color:var(--maroon);}
+
+  .stats{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px;}
+  .stat{background:var(--paper); border:1px solid var(--grid); border-radius:4px; padding:8px 10px;}
+  .stat .lbl{font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:2px;}
+  .stat .num{font-size:16px; font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums;}
+  .stat .unit{font-size:11px; color:var(--muted); font-weight:400;}
+
+  footer{text-align:center; font-size:11px; color:var(--muted); margin-top:22px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">ELEC2005 — Week 8</p>
+      <h1>Phasor ↔ Time-Domain Explorer</h1>
+    </div>
+    <div class="tag">Phasors · Rotating-Vector Representation</div>
+  </header>
+  <p class="intro">
+    The rms phasor V̄ = V∠δ (dashed maroon arrow) is a frozen snapshot, at t = 0, of a vector that's really
+    rotating counter-clockwise at angular speed ω. Press Play to watch that rotating vector (solid teal arrow,
+    peak magnitude √2·V) sweep around — its projection onto the real axis, traced by the moving dot,
+    is exactly v(t). Turn on the current phasor to see the same thing happen for Ī, and to explore how the
+    phase angle φ = δ − β between them shows up as a lag or lead in the time domain.
+  </p>
+
+  <div class="grid">
+    <div>
+      <div class="panel">
+        <h2>Phasor diagram</h2>
+        <svg id="phasor-plot" viewBox="0 0 320 380"></svg>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <h2>Time domain: v(t)</h2>
+        <svg id="time-plot" viewBox="0 0 320 360"></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel controls" style="margin-top:14px;">
+    <h2>Controls</h2>
+    <div class="grid" style="grid-template-columns:1fr 1fr; gap:20px;">
+      <div>
+        <p style="font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--maroon); font-weight:700; margin:0 0 8px;">Voltage phasor V̄</p>
+        <div class="row">
+          <label>rms magnitude V <span class="val" id="vVal">3.0</span></label>
+          <input type="range" id="vSlider" min="1" max="5" step="0.5" value="3">
+          <div class="minmax"><span>1</span><span>5</span></div>
+        </div>
+        <div class="row">
+          <label>phase angle δ <span class="val" id="deltaVal">40°</span></label>
+          <input type="range" id="deltaSlider" min="-180" max="180" step="5" value="40">
+          <div class="minmax"><span>−180°</span><span>+180°</span></div>
+        </div>
+
+        <label style="display:flex; align-items:center; gap:8px; margin:16px 0 10px; cursor:pointer;">
+          <input type="checkbox" id="showCurrent" style="accent-color:var(--maroon); width:15px; height:15px;">
+          <span style="font-size:13px; font-weight:700;">Show current phasor Ī</span>
+        </label>
+        <div id="currentControls">
+          <p style="font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--mustard); font-weight:700; margin:0 0 8px;">Current phasor Ī</p>
+          <div class="row">
+            <label>rms magnitude I <span class="val" id="iVal" style="color:var(--mustard);">2.0</span></label>
+            <input type="range" id="iSlider" min="1" max="5" step="0.5" value="2">
+            <div class="minmax"><span>1</span><span>5</span></div>
+          </div>
+          <div class="row">
+            <label>phase difference φ = δ − β <span class="val" id="phiVal" style="color:var(--mustard);">30°</span></label>
+            <input type="range" id="phiSlider" min="-90" max="90" step="5" value="30">
+            <div class="minmax"><span>−90° (leading)</span><span>+90° (lagging)</span></div>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:16px;">
+          <label>ωt (drag to freeze-frame) <span class="val" id="omtVal">0.00 rad</span></label>
+          <input type="range" id="omtSlider" min="0" max="720" step="1" value="0">
+          <div class="minmax"><span>0</span><span>4π</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="btnrow">
+          <button id="playBtn">▶ Play</button>
+          <button id="resetBtn">Reset</button>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="lbl">v(t) now</div><div class="num" id="statV">—</div></div>
+          <div class="stat"><div class="lbl">i(t) now</div><div class="num" id="statI">—</div></div>
+          <div class="stat"><div class="lbl">Phasor V̄</div><div class="num" id="statPhasor">—</div></div>
+          <div class="stat"><div class="lbl">Phasor Ī</div><div class="num" id="statIPhasor">—</div></div>
+          <div class="stateflag" id="stateFlag" style="grid-column:1/-1; text-align:center; padding:7px 8px; border-radius:4px; font-size:13px; font-weight:700; border:1px solid transparent;">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>ELEC2005 — Week 8 · for concept exploration, not assessment</footer>
+</div>
+
+<script>
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs={}, children=[]){
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  for (const c of children) e.appendChild(c);
+  return e;
+}
+function pathFromPoints(pts){
+  return pts.map((p,i)=> (i===0?"M":"L")+p[0].toFixed(2)+","+p[1].toFixed(2)).join(" ");
+}
+
+const FRAME_R = 8;       // volts, symmetric, both plots
+const OMT_MAX = 4*Math.PI;
+
+const COL_PHASOR = "#7a1730";   // maroon dashed, static rms V phasor
+const COL_ROT = "#1c5f7a";      // teal solid, rotating V vector
+const COL_TRACE = "#c98a2c";    // mustard, locus circle
+const COL_V = "#7a1730";        // v(t) curve
+const COL_IPHASOR = "#c98a2c";  // mustard dashed, static rms I phasor
+const COL_IROT = "#2f7d4f";     // green solid, rotating I vector
+const COL_I = "#c98a2c";        // i(t) curve
+
+let playing = false;
+let lastTs = null;
+const OMEGA_ANIM = 1.4; // rad/s of ωt advance during animation
+
+function render(){
+  const V = parseFloat(document.getElementById("vSlider").value);
+  const deltaDeg = parseFloat(document.getElementById("deltaSlider").value);
+  const omt = parseFloat(document.getElementById("omtSlider").value) / 720 * OMT_MAX;
+  const showCurrent = document.getElementById("showCurrent").checked;
+  const I = parseFloat(document.getElementById("iSlider").value);
+  const phiDeg = parseFloat(document.getElementById("phiSlider").value);
+
+  document.getElementById("currentControls").style.display = showCurrent ? "block" : "none";
+
+  document.getElementById("vVal").textContent = V.toFixed(1);
+  document.getElementById("deltaVal").textContent = (deltaDeg>=0?"+":"")+deltaDeg.toFixed(0)+"\u00b0";
+  document.getElementById("omtVal").textContent = omt.toFixed(2)+" rad";
+  document.getElementById("iVal").textContent = I.toFixed(1);
+  document.getElementById("phiVal").textContent = (phiDeg>=0?"+":"")+phiDeg.toFixed(0)+"\u00b0";
+
+  const delta = deltaDeg*Math.PI/180;
+  const rotAngle = omt + delta;           // angle of the rotating V vector right now
+  const peak = Math.sqrt(2)*V;            // magnitude of the rotating V vector
+  const vNow = peak*Math.cos(rotAngle);   // v(t) = Re[rotating vector]
+
+  const phi = phiDeg*Math.PI/180;
+  const beta = delta - phi;               // I phasor angle, since phi = delta - beta
+  const rotAngleI = omt + beta;
+  const peakI = Math.sqrt(2)*I;
+  const iNow = peakI*Math.cos(rotAngleI);
+
+  document.getElementById("statV").innerHTML = vNow.toFixed(2)+'<span class="unit"> V</span>';
+  document.getElementById("statPhasor").innerHTML = V.toFixed(1)+'\u2220'+deltaDeg.toFixed(0)+'\u00b0';
+  if (showCurrent){
+    document.getElementById("statI").innerHTML = iNow.toFixed(2)+'<span class="unit"> A</span>';
+    document.getElementById("statIPhasor").innerHTML = I.toFixed(1)+'\u2220'+(beta*180/Math.PI).toFixed(0)+'\u00b0';
+  } else {
+    document.getElementById("statI").innerHTML = '<span class="unit">off</span>';
+    document.getElementById("statIPhasor").innerHTML = '<span class="unit">off</span>';
+  }
+
+  const flag = document.getElementById("stateFlag");
+  if (!showCurrent){
+    flag.style.display = "none";
+  } else {
+    flag.style.display = "block";
+    if (Math.abs(phiDeg) < 1e-6){
+      flag.textContent = "\u03c6 = 0 \u2014 voltage and current in phase";
+      flag.style.background = "#e5f3ea"; flag.style.color = "#2f7d4f"; flag.style.borderColor="#2f7d4f";
+    } else if (phiDeg > 0){
+      flag.textContent = "\u03c6 = "+phiDeg.toFixed(0)+"\u00b0 \u2014 current lags voltage (\u012a behind V\u0304)";
+      flag.style.background = "#e3eef4"; flag.style.color = "#1c5f7a"; flag.style.borderColor="#1c5f7a";
+    } else {
+      flag.textContent = "\u03c6 = "+phiDeg.toFixed(0)+"\u00b0 \u2014 current leads voltage (\u012a ahead of V\u0304)";
+      flag.style.background = "#f7e9e7"; flag.style.color = "#a3372c"; flag.style.borderColor="#a3372c";
+    }
+  }
+
+  // ---------------- phasor diagram ----------------
+  const svg1 = document.getElementById("phasor-plot");
+  svg1.innerHTML = "";
+  const size=320, cx=160, cy=160;
+  const pxPerVolt = (size/2 - 34) / FRAME_R;
+  const toPx = (re, im) => [cx + re*pxPerVolt, cy - im*pxPerVolt];
+
+  // axes
+  svg1.appendChild(el("line",{x1:20,y1:cy,x2:size-20,y2:cy,stroke:"#c9c2b4","stroke-width":1}));
+  svg1.appendChild(el("line",{x1:cx,y1:20,x2:cx,y2:size-20,stroke:"#c9c2b4","stroke-width":1}));
+  svg1.appendChild(el("text",{x:size-22,y:cy-6,class:"axis-label","text-anchor":"end"},[document.createTextNode("Re")]));
+  svg1.appendChild(el("text",{x:cx+6,y:24,class:"axis-label"},[document.createTextNode("Im")]));
+
+  // locus circle traced by rotating vector tip
+  svg1.appendChild(el("circle",{cx:cx,cy:cy,r:peak*pxPerVolt,fill:"none",stroke:COL_TRACE,"stroke-width":1,"stroke-dasharray":"3,3",opacity:0.6}));
+
+  // static rms phasor (dashed maroon), magnitude V at angle delta
+  const [px,py] = toPx(V*Math.cos(delta), V*Math.sin(delta));
+  svg1.appendChild(el("line",{x1:cx,y1:cy,x2:px,y2:py,stroke:COL_PHASOR,"stroke-width":2.4,"stroke-dasharray":"7,4"}));
+  svg1.appendChild(el("circle",{cx:px,cy:py,r:3.5,fill:COL_PHASOR}));
+
+  // rotating vector (solid teal), peak magnitude at angle rotAngle
+  const [rx,ry] = toPx(peak*Math.cos(rotAngle), peak*Math.sin(rotAngle));
+  svg1.appendChild(el("line",{x1:cx,y1:cy,x2:rx,y2:ry,stroke:COL_ROT,"stroke-width":2.6}));
+  svg1.appendChild(el("circle",{cx:rx,cy:ry,r:4,fill:COL_ROT}));
+
+  // projection guide onto real axis
+  const [projx,projy] = toPx(peak*Math.cos(rotAngle), 0);
+  svg1.appendChild(el("line",{x1:rx,y1:ry,x2:projx,y2:projy,stroke:COL_ROT,"stroke-width":1,"stroke-dasharray":"3,3",opacity:0.6}));
+  svg1.appendChild(el("circle",{cx:projx,cy:projy,r:3.5,fill:COL_ROT}));
+
+  if (showCurrent){
+    // static rms current phasor (dashed mustard), magnitude I at angle beta
+    const [pix,piy] = toPx(I*Math.cos(beta), I*Math.sin(beta));
+    svg1.appendChild(el("line",{x1:cx,y1:cy,x2:pix,y2:piy,stroke:COL_IPHASOR,"stroke-width":2.4,"stroke-dasharray":"7,4"}));
+    svg1.appendChild(el("circle",{cx:pix,cy:piy,r:3.5,fill:COL_IPHASOR}));
+
+    // rotating current vector (solid green), peak magnitude at angle rotAngleI
+    const [rix,riy] = toPx(peakI*Math.cos(rotAngleI), peakI*Math.sin(rotAngleI));
+    svg1.appendChild(el("line",{x1:cx,y1:cy,x2:rix,y2:riy,stroke:COL_IROT,"stroke-width":2.6}));
+    svg1.appendChild(el("circle",{cx:rix,cy:riy,r:4,fill:COL_IROT}));
+
+    // projection guide
+    const [projix,projiy] = toPx(peakI*Math.cos(rotAngleI), 0);
+    svg1.appendChild(el("line",{x1:rix,y1:riy,x2:projix,y2:projiy,stroke:COL_IROT,"stroke-width":1,"stroke-dasharray":"3,3",opacity:0.6}));
+    svg1.appendChild(el("circle",{cx:projix,cy:projiy,r:3.5,fill:COL_IROT}));
+  }
+
+  // legend
+  let legY = 300;
+  svg1.appendChild(el("rect",{x:22,y:legY-10,width:16,height:2.4,fill:COL_PHASOR}));
+  svg1.appendChild(el("text",{x:41,y:legY-5,class:"legend-label"},[document.createTextNode("rms phasor V\u0304 (frozen)")]));
+  legY += 22;
+  svg1.appendChild(el("rect",{x:22,y:legY-10,width:16,height:2.8,fill:COL_ROT}));
+  svg1.appendChild(el("text",{x:41,y:legY-5,class:"legend-label"},[document.createTextNode("rotating vector (live)")]));
+  if (showCurrent){
+    legY += 22;
+    svg1.appendChild(el("rect",{x:22,y:legY-10,width:16,height:2.4,fill:COL_IPHASOR}));
+    svg1.appendChild(el("text",{x:41,y:legY-5,class:"legend-label"},[document.createTextNode("rms phasor \u012a (frozen)")]));
+    legY += 22;
+    svg1.appendChild(el("rect",{x:22,y:legY-10,width:16,height:2.8,fill:COL_IROT}));
+    svg1.appendChild(el("text",{x:41,y:legY-5,class:"legend-label"},[document.createTextNode("rotating vector \u012a (live)")]));
+  }
+
+  // ---------------- time-domain plot ----------------
+  const svg2 = document.getElementById("time-plot");
+  svg2.innerHTML = "";
+  const w2=320,h2=320;
+  const M = {l:34, r:10, t:14, b:30};
+  const innerW = w2-M.l-M.r, innerH = h2-M.t-M.b;
+  const xToPx = o => M.l + (o/OMT_MAX)*innerW;
+  const yToPx = v => M.t + innerH*(1 - (v+FRAME_R)/(2*FRAME_R));
+
+  svg2.appendChild(el("line",{x1:M.l,y1:yToPx(0),x2:w2-M.r,y2:yToPx(0),stroke:"#c9c2b4","stroke-width":1}));
+  svg2.appendChild(el("line",{x1:M.l,y1:M.t,x2:M.l,y2:h2-M.b,stroke:"#c9c2b4","stroke-width":1}));
+  for(let k=0;k<=4;k++){
+    const px = xToPx(k*Math.PI);
+    svg2.appendChild(el("line",{x1:px,y1:M.t,x2:px,y2:h2-M.b,stroke:"#eee7db","stroke-width":1}));
+    const label = k===0?"0":(k===1?"\u03c0":k+"\u03c0");
+    svg2.appendChild(el("text",{x:px,y:h2-M.b+16,class:"tick-label","text-anchor":"middle"},[document.createTextNode(label)]));
+  }
+  svg2.appendChild(el("text",{x:w2-M.r,y:h2-4,class:"axis-label","text-anchor":"end"},[document.createTextNode("\u03c9t [rad]")]));
+  for(const yt of [-8,-4,0,4,8]){
+    const py = yToPx(yt);
+    svg2.appendChild(el("line",{x1:M.l-4,y1:py,x2:M.l,y2:py,stroke:"#c9c2b4","stroke-width":1}));
+    const suffix = yt===8 ? " V" : "";
+    svg2.appendChild(el("text",{x:M.l-8,y:py+4,class:"tick-label","text-anchor":"end"},[document.createTextNode(String(yt)+suffix)]));
+  }
+
+  const N=400;
+  const pts = [];
+  const ptsI = [];
+  for(let k=0;k<=N;k++){
+    const o = k*OMT_MAX/N;
+    pts.push([xToPx(o), yToPx(peak*Math.cos(o+delta))]);
+    if (showCurrent) ptsI.push([xToPx(o), yToPx(peakI*Math.cos(o+beta))]);
+  }
+  svg2.appendChild(el("path",{d:pathFromPoints(pts), fill:"none", stroke:COL_V, "stroke-width":2.4}));
+  if (showCurrent){
+    svg2.appendChild(el("path",{d:pathFromPoints(ptsI), fill:"none", stroke:COL_I, "stroke-width":2.4, "stroke-dasharray":"6,3"}));
+  }
+
+  // moving marker at current omt
+  const mx = xToPx(omt), my = yToPx(vNow);
+  svg2.appendChild(el("line",{x1:mx,y1:my,x2:mx,y2:h2-M.b,stroke:COL_ROT,"stroke-width":1,"stroke-dasharray":"3,3"}));
+  svg2.appendChild(el("circle",{cx:mx,cy:my,r:4.5,fill:COL_ROT}));
+  if (showCurrent){
+    const miy = yToPx(iNow);
+    svg2.appendChild(el("circle",{cx:mx,cy:miy,r:4.5,fill:COL_IROT}));
+  }
+
+  // legend for time-domain curves
+  svg2.appendChild(el("rect",{x:M.l+2,y:h2-M.b+22,width:16,height:2.4,fill:COL_V}));
+  svg2.appendChild(el("text",{x:M.l+21,y:h2-M.b+27,class:"legend-label"},[document.createTextNode("v(t)")]));
+  if (showCurrent){
+    svg2.appendChild(el("rect",{x:M.l+66,y:h2-M.b+22,width:16,height:2.4,fill:COL_I}));
+    svg2.appendChild(el("text",{x:M.l+85,y:h2-M.b+27,class:"legend-label"},[document.createTextNode("i(t)")]));
+  }
+}
+
+function animate(ts){
+  if (!playing) return;
+  if (lastTs===null) lastTs = ts;
+  const dt = (ts-lastTs)/1000;
+  lastTs = ts;
+  const slider = document.getElementById("omtSlider");
+  let cur = parseFloat(slider.value)/720*OMT_MAX;
+  cur += OMEGA_ANIM*dt;
+  if (cur > OMT_MAX) cur -= OMT_MAX;
+  slider.value = (cur/OMT_MAX*720).toFixed(1);
+  render();
+  requestAnimationFrame(animate);
+}
+
+document.getElementById("vSlider").addEventListener("input", render);
+document.getElementById("deltaSlider").addEventListener("input", render);
+document.getElementById("iSlider").addEventListener("input", render);
+document.getElementById("phiSlider").addEventListener("input", render);
+document.getElementById("showCurrent").addEventListener("change", render);
+document.getElementById("omtSlider").addEventListener("input", ()=>{
+  if (playing){ playing=false; document.getElementById("playBtn").textContent="\u25b6 Play"; document.getElementById("playBtn").classList.remove("active"); }
+  render();
+});
+document.getElementById("playBtn").addEventListener("click", (e)=>{
+  playing = !playing;
+  e.target.textContent = playing ? "\u23f8 Pause" : "\u25b6 Play";
+  e.target.classList.toggle("active", playing);
+  lastTs = null;
+  if (playing) requestAnimationFrame(animate);
+});
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  playing = false;
+  document.getElementById("playBtn").textContent = "\u25b6 Play";
+  document.getElementById("playBtn").classList.remove("active");
+  document.getElementById("vSlider").value = 3;
+  document.getElementById("deltaSlider").value = 40;
+  document.getElementById("iSlider").value = 2;
+  document.getElementById("phiSlider").value = 30;
+  document.getElementById("showCurrent").checked = false;
+  document.getElementById("omtSlider").value = 0;
+  render();
+});
+
+render();
+</script>
+</body>
+</html>

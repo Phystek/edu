@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instantaneous Power Explorer — ELEC2005</title>
+<style>
+  :root{
+    --ink:#1a1512; --paper:#faf7f2; --panel:#ffffff; --maroon:#7a1730;
+    --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a;
+    --mustard:#c98a2c;
+    --cutoff-fill:#e3eef4; --cutoff-text:#1c5f7a;
+    --active-fill:#e5f3ea; --active-text:#2f7d4f;
+    --sat-fill:#f7e9e7; --sat-text:#a3372c;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:24px 16px 40px; background:#e6e6e4;
+    font-family:"Helvetica Neue",Arial,sans-serif; color:var(--ink);
+  }
+  .wrap{max-width:960px; margin:0 auto;}
+  header{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    border-bottom:1px solid var(--grid); padding-bottom:14px; margin-bottom:6px;
+  }
+  .eyebrow{
+    font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--maroon); font-weight:700; margin:0 0 4px;
+  }
+  h1{
+    font-family:"Iowan Old Style","Georgia",serif; font-weight:700;
+    font-size:28px; letter-spacing:-0.01em; margin:0; color:var(--ink);
+  }
+  .tag{font-size:12px; color:var(--muted); white-space:nowrap; padding-bottom:4px;}
+  .intro{
+    font-family:"Helvetica Neue",Arial,sans-serif; font-size:14px; line-height:1.5;
+    color:var(--muted); margin:14px 0 20px;
+  }
+  .grid{display:grid; grid-template-columns:1.35fr 1fr; gap:18px;}
+  @media (max-width:800px){ .grid{grid-template-columns:1fr;} }
+  .panel{
+    background:var(--panel); border:1px solid var(--grid); border-radius:4px;
+    padding:14px 16px;
+  }
+  .panel + .panel{margin-top:14px;}
+  .panel h2{
+    font-family:"Iowan Old Style","Georgia",serif; font-size:15px; font-weight:700;
+    margin:0 0 8px; color:var(--ink);
+  }
+  svg{display:block; width:100%; height:auto;}
+  .axis-label{font-size:14px; fill:var(--muted); font-family:"Helvetica Neue",Arial,sans-serif;}
+  .tick-label{font-size:13px; fill:var(--muted); font-family:"Helvetica Neue",Arial,sans-serif;}
+  .legend-label{font-size:14px; font-family:"Helvetica Neue",Arial,sans-serif;}
+  .curve{fill:none; stroke-width:2.2;}
+  .refline{fill:none; stroke-width:1.3; stroke-dasharray:5,3;}
+
+  .controls .row{margin-bottom:16px;}
+  .controls label{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-size:13px; color:var(--ink); margin-bottom:4px;
+  }
+  .controls .val{
+    font-weight:700; color:var(--maroon); font-variant-numeric:tabular-nums;
+  }
+  .controls input[type=range]{
+    width:100%; accent-color:var(--maroon); margin:2px 0 3px;
+  }
+  .minmax{display:flex; justify-content:space-between; font-size:10px; color:var(--muted);}
+
+  #resetBtn{
+    display:block; width:100%; margin-top:4px; padding:8px 10px;
+    background:var(--paper); border:1px solid var(--ink); border-radius:3px;
+    color:var(--ink); font-size:13px; font-family:"Helvetica Neue",Arial,sans-serif;
+    cursor:pointer; transition:background .15s,color .15s;
+  }
+  #resetBtn:hover{background:var(--ink); color:var(--paper);}
+
+  .stats{
+    display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px;
+  }
+  .stat{
+    background:var(--paper); border:1px solid var(--grid); border-radius:4px;
+    padding:8px 10px;
+  }
+  .stat .lbl{
+    font-size:9.5px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--muted); margin-bottom:2px;
+  }
+  .stat .num{font-size:17px; font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums;}
+  .stat .unit{font-size:11px; color:var(--muted); font-weight:400;}
+  .stateflag{
+    grid-column:1/-1; text-align:center; padding:7px 8px; border-radius:4px;
+    font-size:13px; font-weight:700; border:1px solid transparent;
+  }
+
+  footer{
+    text-align:center; font-size:11px; color:var(--muted); margin-top:22px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">ELEC2005 — Week 8</p>
+      <h1>Instantaneous Power Explorer</h1>
+    </div>
+    <div class="tag">AC Circuits · Instantaneous Power</div>
+  </header>
+  <p class="intro">
+    Drag the sliders to change the rms voltage, rms current, and phase angle φ = δ − β between them.
+    Watch how the instantaneous power p(t) splits into a resistive part p<tspan baseline-shift="sub">R</tspan>(t) —
+    which never goes negative and averages to the active power P — and a reactive part p<tspan baseline-shift="sub">X</tspan>(t),
+    which oscillates around zero and represents energy sloshing back and forth with no net transfer.
+  </p>
+
+  <div class="grid">
+    <div>
+      <div class="panel">
+        <h2>Voltage &amp; current</h2>
+        <svg id="vi-plot" viewBox="0 0 640 230"></svg>
+      </div>
+      <div class="panel">
+        <h2>Instantaneous power decomposition</h2>
+        <svg id="p-plot" viewBox="0 0 640 360"></svg>
+      </div>
+    </div>
+
+    <div class="panel controls">
+      <h2>Controls</h2>
+      <div class="row">
+        <label>rms voltage V <span class="val" id="vVal">230 V</span></label>
+        <input type="range" id="vSlider" min="100" max="300" step="10" value="230">
+        <div class="minmax"><span>100 V</span><span>300 V</span></div>
+      </div>
+      <div class="row">
+        <label>rms current I <span class="val" id="iVal">10.0 A</span></label>
+        <input type="range" id="iSlider" min="2" max="12" step="0.5" value="10">
+        <div class="minmax"><span>2 A</span><span>12 A</span></div>
+      </div>
+      <div class="row">
+        <label>phase angle φ = δ − β <span class="val" id="phiVal">30°</span></label>
+        <input type="range" id="phiSlider" min="-90" max="90" step="5" value="30">
+        <div class="minmax"><span>−90° (leading)</span><span>+90° (lagging)</span></div>
+      </div>
+      <button id="resetBtn">Reset to defaults</button>
+
+      <div class="stats">
+        <div class="stat"><div class="lbl">Active power P</div><div class="num" id="statP">—</div></div>
+        <div class="stat"><div class="lbl">Reactive power Q</div><div class="num" id="statQ">—</div></div>
+        <div class="stat"><div class="lbl">Apparent power S</div><div class="num" id="statS">—</div></div>
+        <div class="stat"><div class="lbl">Power factor</div><div class="num" id="statPF">—</div></div>
+        <div class="stateflag" id="stateFlag">—</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>ELEC2005 — Week 8 · for concept exploration, not assessment</footer>
+</div>
+
+<script>
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs={}, children=[]){
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  for (const c of children) e.appendChild(c);
+  return e;
+}
+
+// ---------- fixed frames ----------
+const V_FRAME = 450;      // volts, symmetric
+const I_FRAME = 20;       // amps, symmetric
+const P_FRAME_MIN = -4000, P_FRAME_MAX = 8000; // watts / VAr, shared
+
+const OMT_MAX = 4*Math.PI; // two periods
+
+// ---------- colors ----------
+const COL_V = "#7a1730";      // maroon
+const COL_I = "#c98a2c";      // mustard dashed
+const COL_P = "#1a1512";      // ink (total power)
+const COL_PR = "#2f7d4f";     // green (resistive/active)
+const COL_PX = "#1c5f7a";     // teal (reactive)
+const COL_Pline = "#a3372c";  // dashed reference for P
+const COL_Qline = "#1c5f7a";  // dashed reference for Q
+
+// ---------- margins ----------
+const M1 = {l:58, r:50, t:18, b:36}; // vi-plot
+const M2 = {l:64, r:18, t:18, b:38}; // p-plot
+
+function scaleX(w, margin){
+  const innerW = w - margin.l - margin.r;
+  return omt => margin.l + (omt/OMT_MAX)*innerW;
+}
+function scaleY(h, margin, dataMin, dataMax){
+  const innerH = h - margin.t - margin.b;
+  return val => margin.t + innerH*(1 - (val-dataMin)/(dataMax-dataMin));
+}
+
+function pathFromPoints(pts){
+  return pts.map((p,i)=> (i===0?"M":"L")+p[0].toFixed(2)+","+p[1].toFixed(2)).join(" ");
+}
+
+function buildAxes(svgW, svgH, margin, xTickCount, yTicks, xToPx, yToPx, y0, yUnit){
+  const g = [];
+  // axes lines
+  g.push(el("line",{x1:margin.l,y1:yToPx(y0),x2:svgW-margin.r,y2:yToPx(y0),stroke:"#c9c2b4","stroke-width":1}));
+  g.push(el("line",{x1:margin.l,y1:margin.t,x2:margin.l,y2:svgH-margin.b,stroke:"#c9c2b4","stroke-width":1}));
+  // x gridlines/ticks at multiples of pi
+  for(let k=0;k<=4;k++){
+    const omt = k*Math.PI;
+    const px = xToPx(omt);
+    g.push(el("line",{x1:px,y1:margin.t,x2:px,y2:svgH-margin.b,stroke:"#eee7db","stroke-width":1}));
+    const label = k===0?"0":(k===1?"\u03c0":k+"\u03c0");
+    g.push(el("text",{x:px,y:svgH-margin.b+18,class:"tick-label","text-anchor":"middle"},[document.createTextNode(label)]));
+  }
+  g.push(el("text",{x:svgW-margin.r,y:svgH-4,class:"axis-label","text-anchor":"end"},[document.createTextNode("\u03c9t [rad]")]));
+  // y ticks (unit appended to the topmost tick only, so no separate floating label collides with it)
+  const maxTick = Math.max(...yTicks);
+  for(const yt of yTicks){
+    const py = yToPx(yt);
+    g.push(el("line",{x1:margin.l-4,y1:py,x2:margin.l,y2:py,stroke:"#c9c2b4","stroke-width":1}));
+    const suffix = (yt===maxTick) ? " "+yUnit : "";
+    g.push(el("text",{x:margin.l-9,y:py+4,class:"tick-label","text-anchor":"end"},[document.createTextNode(String(yt)+suffix)]));
+  }
+  return g;
+}
+
+function render(){
+  const V = parseFloat(document.getElementById("vSlider").value);
+  const I = parseFloat(document.getElementById("iSlider").value);
+  const phiDeg = parseFloat(document.getElementById("phiSlider").value);
+  const phi = phiDeg*Math.PI/180;
+
+  document.getElementById("vVal").textContent = V.toFixed(0)+" V";
+  document.getElementById("iVal").textContent = I.toFixed(1)+" A";
+  document.getElementById("phiVal").textContent = (phiDeg>=0?"+":"")+phiDeg.toFixed(0)+"\u00b0";
+
+  // reference: delta = 0 (voltage phase reference), beta = -phi
+  const delta = 0;
+  const beta = -phi;
+
+  const P = V*I*Math.cos(phi);
+  const Q = V*I*Math.sin(phi);
+  const S = V*I;
+  const pf = Math.cos(phi);
+
+  document.getElementById("statP").innerHTML = P.toFixed(0)+'<span class="unit"> W</span>';
+  document.getElementById("statQ").innerHTML = Q.toFixed(0)+'<span class="unit"> VAr</span>';
+  document.getElementById("statS").innerHTML = S.toFixed(0)+'<span class="unit"> VA</span>';
+  document.getElementById("statPF").textContent = pf.toFixed(3);
+
+  const flag = document.getElementById("stateFlag");
+  if (Math.abs(phiDeg) < 1e-6){
+    flag.textContent = "Unity power factor — voltage and current in phase";
+    flag.style.background = "var(--active-fill)"; flag.style.color = "var(--active-text)"; flag.style.borderColor="var(--active-text)";
+  } else if (phiDeg > 0){
+    flag.textContent = "Lagging power factor — current lags voltage (inductive-type)";
+    flag.style.background = "var(--cutoff-fill)"; flag.style.color = "var(--cutoff-text)"; flag.style.borderColor="var(--cutoff-text)";
+  } else {
+    flag.textContent = "Leading power factor — current leads voltage (capacitive-type)";
+    flag.style.background = "var(--sat-fill)"; flag.style.color = "var(--sat-text)"; flag.style.borderColor="var(--sat-text)";
+  }
+
+  // ---------- sample curves ----------
+  const N = 400;
+  const omts = Array.from({length:N+1}, (_,k)=> k*OMT_MAX/N);
+
+  const vArr = omts.map(omt => Math.sqrt(2)*V*Math.cos(omt+delta));
+  const iArr = omts.map(omt => Math.sqrt(2)*I*Math.cos(omt+beta));
+  const pArr = omts.map((omt,k) => vArr[k]*iArr[k]);
+  const pRArr = omts.map(omt => P*(1+Math.cos(2*(omt+delta))));
+  const pXArr = omts.map(omt => Q*Math.sin(2*(omt+delta)));
+
+  // ---------- vi-plot ----------
+  const svg1 = document.getElementById("vi-plot");
+  svg1.innerHTML = "";
+  const w1=640,h1=230;
+  const xToPx1 = scaleX(w1, M1);
+  const yToPxV = scaleY(h1, M1, -V_FRAME, V_FRAME);
+  const yToPxI = (val)=> M1.t + (h1-M1.t-M1.b)*(1 - (val+I_FRAME)/(2*I_FRAME));
+
+  for(const g of buildAxes(w1,h1,M1,4,[-400,-200,0,200,400],xToPx1,yToPxV,0,"V")) svg1.appendChild(g);
+  // right-side current axis ticks
+  const iTicks = [-20,-10,0,10,20];
+  const iMaxTick = Math.max(...iTicks);
+  for(const yt of iTicks){
+    const py = yToPxI(yt);
+    svg1.appendChild(el("line",{x1:w1-M1.r,y1:py,x2:w1-M1.r+4,y2:py,stroke:"#c9c2b4","stroke-width":1}));
+    const suffix = (yt===iMaxTick) ? " A" : "";
+    svg1.appendChild(el("text",{x:w1-M1.r+9,y:py+4,class:"tick-label","text-anchor":"start"},[document.createTextNode(String(yt)+suffix)]));
+  }
+
+  const vPts = omts.map((omt,k)=>[xToPx1(omt), yToPxV(vArr[k])]);
+  const iPts = omts.map((omt,k)=>[xToPx1(omt), yToPxI(iArr[k])]);
+  svg1.appendChild(el("path",{d:pathFromPoints(vPts), class:"curve", stroke:COL_V}));
+  svg1.appendChild(el("path",{d:pathFromPoints(iPts), class:"curve", stroke:COL_I, "stroke-dasharray":"6,3"}));
+
+  svg1.appendChild(el("rect",{x:M1.l+8,y:M1.t,width:11,height:11,fill:COL_V}));
+  svg1.appendChild(el("text",{x:M1.l+24,y:M1.t+10,class:"legend-label"},[document.createTextNode("v(t)")]));
+  svg1.appendChild(el("rect",{x:M1.l+78,y:M1.t,width:11,height:11,fill:COL_I}));
+  svg1.appendChild(el("text",{x:M1.l+94,y:M1.t+10,class:"legend-label"},[document.createTextNode("i(t)")]));
+
+  // ---------- p-plot ----------
+  const svg2 = document.getElementById("p-plot");
+  svg2.innerHTML = "";
+  const w2=640,h2=360;
+  const xToPx2 = scaleX(w2, M2);
+  const yToPxP = scaleY(h2, M2, P_FRAME_MIN, P_FRAME_MAX);
+
+  for(const g of buildAxes(w2,h2,M2,4,[-4000,-2000,0,2000,4000,6000,8000],xToPx2,yToPxP,0,"W")) svg2.appendChild(g);
+
+  const pPts = omts.map((omt,k)=>[xToPx2(omt), yToPxP(pArr[k])]);
+  const pRPts = omts.map((omt,k)=>[xToPx2(omt), yToPxP(pRArr[k])]);
+  const pXPts = omts.map((omt,k)=>[xToPx2(omt), yToPxP(pXArr[k])]);
+
+  // reference lines for P and Q
+  svg2.appendChild(el("line",{x1:M2.l,y1:yToPxP(P),x2:w2-M2.r,y2:yToPxP(P),class:"refline",stroke:COL_Pline}));
+  svg2.appendChild(el("line",{x1:M2.l,y1:yToPxP(Q),x2:w2-M2.r,y2:yToPxP(Q),class:"refline",stroke:COL_Qline}));
+
+  svg2.appendChild(el("path",{d:pathFromPoints(pRPts), class:"curve", stroke:COL_PR}));
+  svg2.appendChild(el("path",{d:pathFromPoints(pXPts), class:"curve", stroke:COL_PX}));
+  svg2.appendChild(el("path",{d:pathFromPoints(pPts), class:"curve", stroke:COL_P, "stroke-width":2.6}));
+
+  // legend
+  const legendY = M2.t + 4;
+  const items = [["p(t)",COL_P],["p\u1d63(t)",COL_PR],["p\u2093(t)",COL_PX]];
+  let lx = M2.l+8;
+  for(const [label,color] of items){
+    svg2.appendChild(el("rect",{x:lx,y:legendY,width:11,height:11,fill:color}));
+    svg2.appendChild(el("text",{x:lx+15,y:legendY+10,class:"legend-label"},[document.createTextNode(label)]));
+    lx += 15 + label.length*9 + 16;
+  }
+  svg2.appendChild(el("text",{x:w2-M2.r,y:yToPxP(P)-4,class:"legend-label","text-anchor":"end",fill:COL_Pline},[document.createTextNode("P = "+P.toFixed(0)+" W")]));
+  svg2.appendChild(el("text",{x:w2-M2.r,y:yToPxP(Q)-4,class:"legend-label","text-anchor":"end",fill:COL_Qline},[document.createTextNode("Q = "+Q.toFixed(0)+" VAr")]));
+}
+
+["vSlider","iSlider","phiSlider"].forEach(id=>{
+  document.getElementById(id).addEventListener("input", render);
+});
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  document.getElementById("vSlider").value = 230;
+  document.getElementById("iSlider").value = 10;
+  document.getElementById("phiSlider").value = 30;
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
