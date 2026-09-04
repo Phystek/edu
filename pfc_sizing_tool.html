@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Power Factor Correction Sizing Tool — ELEC2005</title>
+<style>
+  :root{
+    --ink:#1a1512; --paper:#faf7f2; --panel:#ffffff; --maroon:#7a1730;
+    --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a; --mustard:#c98a2c;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; padding:24px 16px 40px; background:#e6e6e4; font-family:"Helvetica Neue",Arial,sans-serif; color:var(--ink);}
+  .wrap{max-width:960px; margin:0 auto;}
+  header{display:flex; justify-content:space-between; align-items:flex-end; border-bottom:1px solid var(--grid); padding-bottom:14px; margin-bottom:6px;}
+  .eyebrow{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--maroon); font-weight:700; margin:0 0 4px;}
+  h1{font-family:"Iowan Old Style","Georgia",serif; font-weight:700; font-size:28px; letter-spacing:-0.01em; margin:0; color:var(--ink);}
+  .tag{font-size:12px; color:var(--muted); white-space:nowrap; padding-bottom:4px;}
+  .intro{font-size:14px; line-height:1.5; color:var(--muted); margin:14px 0 20px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  @media (max-width:800px){ .grid2{grid-template-columns:1fr;} }
+  .panel{background:var(--panel); border:1px solid var(--grid); border-radius:4px; padding:14px 16px;}
+  .panel + .panel{margin-top:14px;}
+  .panel h2{font-family:"Iowan Old Style","Georgia",serif; font-size:15px; font-weight:700; margin:0 0 8px; color:var(--ink);}
+  svg{display:block; width:100%; height:auto;}
+  .axis-label{font-size:14px; fill:var(--muted);}
+  .tick-label{font-size:13px; fill:var(--muted);}
+  .legend-label{font-size:14px;}
+
+  .controls .row{margin-bottom:16px;}
+  .controls label{display:flex; justify-content:space-between; align-items:baseline; font-size:13px; margin-bottom:4px;}
+  .controls .val{font-weight:700; color:var(--maroon); font-variant-numeric:tabular-nums;}
+  .controls input[type=range]{width:100%; accent-color:var(--maroon); margin:2px 0 3px;}
+  .minmax{display:flex; justify-content:space-between; font-size:10px; color:var(--muted);}
+
+  .mode-toggle{display:flex; border:1px solid var(--ink); border-radius:3px; overflow:hidden; margin-bottom:16px;}
+  .mode-btn{flex:1; padding:8px 6px; background:var(--paper); border:none; color:var(--ink); font-size:12.5px; font-family:"Helvetica Neue",Arial,sans-serif; cursor:pointer;}
+  .mode-btn.active{background:var(--ink); color:#fff;}
+  .mode-btn:not(:last-child){border-right:1px solid var(--ink);}
+
+  button.reset{
+    display:block; width:100%; padding:8px 10px; background:var(--paper); border:1px solid var(--ink); border-radius:3px;
+    color:var(--ink); font-size:13px; font-family:"Helvetica Neue",Arial,sans-serif; cursor:pointer; transition:background .15s,color .15s;
+  }
+  button.reset:hover{background:var(--ink); color:var(--paper);}
+
+  .stats{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px;}
+  .stat{background:var(--paper); border:1px solid var(--grid); border-radius:4px; padding:8px 10px;}
+  .stat .lbl{font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:2px;}
+  .stat .num{font-size:16px; font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums;}
+  .stat .unit{font-size:11px; color:var(--muted); font-weight:400;}
+  .stat.highlight{background:#e5f3ea; border-color:#2f7d4f;}
+  .stat.highlight .num{color:#2f7d4f;}
+  .warn{grid-column:1/-1; text-align:center; padding:7px 8px; border-radius:4px; font-size:12.5px; font-weight:700; background:#f7e9e7; color:#a3372c; border:1px solid #a3372c;}
+
+  footer{text-align:center; font-size:11px; color:var(--muted); margin-top:22px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">ELEC2005 — Week 8</p>
+      <h1>Power Factor Correction Sizing Tool</h1>
+    </div>
+    <div class="tag">Power Factor Correction</div>
+  </header>
+  <p class="intro">
+    Set a load's real power and starting power factor, pick a target, and this sizes the shunt capacitor
+    (or inductor, for a leading load) needed to get there — the same P(tanθ₁−tanθ₂) calculation from the
+    lecture, worked live. Watch the source current shrink as the power triangle narrows.
+  </p>
+
+  <div class="grid2">
+    <div class="panel">
+      <h2>Power triangle: before &amp; after</h2>
+      <svg id="s-plot" viewBox="0 0 320 340"></svg>
+    </div>
+    <div class="panel">
+      <h2>Source current phasor: before &amp; after</h2>
+      <svg id="i-plot" viewBox="0 0 320 370"></svg>
+    </div>
+  </div>
+
+  <div class="panel controls" style="margin-top:14px;">
+    <h2>Controls</h2>
+    <div class="grid2">
+      <div>
+        <div class="mode-toggle">
+          <button class="mode-btn active" id="modeInd">Inductive load (lagging)</button>
+          <button class="mode-btn" id="modeCap">Capacitive load (leading)</button>
+        </div>
+        <div class="row">
+          <label>real power P <span class="val" id="pVal">5.0 kW</span></label>
+          <input type="range" id="pSlider" min="1000" max="10000" step="250" value="5000">
+          <div class="minmax"><span>1 kW</span><span>10 kW</span></div>
+        </div>
+        <div class="row">
+          <label>starting power factor cos&theta;&#8321; <span class="val" id="pf1Val">0.70</span></label>
+          <input type="range" id="pf1Slider" min="0.60" max="0.95" step="0.01" value="0.70">
+          <div class="minmax"><span>0.60</span><span>0.95</span></div>
+        </div>
+        <div class="row">
+          <label>target power factor cos&theta;&#8322; <span class="val" id="pf2Val">0.90</span></label>
+          <input type="range" id="pf2Slider" min="0.85" max="0.999" step="0.005" value="0.90">
+          <div class="minmax"><span>0.85</span><span>0.999</span></div>
+        </div>
+        <div class="row">
+          <label>source rms voltage V <span class="val" id="vVal">230 V</span></label>
+          <input type="range" id="vSlider" min="180" max="300" step="10" value="230">
+          <div class="minmax"><span>180 V</span><span>300 V</span></div>
+        </div>
+        <div class="mode-toggle">
+          <button class="mode-btn active" id="freq50">50 Hz</button>
+          <button class="mode-btn" id="freq60">60 Hz</button>
+        </div>
+        <button class="reset" id="resetBtn">Reset to defaults</button>
+      </div>
+      <div>
+        <div class="stats">
+          <div class="stat highlight" id="deviceStat"><div class="lbl">Required capacitor C</div><div class="num" id="statDevice">—</div></div>
+          <div class="stat"><div class="lbl">Reactive power supplied</div><div class="num" id="statQc">—</div></div>
+          <div class="stat"><div class="lbl">S before / after</div><div class="num" id="statS">—</div></div>
+          <div class="stat"><div class="lbl">I before / after</div><div class="num" id="statI">—</div></div>
+          <div class="warn" id="warnBox" style="display:none;">Target power factor must exceed the starting power factor</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>ELEC2005 — Week 8 · for concept exploration, not assessment</footer>
+</div>
+
+<script>
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs={}, children=[]){
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  for (const c of children) e.appendChild(c);
+  return e;
+}
+
+const P_FRAME = 10000;
+const Q_FRAME = 14000;
+const I_FRAME = 100;
+
+const COL_BEFORE = "#c98a2c";  // mustard, dashed - before correction
+const COL_AFTER = "#1c5f7a";   // teal, solid - after correction
+const COL_DEVICE = "#2f7d4f";  // green - correction device contribution
+const COL_P = "#7a1730";       // maroon - P axis / reference
+
+let loadType = "inductive"; // or "capacitive"
+let freq = 50;
+
+function render(){
+  const P = parseFloat(document.getElementById("pSlider").value);
+  let pf1 = parseFloat(document.getElementById("pf1Slider").value);
+  let pf2 = parseFloat(document.getElementById("pf2Slider").value);
+  const V = parseFloat(document.getElementById("vSlider").value);
+
+  document.getElementById("pVal").textContent = (P/1000).toFixed(2)+" kW";
+  document.getElementById("pf1Val").textContent = pf1.toFixed(2);
+  document.getElementById("pf2Val").textContent = pf2.toFixed(2);
+  document.getElementById("vVal").textContent = V.toFixed(0)+" V";
+
+  const warnBox = document.getElementById("warnBox");
+  const invalid = pf2 <= pf1;
+  warnBox.style.display = invalid ? "block" : "none";
+
+  const theta1 = Math.acos(pf1);
+  const theta2 = invalid ? theta1 : Math.acos(pf2);
+  const omega = 2*Math.PI*freq;
+
+  const Q1 = P*Math.tan(theta1);
+  const Q2 = invalid ? Q1 : P*Math.tan(theta2);
+  const Qc = Q1 - Q2; // magnitude of reactive power the device must supply/absorb
+  const S1 = P/pf1;
+  const S2 = invalid ? S1 : P/pf2;
+  const I1 = S1/V;
+  const I2 = S2/V;
+
+  const deviceLabel = document.getElementById("deviceStat").querySelector(".lbl");
+  const statDevice = document.getElementById("statDevice");
+  if (invalid){
+    statDevice.innerHTML = '<span class="unit">—</span>';
+    document.getElementById("statQc").innerHTML = '<span class="unit">—</span>';
+  } else if (loadType === "inductive"){
+    const C = Qc/(omega*V*V);
+    deviceLabel.textContent = "Required capacitor C";
+    statDevice.innerHTML = (C*1e6).toFixed(1)+'<span class="unit"> \u00b5F</span>';
+    document.getElementById("statQc").innerHTML = Qc.toFixed(0)+'<span class="unit"> VAr supplied</span>';
+  } else {
+    const L = V*V/(omega*Qc);
+    deviceLabel.textContent = "Required inductor L";
+    statDevice.innerHTML = (L*1000).toFixed(1)+'<span class="unit"> mH</span>';
+    document.getElementById("statQc").innerHTML = Qc.toFixed(0)+'<span class="unit"> VAr absorbed</span>';
+  }
+  document.getElementById("statS").innerHTML = S1.toFixed(0)+' \u2192 '+S2.toFixed(0)+'<span class="unit"> VA</span>';
+  document.getElementById("statI").innerHTML = I1.toFixed(1)+' \u2192 '+I2.toFixed(1)+'<span class="unit"> A</span>';
+
+  drawPowerTriangle(P, Q1, Q2, S1, S2, invalid);
+  drawPhasor(V, I1, I2, theta1, theta2, invalid);
+}
+
+function drawPowerTriangle(P, Q1, Q2, S1, S2, invalid){
+  const svg = document.getElementById("s-plot");
+  svg.innerHTML = "";
+  const w=320, hDraw=300, hTotal=340;
+  const M = {l:56, r:20, t:20, b:40};
+  const innerW = w-M.l-M.r, innerH = hDraw-M.t-M.b;
+  const cx = M.l, cy = M.t + innerH/2;
+  const pxPerW = innerW/P_FRAME;
+  const pxPerVAr = (innerH/2)/Q_FRAME;
+
+  svg.appendChild(el("line",{x1:cx,y1:cy,x2:w-M.r,y2:cy,stroke:"#c9c2b4","stroke-width":1}));
+  svg.appendChild(el("line",{x1:cx,y1:M.t,x2:cx,y2:hDraw-M.b,stroke:"#c9c2b4","stroke-width":1}));
+  svg.appendChild(el("text",{x:w-M.r,y:cy+16,class:"axis-label","text-anchor":"end"},[document.createTextNode("P \u2192")]));
+  svg.appendChild(el("text",{x:cx+4,y:M.t+2,class:"axis-label"},[document.createTextNode("Q")]));
+  svg.appendChild(el("text",{x:cx,y:hDraw-M.b+16,class:"tick-label","text-anchor":"middle"},[document.createTextNode("0")]));
+  svg.appendChild(el("text",{x:w-M.r,y:hDraw-M.b+16,class:"tick-label","text-anchor":"end"},[document.createTextNode(P_FRAME.toLocaleString()+" W")]));
+
+  const px = cx + P*pxPerW;
+  const py1 = cy - Q1*pxPerVAr;
+  const py2 = cy - Q2*pxPerVAr;
+
+  // before (dashed mustard)
+  svg.appendChild(el("line",{x1:cx,y1:cy,x2:px,y2:py1,stroke:COL_BEFORE,"stroke-width":2.6,"stroke-dasharray":"7,4"}));
+  svg.appendChild(el("line",{x1:px,y1:cy,x2:px,y2:py1,stroke:COL_BEFORE,"stroke-width":1.6,"stroke-dasharray":"4,3",opacity:0.7}));
+  svg.appendChild(el("circle",{cx:px,cy:py1,r:4,fill:COL_BEFORE}));
+
+  if (!invalid){
+    // after (solid teal)
+    svg.appendChild(el("line",{x1:cx,y1:cy,x2:px,y2:py2,stroke:COL_AFTER,"stroke-width":2.8}));
+    svg.appendChild(el("line",{x1:px,y1:cy,x2:px,y2:py2,stroke:COL_AFTER,"stroke-width":1.8,opacity:0.7}));
+    svg.appendChild(el("circle",{cx:px,cy:py2,r:4.5,fill:COL_AFTER}));
+    // device contribution: from py2 up to py1 (the Q that got cancelled)
+    svg.appendChild(el("line",{x1:px+6,y1:py1,x2:px+6,y2:py2,stroke:COL_DEVICE,"stroke-width":2,"stroke-dasharray":"3,2"}));
+  }
+
+  svg.appendChild(el("line",{x1:cx,y1:cy,x2:px,y2:cy,stroke:COL_P,"stroke-width":3}));
+
+  let ly = 296;
+  const items = invalid ? [["P (fixed)",COL_P],["S\u2081, Q\u2081 (before)",COL_BEFORE]]
+                         : [["P (fixed)",COL_P],["S\u2081, Q\u2081 (before)",COL_BEFORE],["S\u2082, Q\u2082 (after)",COL_AFTER]];
+  for (const [label,color] of items){
+    svg.appendChild(el("rect",{x:M.l,y:ly-9,width:14,height:2.8,fill:color}));
+    svg.appendChild(el("text",{x:M.l+19,y:ly-4,class:"legend-label"},[document.createTextNode(label)]));
+    ly += 20;
+  }
+}
+
+function drawPhasor(V, I1, I2, theta1, theta2, invalid){
+  const svg = document.getElementById("i-plot");
+  svg.innerHTML = "";
+  const w=320, hDraw=300;
+  const M = {l:20, r:20, t:20, b:40};
+  const innerW = w-M.l-M.r, innerH = hDraw-M.t-M.b;
+  const cx = M.l + innerW*0.28, cy = M.t + innerH/2;
+  const pxPerAmp = Math.min(innerW*0.68, innerH/2) / I_FRAME;
+
+  svg.appendChild(el("line",{x1:M.l,y1:cy,x2:w-M.r,y2:cy,stroke:"#c9c2b4","stroke-width":1}));
+  svg.appendChild(el("line",{x1:cx,y1:M.t,x2:cx,y2:hDraw-M.b,stroke:"#c9c2b4","stroke-width":1}));
+  svg.appendChild(el("text",{x:w-M.r,y:cy-6,class:"axis-label","text-anchor":"end"},[document.createTextNode("V\u0304 reference")]));
+
+  // V reference phasor (short, along real axis)
+  const vLen = 40;
+  svg.appendChild(el("line",{x1:cx,y1:cy,x2:cx+vLen,y2:cy,stroke:COL_P,"stroke-width":2.4}));
+  svg.appendChild(el("circle",{cx:cx+vLen,cy:cy,r:3,fill:COL_P}));
+
+  const sign = loadType === "inductive" ? 1 : -1; // lagging (below axis) vs leading (above axis)
+
+  // I1 before (dashed mustard)
+  const a1x = cx + I1*pxPerAmp*Math.cos(theta1);
+  const a1y = cy + sign*I1*pxPerAmp*Math.sin(theta1);
+  svg.appendChild(el("line",{x1:cx,y1:cy,x2:a1x,y2:a1y,stroke:COL_BEFORE,"stroke-width":2.6,"stroke-dasharray":"7,4"}));
+  svg.appendChild(el("circle",{cx:a1x,cy:a1y,r:4,fill:COL_BEFORE}));
+
+  if (!invalid){
+    const a2x = cx + I2*pxPerAmp*Math.cos(theta2);
+    const a2y = cy + sign*I2*pxPerAmp*Math.sin(theta2);
+    svg.appendChild(el("line",{x1:cx,y1:cy,x2:a2x,y2:a2y,stroke:COL_AFTER,"stroke-width":2.8}));
+    svg.appendChild(el("circle",{cx:a2x,cy:a2y,r:4.5,fill:COL_AFTER}));
+    // device current: connects tip of I1 to tip of I2 (the correction contribution)
+    svg.appendChild(el("line",{x1:a1x,y1:a1y,x2:a2x,y2:a2y,stroke:COL_DEVICE,"stroke-width":2,"stroke-dasharray":"3,2"}));
+  }
+
+  let ly = 296;
+  const items = invalid ? [["V\u0304 (reference)",COL_P],["\u012a\u2081 (before)",COL_BEFORE]]
+                         : [["V\u0304 (reference)",COL_P],["\u012a\u2081 (before)",COL_BEFORE],["\u012a\u2082 (after)",COL_AFTER],["device current",COL_DEVICE]];
+  for (const [label,color] of items){
+    svg.appendChild(el("rect",{x:20,y:ly-9,width:14,height:2.8,fill:color}));
+    svg.appendChild(el("text",{x:39,y:ly-4,class:"legend-label"},[document.createTextNode(label)]));
+    ly += 20;
+  }
+}
+
+document.getElementById("pSlider").addEventListener("input", render);
+document.getElementById("pf1Slider").addEventListener("input", render);
+document.getElementById("pf2Slider").addEventListener("input", render);
+document.getElementById("vSlider").addEventListener("input", render);
+
+document.getElementById("modeInd").addEventListener("click", ()=>{
+  loadType = "inductive";
+  document.getElementById("modeInd").classList.add("active");
+  document.getElementById("modeCap").classList.remove("active");
+  render();
+});
+document.getElementById("modeCap").addEventListener("click", ()=>{
+  loadType = "capacitive";
+  document.getElementById("modeCap").classList.add("active");
+  document.getElementById("modeInd").classList.remove("active");
+  render();
+});
+document.getElementById("freq50").addEventListener("click", ()=>{
+  freq = 50;
+  document.getElementById("freq50").classList.add("active");
+  document.getElementById("freq60").classList.remove("active");
+  render();
+});
+document.getElementById("freq60").addEventListener("click", ()=>{
+  freq = 60;
+  document.getElementById("freq60").classList.add("active");
+  document.getElementById("freq50").classList.remove("active");
+  render();
+});
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  document.getElementById("pSlider").value = 5000;
+  document.getElementById("pf1Slider").value = 0.70;
+  document.getElementById("pf2Slider").value = 0.90;
+  document.getElementById("vSlider").value = 230;
+  loadType = "inductive";
+  freq = 50;
+  document.getElementById("modeInd").classList.add("active");
+  document.getElementById("modeCap").classList.remove("active");
+  document.getElementById("freq50").classList.add("active");
+  document.getElementById("freq60").classList.remove("active");
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
