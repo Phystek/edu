@@ -19,6 +19,9 @@
   .intro{font-size:14px; line-height:1.5; color:var(--muted); margin:14px 0 20px;}
   .grid2{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
   @media (max-width:800px){ .grid2{grid-template-columns:1fr;} }
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;}
+  @media (max-width:1000px){ .grid3{grid-template-columns:1fr 1fr;} }
+  @media (max-width:640px){ .grid3{grid-template-columns:1fr;} }
   .panel{background:var(--panel); border:1px solid var(--grid); border-radius:4px; padding:14px 16px;}
   .panel + .panel{margin-top:14px;}
   .panel h2{font-family:"Iowan Old Style","Georgia",serif; font-size:15px; font-weight:700; margin:0 0 8px; color:var(--ink);}
@@ -60,12 +63,25 @@
     <div class="tag">Impedance · Complex Power</div>
   </header>
   <p class="intro">
-    Build up an impedance Z = R + jX with the sliders below, and watch the impedance triangle and the power
-    triangle move together — they're always similar triangles, sharing the exact same angle φ. That's not a
-    coincidence: φ is simultaneously the impedance angle, the V–I phase difference, and the power-factor angle.
+    Build up an impedance Z = R + jX with the sliders below. Your lecture slides introduced Z algebraically,
+    without drawing it as a triangle — the impedance triangle here is a visual tool being introduced for the
+    first time, not something you've already seen on a slide. It's worth showing because it's the exact same
+    shape as the power triangle you <em>have</em> covered, sharing the same angle φ.
+  </p>
+  <p class="intro">
+    The phasor diagram on the left is different in kind from the other two, not just in appearance: V̄ and Ī
+    are real oscillating quantities — actual snapshots of things rotating in the circuit, the same idea from
+    the phasor explorer. Z and S̄ are <em>not</em> oscillating phasors of anything — Z is a fixed ratio V̄/Ī,
+    and S̄ is a power quantity computed from V̄ and Ī. All three happen to share the same angle φ, which is
+    exactly why they're drawn side by side here — but only the left-hand picture is a phasor diagram in the
+    strict sense.
   </p>
 
-  <div class="grid2">
+  <div class="grid3">
+    <div class="panel">
+      <h2>Phasor diagram (V̄, Ī)</h2>
+      <svg id="vi-plot" viewBox="0 0 320 350"></svg>
+    </div>
     <div class="panel">
       <h2>Impedance triangle</h2>
       <svg id="z-plot" viewBox="0 0 320 350"></svg>
@@ -75,7 +91,7 @@
       <svg id="s-plot" viewBox="0 0 320 350"></svg>
     </div>
   </div>
-  <p class="samefi">▲ same angle φ in both triangles ▲</p>
+  <p class="samefi">▲ same angle φ in all three ▲</p>
 
   <div class="panel controls" style="margin-top:14px;">
     <h2>Controls</h2>
@@ -128,6 +144,7 @@ const R_FRAME = 20;      // ohms
 const X_FRAME = 20;      // ohms, symmetric
 const P_FRAME = 18000;   // watts
 const Q_FRAME = 9000;    // VAr, symmetric
+const I_FRAME = 65;      // amps, for the phasor panel
 
 const COL_R = "#1c5f7a";   // teal
 const COL_X = "#c98a2c";   // mustard
@@ -180,6 +197,50 @@ function drawTriangle(svgId, horizVal, vertVal, hypMag, angleRad, horizFrame, ve
   svg.appendChild(el("text",{x:lx,y:ly+4,class:"legend-label","text-anchor":"middle",fill:COL_ARC},[document.createTextNode("\u03c6")]));
 }
 
+function drawPhasor(V, I, angZ){
+  const svg = document.getElementById("vi-plot");
+  svg.innerHTML = "";
+  const w=320, h=300;
+  const M = {l:20, r:20, t:20, b:40};
+  const innerW = w-M.l-M.r, innerH = h-M.t-M.b;
+  const cx = M.l + innerW*0.22, cy = M.t + innerH/2;
+  const pxPerAmp = Math.min(innerW*0.72, innerH/2) / I_FRAME;
+
+  svg.appendChild(el("line",{x1:M.l,y1:cy,x2:w-M.r,y2:cy,stroke:"#c9c2b4","stroke-width":1}));
+  svg.appendChild(el("line",{x1:cx,y1:M.t,x2:cx,y2:h-M.b,stroke:"#c9c2b4","stroke-width":1}));
+
+  // V reference: fixed short length, purely along the real axis by definition (our angle reference)
+  const vLen = 40;
+  svg.appendChild(el("line",{x1:cx,y1:cy,x2:cx+vLen,y2:cy,stroke:COL_Z,"stroke-width":2.6}));
+  svg.appendChild(el("circle",{cx:cx+vLen,cy:cy,r:3.5,fill:COL_Z}));
+
+  // I = Vbar/Z has angle -angZ relative to V (verified: lags by the impedance angle)
+  const iAngle = -angZ;
+  const ix = cx + I*pxPerAmp*Math.cos(iAngle);
+  const iy = cy - I*pxPerAmp*Math.sin(iAngle);
+  svg.appendChild(el("line",{x1:cx,y1:cy,x2:ix,y2:iy,stroke:COL_R,"stroke-width":2.8}));
+  svg.appendChild(el("circle",{cx:ix,cy:iy,r:4.5,fill:COL_R}));
+
+  // angle arc — single isotropic scale here, so the true angle iAngle can be used directly (no distortion risk)
+  const arcR = 18;
+  const largeArc = Math.abs(iAngle) > Math.PI/2 ? 1 : 0;
+  const sweep = iAngle >= 0 ? 0 : 1;
+  const ax = cx + arcR, ay = cy;
+  const bx = cx + arcR*Math.cos(iAngle), by = cy - arcR*Math.sin(iAngle);
+  svg.appendChild(el("path",{d:`M ${ax} ${ay} A ${arcR} ${arcR} 0 ${largeArc} ${sweep} ${bx} ${by}`, fill:"none", stroke:COL_ARC, "stroke-width":1.6}));
+  const midAngle = iAngle/2;
+  const lx = cx + (arcR+13)*Math.cos(midAngle), ly = cy - (arcR+13)*Math.sin(midAngle);
+  svg.appendChild(el("text",{x:lx,y:ly+4,class:"legend-label","text-anchor":"middle",fill:COL_ARC},[document.createTextNode("\u03c6")]));
+
+  let ly2 = 296;
+  const items = [["V\u0304 (reference)",COL_Z],["\u012a (physical, oscillating)",COL_R]];
+  for (const [label,color] of items){
+    svg.appendChild(el("rect",{x:20,y:ly2-9,width:14,height:2.8,fill:color}));
+    svg.appendChild(el("text",{x:39,y:ly2-4,class:"legend-label"},[document.createTextNode(label)]));
+    ly2 += 20;
+  }
+}
+
 function render(){
   const R = parseFloat(document.getElementById("rSlider").value);
   const X = parseFloat(document.getElementById("xSlider").value);
@@ -216,6 +277,7 @@ function render(){
     flag.style.background = "#f7e9e7"; flag.style.color = "#a3372c"; flag.style.borderColor="#a3372c";
   }
 
+  drawPhasor(V, I, angZ);
   drawTriangle("z-plot", R, X, magZ, angZ, R_FRAME, X_FRAME, "R", "X", "Z");
   drawTriangle("s-plot", P, Q, S, angZ, P_FRAME, Q_FRAME, "P", "Q", "S");
 
