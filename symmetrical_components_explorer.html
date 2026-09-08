@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Symmetrical Components Explorer — ELEC2005</title>
+<style>
+  :root{
+    --ink:#1a1512;
+    --paper:#faf7f2;
+    --panel:#ffffff;
+    --maroon:#7a1730;
+    --muted:#6b6156;
+    --grid:#e4ddd2;
+    --focus:#1c5f7a;
+    --amber:#c98a2c;
+    --page-bg:#e6e6e4;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--page-bg);
+    color:var(--ink);
+    font-family:"Helvetica Neue",Arial,sans-serif;
+  }
+  .wrap{
+    max-width:960px;
+    margin:0 auto;
+    padding:28px 20px 40px;
+  }
+  header{
+    border-bottom:1px solid var(--grid);
+    padding-bottom:14px;
+    margin-bottom:16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .eyebrow{
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--maroon);
+    font-weight:700;
+    margin:0 0 4px;
+  }
+  h1{
+    font-family:"Iowan Old Style","Georgia",serif;
+    font-size:26px;
+    letter-spacing:-0.01em;
+    margin:0;
+    font-weight:700;
+  }
+  .tag{
+    font-size:12px;
+    color:var(--muted);
+    white-space:nowrap;
+  }
+  .intro{
+    font-size:14px;
+    line-height:1.5;
+    color:var(--ink);
+    max-width:760px;
+    margin:0 0 14px;
+  }
+  .note-box{
+    font-size:12px;
+    line-height:1.5;
+    color:var(--muted);
+    max-width:760px;
+    margin:0 0 18px;
+    padding:10px 12px;
+    background:var(--paper);
+    border:1px solid var(--grid);
+    border-radius:4px;
+  }
+  .note-box strong{color:var(--ink);}
+  .grid{
+    display:grid;
+    grid-template-columns:1.35fr 1fr;
+    gap:16px;
+  }
+  @media (max-width:800px){
+    .grid{grid-template-columns:1fr;}
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--grid);
+    border-radius:4px;
+    padding:14px 16px;
+  }
+  .panel + .panel{margin-top:14px;}
+  .panel h2{
+    font-family:"Iowan Old Style","Georgia",serif;
+    font-size:15px;
+    margin:0 0 2px;
+    font-weight:700;
+  }
+  .panel .sub{
+    font-size:10.5px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--maroon);
+    margin:0 0 10px;
+    font-weight:700;
+  }
+  .seq-row{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+  }
+  .seq-cell{
+    text-align:center;
+  }
+  .seq-cell .cap{
+    font-size:11.5px;
+    color:var(--muted);
+    margin-top:2px;
+  }
+  svg{display:block;margin:0 auto;max-width:100%;height:auto;}
+  .mode-toggle{
+    display:flex;
+    border:1px solid var(--grid);
+    border-radius:4px;
+    overflow:hidden;
+    margin-bottom:14px;
+  }
+  .mode-btn{
+    flex:1;
+    padding:9px 6px;
+    text-align:center;
+    font-size:12.5px;
+    font-weight:700;
+    background:var(--paper);
+    color:var(--muted);
+    cursor:pointer;
+    border:none;
+    font-family:inherit;
+  }
+  .mode-btn.active{
+    background:var(--maroon);
+    color:#fff;
+  }
+  .mode-toggle.small{
+    margin-bottom:0;
+  }
+  .mode-toggle.small .mode-btn{
+    padding:6px 6px;
+    font-size:11px;
+  }
+  .conv-toggle-row{
+    margin-bottom:14px;
+    padding-bottom:12px;
+    border-bottom:1px solid var(--grid);
+  }
+  .conv-label{
+    display:block;
+    font-size:11px;
+    font-weight:700;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  .group{
+    border-top:1px solid var(--grid);
+    padding-top:10px;
+    margin-top:10px;
+  }
+  .group:first-of-type{border-top:none;margin-top:0;padding-top:0;}
+  .group-label{
+    font-size:12px;
+    font-weight:700;
+    margin-bottom:6px;
+  }
+  .group-label .swatch{
+    display:inline-block;
+    width:9px;height:9px;
+    border-radius:50%;
+    margin-right:6px;
+    vertical-align:middle;
+  }
+  .slider-row{margin-bottom:8px;}
+  .slider-row label{
+    display:flex;
+    justify-content:space-between;
+    font-size:12px;
+    color:var(--ink);
+    margin-bottom:2px;
+  }
+  .slider-row .val{
+    font-weight:700;
+    color:var(--maroon);
+    font-variant-numeric:tabular-nums;
+  }
+  input[type=range]{
+    width:100%;
+    accent-color:var(--maroon);
+  }
+  .minmax{
+    display:flex;
+    justify-content:space-between;
+    font-size:10px;
+    color:var(--muted);
+    margin-top:1px;
+  }
+  .btnrow{
+    display:flex;
+    gap:8px;
+    margin-top:12px;
+    flex-wrap:wrap;
+  }
+  .btn{
+    flex:1;
+    min-width:110px;
+    padding:8px 10px;
+    font-size:11.5px;
+    font-weight:700;
+    border-radius:4px;
+    border:1px solid var(--ink);
+    background:transparent;
+    color:var(--ink);
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .btn:hover{background:var(--ink);color:#fff;}
+  .btn.wide{flex:1 1 100%;}
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:8px;
+    margin-top:10px;
+  }
+  .stat{
+    background:var(--paper);
+    border:1px solid var(--grid);
+    border-radius:4px;
+    padding:8px 6px;
+    text-align:center;
+  }
+  .stat .lbl{
+    font-size:9.5px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:3px;
+  }
+  .stat .lbl .dot{
+    display:inline-block;
+    width:7px;height:7px;
+    border-radius:50%;
+    margin-right:3px;
+    vertical-align:middle;
+  }
+  .stat .v{
+    font-size:13px;
+    font-weight:700;
+    color:var(--ink);
+  }
+  .construction-toggle{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:11.5px;
+    color:var(--muted);
+    margin-top:8px;
+    justify-content:center;
+  }
+  .construction-toggle input{accent-color:var(--maroon);}
+  footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:11px;
+    margin-top:24px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">Symmetrical Components</p>
+      <h1>Fortescue Decomposition Explorer</h1>
+    </div>
+    <div class="tag">ELEC2005 &middot; Week 9</div>
+  </header>
+
+  <p class="intro">Any unbalanced three-phase phasor set can be built from three balanced sets — zero, positive and
+  negative sequence. Use <strong>Compose</strong> to build an unbalanced set from sequence components, or
+  <strong>Decompose</strong> to extract the sequence components from a given unbalanced set — the two directions
+  of the Fortescue transform.</p>
+
+  <p class="note-box" id="conventionNote">
+    <strong>A note on angle convention:</strong> textbooks vary. Glover's own definition of the sequence
+    rotation operator uses 0&ndash;360&deg; (e.g. a&sup2; = 1&ang;240&deg;), but its worked examples often report
+    specific values in whichever form is shortest &mdash; including negative angles (e.g. &minus;120&deg;).
+    Both describe exactly the same phasor. Use the toggle below to match whichever convention you're
+    working from &mdash; it only changes how angles are <em>displayed</em>, not the underlying values.
+  </p>
+
+  <div class="grid">
+    <div>
+      <div class="panel">
+        <h2>Sequence components</h2>
+        <p class="sub" id="seqSubLabel">Zero &middot; Positive &middot; Negative</p>
+        <div class="seq-row">
+          <div class="seq-cell">
+            <svg id="svgZero" viewBox="0 0 220 220"></svg>
+            <div class="cap">(a) Zero-sequence</div>
+          </div>
+          <div class="seq-cell">
+            <svg id="svgPos" viewBox="0 0 220 220"></svg>
+            <div class="cap">(b) Positive-sequence</div>
+          </div>
+          <div class="seq-cell">
+            <svg id="svgNeg" viewBox="0 0 220 220"></svg>
+            <div class="cap">(c) Negative-sequence</div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Resulting three-phase set</h2>
+        <p class="sub" id="resultSubLabel">V&#772;<sub>a</sub>, V&#772;<sub>b</sub>, V&#772;<sub>c</sub></p>
+        <svg id="svgMain" viewBox="0 0 360 360" style="max-width:320px;"></svg>
+        <div class="construction-toggle">
+          <input type="checkbox" id="showConstruction" checked>
+          <label for="showConstruction">Show construction chain for phase a (V&#772;<sub>a0</sub> + V&#772;<sub>a+</sub> + V&#772;<sub>a&minus;</sub>)</label>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <div class="conv-toggle-row">
+          <span class="conv-label">Angle convention</span>
+          <div class="mode-toggle small">
+            <button class="mode-btn active" id="btnConv180">&minus;180&deg; to 180&deg;</button>
+            <button class="mode-btn" id="btnConv360">0&deg; to 360&deg;</button>
+          </div>
+        </div>
+        <div class="mode-toggle">
+          <button class="mode-btn active" id="btnCompose">Compose<br><span style="font-weight:400;font-size:10.5px;">sequence &rarr; set</span></button>
+          <button class="mode-btn" id="btnDecompose">Decompose<br><span style="font-weight:400;font-size:10.5px;">set &rarr; sequence</span></button>
+        </div>
+
+        <div id="controlsCompose">
+          <div class="group">
+            <div class="group-label"><span class="swatch" style="background:#8a8578;"></span>Zero-sequence (V&#772;<sub>a0</sub>)</div>
+            <div class="slider-row">
+              <label>Magnitude <span class="val" id="v_z0_mag">0.00</span></label>
+              <input type="range" id="s_z0_mag" min="0" max="1.5" step="0.01" value="0">
+              <div class="minmax"><span>0</span><span>1.5 pu</span></div>
+            </div>
+            <div class="slider-row">
+              <label>Angle <span class="val" id="v_z0_ang">0&deg;</span></label>
+              <input type="range" id="s_z0_ang" min="-180" max="180" step="1" value="0">
+              <div class="minmax"><span class="angle-minmax-min">&minus;180&deg;</span><span class="angle-minmax-max">180&deg;</span></div>
+            </div>
+          </div>
+          <div class="group">
+            <div class="group-label"><span class="swatch" style="background:var(--maroon);"></span>Positive-sequence (V&#772;<sub>a+</sub>)</div>
+            <div class="slider-row">
+              <label>Magnitude <span class="val" id="v_p_mag">1.00</span></label>
+              <input type="range" id="s_p_mag" min="0" max="1.5" step="0.01" value="1">
+              <div class="minmax"><span>0</span><span>1.5 pu</span></div>
+            </div>
+            <div class="slider-row">
+              <label>Angle <span class="val" id="v_p_ang">0&deg;</span></label>
+              <input type="range" id="s_p_ang" min="-180" max="180" step="1" value="0">
+              <div class="minmax"><span class="angle-minmax-min">&minus;180&deg;</span><span class="angle-minmax-max">180&deg;</span></div>
+            </div>
+          </div>
+          <div class="group">
+            <div class="group-label"><span class="swatch" style="background:var(--focus);"></span>Negative-sequence (V&#772;<sub>a&minus;</sub>)</div>
+            <div class="slider-row">
+              <label>Magnitude <span class="val" id="v_n_mag">0.00</span></label>
+              <input type="range" id="s_n_mag" min="0" max="1.5" step="0.01" value="0">
+              <div class="minmax"><span>0</span><span>1.5 pu</span></div>
+            </div>
+            <div class="slider-row">
+              <label>Angle <span class="val" id="v_n_ang">0&deg;</span></label>
+              <input type="range" id="s_n_ang" min="-180" max="180" step="1" value="0">
+              <div class="minmax"><span class="angle-minmax-min">&minus;180&deg;</span><span class="angle-minmax-max">180&deg;</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="controlsDecompose" style="display:none;">
+          <div class="group">
+            <div class="group-label"><span class="swatch" style="background:var(--maroon);"></span>Phase a (V&#772;<sub>a</sub>)</div>
+            <div class="slider-row">
+              <label>Magnitude <span class="val" id="v_a_mag">1.00</span></label>
+              <input type="range" id="s_a_mag" min="0" max="1.5" step="0.01" value="1">
+              <div class="minmax"><span>0</span><span>1.5 pu</span></div>
+            </div>
+            <div class="slider-row">
+              <label>Angle <span class="val" id="v_a_ang">0&deg;</span></label>
+              <input type="range" id="s_a_ang" min="-180" max="180" step="1" value="0">
+              <div class="minmax"><span class="angle-minmax-min">&minus;180&deg;</span><span class="angle-minmax-max">180&deg;</span></div>
+            </div>
+          </div>
+          <div class="group">
+            <div class="group-label"><span class="swatch" style="background:var(--focus);"></span>Phase b (V&#772;<sub>b</sub>)</div>
+            <div class="slider-row">
+              <label>Magnitude <span class="val" id="v_b_mag">1.00</span></label>
+              <input type="range" id="s_b_mag" min="0" max="1.5" step="0.01" value="1">
+              <div class="minmax"><span>0</span><span>1.5 pu</span></div>
+            </div>
+            <div class="slider-row">
+              <label>Angle <span class="val" id="v_b_ang">-120&deg;</span></label>
+              <input type="range" id="s_b_ang" min="-180" max="180" step="1" value="-120">
+              <div class="minmax"><span class="angle-minmax-min">&minus;180&deg;</span><span class="angle-minmax-max">180&deg;</span></div>
+            </div>
+          </div>
+          <div class="group">
+            <div class="group-label"><span class="swatch" style="background:var(--amber);"></span>Phase c (V&#772;<sub>c</sub>)</div>
+            <div class="slider-row">
+              <label>Magnitude <span class="val" id="v_c_mag">1.00</span></label>
+              <input type="range" id="s_c_mag" min="0" max="1.5" step="0.01" value="1">
+              <div class="minmax"><span>0</span><span>1.5 pu</span></div>
+            </div>
+            <div class="slider-row">
+              <label>Angle <span class="val" id="v_c_ang">120&deg;</span></label>
+              <input type="range" id="s_c_ang" min="-180" max="180" step="1" value="120">
+              <div class="minmax"><span class="angle-minmax-min">&minus;180&deg;</span><span class="angle-minmax-max">180&deg;</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="btnrow">
+          <button class="btn" id="btnBalanced">Balanced preset</button>
+          <button class="btn" id="btnDeckExample">Deck example (45&deg;)</button>
+        </div>
+        <div class="btnrow">
+          <button class="btn wide" id="btnReset">Reset to defaults</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Computed values</h2>
+        <p class="sub" id="computedSubLabel">Resulting a / b / c set</p>
+        <div class="stats" id="statsOut"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>ELEC2005 &middot; Week 9 &mdash; for concept exploration, not assessment.</footer>
+</div>
+
+<script>
+(function(){
+  const NS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs){
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  const COLOR_A = "#7a1730";   // maroon
+  const COLOR_B = "#1c5f7a";   // teal
+  const COLOR_C = "#c98a2c";   // amber
+  const COLOR_ZERO = "#8a8578"; // muted grey for zero-sequence (all three coincide)
+
+  const alpha  = {re: Math.cos(2*Math.PI/3),  im: Math.sin(2*Math.PI/3)};   // e^{j120}
+  const alpha2 = {re: Math.cos(-2*Math.PI/3), im: Math.sin(-2*Math.PI/3)};  // e^{-j120}
+
+  function cmul(a,b){ return {re: a.re*b.re - a.im*b.im, im: a.re*b.im + a.im*b.re}; }
+  function cadd(a,b){ return {re: a.re+b.re, im: a.im+b.im}; }
+  function csub(a,b){ return {re: a.re-b.re, im: a.im-b.im}; }
+  function cscale(a,s){ return {re: a.re*s, im: a.im*s}; }
+  function polarToC(mag, angDeg){
+    const r = angDeg*Math.PI/180;
+    return {re: mag*Math.cos(r), im: mag*Math.sin(r)};
+  }
+  function cMag(a){ return Math.hypot(a.re, a.im); }
+  function cAngDeg(a){
+    if (Math.abs(a.re) < 1e-9 && Math.abs(a.im) < 1e-9) return 0;
+    return Math.atan2(a.im, a.re) * 180/Math.PI;
+  }
+
+  function forward(Va0, Vap, Van){
+    // Va = Va0+Vap+Van ; Vb = Va0 + alpha2*Vap + alpha*Van ; Vc = Va0 + alpha*Vap + alpha2*Van
+    const Va = cadd(cadd(Va0, Vap), Van);
+    const Vb = cadd(cadd(Va0, cmul(alpha2, Vap)), cmul(alpha, Van));
+    const Vc = cadd(cadd(Va0, cmul(alpha, Vap)), cmul(alpha2, Van));
+    return {Va, Vb, Vc};
+  }
+  function inverse(Va, Vb, Vc){
+    const Va0 = cscale(cadd(cadd(Va, Vb), Vc), 1/3);
+    const Vap = cscale(cadd(cadd(Va, cmul(alpha, Vb)), cmul(alpha2, Vc)), 1/3);
+    const Van = cscale(cadd(cadd(Va, cmul(alpha2, Vb)), cmul(alpha, Vc)), 1/3);
+    return {Va0, Vap, Van};
+  }
+  // sequence-set full triads from the single controlling ("a") phasor
+  function seqTriadFromA(Va_seq, kind){
+    // kind: 'zero' -> b=c=a ; 'pos' -> b=alpha2*a, c=alpha*a ; 'neg' -> b=alpha*a, c=alpha2*a
+    if (kind === 'zero') return {a:Va_seq, b:Va_seq, c:Va_seq};
+    if (kind === 'pos')  return {a:Va_seq, b:cmul(alpha2,Va_seq), c:cmul(alpha,Va_seq)};
+    return {a:Va_seq, b:cmul(alpha,Va_seq), c:cmul(alpha2,Va_seq)};
+  }
+
+  const MAXMAG = 1.5;
+  const SCALE_SMALL = (110-30)/MAXMAG;
+  const SCALE_MAIN  = (180-40)/MAXMAG;
+
+  function drawAxisFrame(svg, cx, cy, scale, frameMax, showRingLabels){
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    const rings = [0.5,1.0,1.5];
+    rings.forEach(r=>{
+      svg.appendChild(el('circle',{cx:cx,cy:cy,r:r*scale,fill:'none',stroke:'#e4ddd2','stroke-width':1}));
+    });
+    const frameExtent = scale*frameMax + 8;
+    svg.appendChild(el('line',{x1:cx-frameExtent,y1:cy,x2:cx+frameExtent,y2:cy,stroke:'#e4ddd2','stroke-width':1}));
+    svg.appendChild(el('line',{x1:cx,y1:cy-frameExtent,x2:cx,y2:cy+frameExtent,stroke:'#e4ddd2','stroke-width':1}));
+    svg.appendChild(el('circle',{cx:cx,cy:cy,r:2.5,fill:'#1a1512'}));
+    if (showRingLabels){
+      [1.0,1.5].forEach(r=>{
+        const t = el('text',{x:cx+3, y:cy-r*scale-3, 'font-size':9, fill:'#6b6156','font-family':'Helvetica Neue,Arial,sans-serif'});
+        t.textContent = r.toFixed(1);
+        svg.appendChild(t);
+      });
+    }
+  }
+
+  let arrowMarkerCounter = 0;
+  function addArrow(svg, cx, cy, scale, phasor, color, label, labelDist){
+    const x = cx + phasor.re*scale;
+    const y = cy - phasor.im*scale;
+    const mag = cMag(phasor);
+    if (mag < 0.005){
+      svg.appendChild(el('circle',{cx:cx,cy:cy,r:3,fill:color}));
+      return;
+    }
+    // Arrowhead size scales with the line's own pixel length so it never dwarfs a
+    // short vector — fixed 7px marker only once the line is long enough to carry it.
+    const lineLen = mag*scale;
+    const s = Math.min(7, Math.max(3, lineLen*0.5));
+    const markerId = 'arrow_' + (arrowMarkerCounter++);
+    let defs = svg.querySelector('defs');
+    if (!defs){ defs = el('defs',{}); svg.insertBefore(defs, svg.firstChild); }
+    const marker = el('marker',{
+      id:markerId, markerWidth:s, markerHeight:s,
+      refX:s*0.9, refY:s/2, orient:'auto', markerUnits:'userSpaceOnUse',
+      viewBox:'0 0 '+s+' '+s
+    });
+    marker.appendChild(el('path',{d:'M0,0 L0,'+s+' L'+s+','+(s/2)+' z', fill:color}));
+    defs.appendChild(marker);
+    svg.appendChild(el('line',{x1:cx,y1:cy,x2:x,y2:y,stroke:color,'stroke-width':2.4,'marker-end':'url(#'+markerId+')'}));
+    if (label){
+      // Offset radially outward along the phasor's own angle, not a fixed pixel
+      // direction — this is what keeps labels from stacking when two phasors
+      // point in different directions, and pushes each label clear of its own
+      // arrow regardless of orientation.
+      const angleRad = Math.atan2(phasor.im, phasor.re);
+      const D = labelDist || 13;
+      const lx = x + Math.cos(angleRad)*D;
+      const ly = y - Math.sin(angleRad)*D;
+      const t = el('text',{x:lx,y:ly,'font-size':13,'font-family':'Helvetica Neue,Arial,sans-serif',
+                            fill:color,'font-weight':700,'text-anchor':'middle','dominant-baseline':'middle'});
+      t.textContent = label;
+      svg.appendChild(t);
+    }
+  }
+
+  function drawSequenceDiagram(svg, triad, kind){
+    const cx=110, cy=110, scale=SCALE_SMALL;
+    drawAxisFrame(svg, cx, cy, scale, MAXMAG, false);
+    if (kind === 'zero'){
+      // a, b and c are always identical for the zero-sequence set — one arrow with
+      // a combined label instead of three arrows stacked exactly on top of each other.
+      addArrow(svg, cx, cy, scale, triad.a, COLOR_ZERO, 'a = b = c', 15);
+    } else {
+      addArrow(svg, cx, cy, scale, triad.a, COLOR_A, 'a', 13);
+      addArrow(svg, cx, cy, scale, triad.b, COLOR_B, 'b', 13);
+      addArrow(svg, cx, cy, scale, triad.c, COLOR_C, 'c', 13);
+    }
+  }
+
+  function drawMainDiagram(svg, abc, seq, showConstruction){
+    const cx=180, cy=180;
+    // The three sequence components can each be up to MAXMAG, and their vector SUM
+    // (a real phasor, not just a slider) can therefore reach up to 3*MAXMAG in the
+    // worst case (all aligned in phase) — the fixed slider-range frame alone would
+    // clip that. Frame grows only when actually needed, never shrinks below the
+    // slider-range default, and every ring is numerically labelled so the current
+    // scale is always self-evident rather than silently changing the effective units.
+    const maxComputed = Math.max(cMag(abc.Va), cMag(abc.Vb), cMag(abc.Vc), MAXMAG);
+    const scale = (180-40) / maxComputed;
+    drawAxisFrame(svg, cx, cy, scale, maxComputed, true);
+
+    if (showConstruction){
+      const p0 = {re:0, im:0};
+      const p1 = seq.Va0;
+      const p2 = cadd(seq.Va0, seq.Vap);
+      const p3 = cadd(p2, seq.Van);
+      const pts = [p0,p1,p2,p3];
+      const cols = [COLOR_ZERO, '#b04a63', '#3d84a8'];
+      for (let i=0;i<3;i++){
+        const x1 = cx+pts[i].re*scale, y1 = cy-pts[i].im*scale;
+        const x2 = cx+pts[i+1].re*scale, y2 = cy-pts[i+1].im*scale;
+        svg.appendChild(el('line',{x1:x1,y1:y1,x2:x2,y2:y2,stroke:cols[i],'stroke-width':2,'stroke-dasharray':'4,3','opacity':0.85}));
+        svg.appendChild(el('circle',{cx:x2,cy:y2,r:2.5,fill:cols[i]}));
+      }
+    }
+    addArrow(svg, cx, cy, scale, abc.Va, COLOR_A, 'a', 16);
+    addArrow(svg, cx, cy, scale, abc.Vb, COLOR_B, 'b', 16);
+    addArrow(svg, cx, cy, scale, abc.Vc, COLOR_C, 'c', 16);
+  }
+
+  // ---------- State ----------
+  let mode = 'compose';
+  const seqIn = {
+    z0: {mag:0, ang:0},
+    p:  {mag:1, ang:0},
+    n:  {mag:0, ang:0}
+  };
+  const abcIn = {
+    a: {mag:1, ang:0},
+    b: {mag:1, ang:-120},
+    c: {mag:1, ang:120}
+  };
+
+  const svgZero = document.getElementById('svgZero');
+  const svgPos = document.getElementById('svgPos');
+  const svgNeg = document.getElementById('svgNeg');
+  const svgMain = document.getElementById('svgMain');
+  const statsOut = document.getElementById('statsOut');
+  const showConstructionEl = document.getElementById('showConstruction');
+
+  function fmt(n){ return (Math.round(n*100)/100).toFixed(2); }
+
+  // ---------- Angle convention (display-only; internal state always stays canonical -180..180) ----------
+  let angleConvention = '180';
+  function toDisplayAngle(canonical, convention){
+    // canonical is always in (-180, 180]
+    if (convention === '360') return canonical < 0 ? canonical + 360 : canonical;
+    return canonical;
+  }
+  function toCanonicalAngle(display, convention){
+    if (convention === '360') return display > 180 ? display - 360 : display;
+    return display;
+  }
+  function fmtAng(canonical){
+    return Math.round(toDisplayAngle(canonical, angleConvention)) + '&deg;';
+  }
+
+  function render(){
+    let Va0, Vap, Van, Va, Vb, Vc;
+    if (mode === 'compose'){
+      Va0 = polarToC(seqIn.z0.mag, seqIn.z0.ang);
+      Vap = polarToC(seqIn.p.mag, seqIn.p.ang);
+      Van = polarToC(seqIn.n.mag, seqIn.n.ang);
+      const out = forward(Va0, Vap, Van);
+      Va = out.Va; Vb = out.Vb; Vc = out.Vc;
+    } else {
+      Va = polarToC(abcIn.a.mag, abcIn.a.ang);
+      Vb = polarToC(abcIn.b.mag, abcIn.b.ang);
+      Vc = polarToC(abcIn.c.mag, abcIn.c.ang);
+      const out = inverse(Va, Vb, Vc);
+      Va0 = out.Va0; Vap = out.Vap; Van = out.Van;
+    }
+
+    drawSequenceDiagram(svgZero, seqTriadFromA(Va0,'zero'), 'zero');
+    drawSequenceDiagram(svgPos,  seqTriadFromA(Vap,'pos'),  'pos');
+    drawSequenceDiagram(svgNeg,  seqTriadFromA(Van,'neg'),  'neg');
+    drawMainDiagram(svgMain, {Va,Vb,Vc}, {Va0,Vap,Van}, showConstructionEl.checked);
+
+    // stats: show the COMPUTED side
+    statsOut.innerHTML = '';
+    let items;
+    if (mode === 'compose'){
+      items = [
+        ['a', COLOR_A, Va], ['b', COLOR_B, Vb], ['c', COLOR_C, Vc]
+      ];
+      document.getElementById('computedSubLabel').innerHTML = 'Resulting a / b / c set';
+    } else {
+      items = [
+        ['a0', COLOR_ZERO, Va0], ['a+', '#b04a63', Vap], ['a&minus;', '#3d84a8', Van]
+      ];
+      document.getElementById('computedSubLabel').innerHTML = 'Resulting sequence components';
+    }
+    items.forEach(([label, color, val])=>{
+      const div = document.createElement('div');
+      div.className = 'stat';
+      div.innerHTML = '<div class="lbl"><span class="dot" style="background:'+color+'"></span>V&#772;<sub>'+label+'</sub></div>' +
+                       '<div class="v">'+fmt(cMag(val))+' &ang; '+Math.round(toDisplayAngle(cAngDeg(val), angleConvention))+'&deg;</div>';
+      statsOut.appendChild(div);
+    });
+  }
+
+  // ---------- Wire up sliders ----------
+  function bind(sliderId, valId, targetObj, key, isAngle){
+    const slider = document.getElementById(sliderId);
+    const valEl = document.getElementById(valId);
+    slider.addEventListener('input', ()=>{
+      const raw = parseFloat(slider.value);
+      if (isAngle){
+        const canonical = toCanonicalAngle(raw, angleConvention);
+        targetObj[key] = canonical;
+        valEl.innerHTML = fmtAng(canonical);
+      } else {
+        targetObj[key] = raw;
+        valEl.innerHTML = fmt(raw);
+      }
+      render();
+    });
+  }
+  bind('s_z0_mag','v_z0_mag', seqIn.z0, 'mag', false);
+  bind('s_z0_ang','v_z0_ang', seqIn.z0, 'ang', true);
+  bind('s_p_mag','v_p_mag', seqIn.p, 'mag', false);
+  bind('s_p_ang','v_p_ang', seqIn.p, 'ang', true);
+  bind('s_n_mag','v_n_mag', seqIn.n, 'mag', false);
+  bind('s_n_ang','v_n_ang', seqIn.n, 'ang', true);
+
+  bind('s_a_mag','v_a_mag', abcIn.a, 'mag', false);
+  bind('s_a_ang','v_a_ang', abcIn.a, 'ang', true);
+  bind('s_b_mag','v_b_mag', abcIn.b, 'mag', false);
+  bind('s_b_ang','v_b_ang', abcIn.b, 'ang', true);
+  bind('s_c_mag','v_c_mag', abcIn.c, 'mag', false);
+  bind('s_c_ang','v_c_ang', abcIn.c, 'ang', true);
+
+  showConstructionEl.addEventListener('change', render);
+
+  const btnConv180 = document.getElementById('btnConv180');
+  const btnConv360 = document.getElementById('btnConv360');
+  const ANGLE_SLIDER_IDS = [
+    ['s_z0_ang','v_z0_ang'], ['s_p_ang','v_p_ang'], ['s_n_ang','v_n_ang'],
+    ['s_a_ang','v_a_ang'], ['s_b_ang','v_b_ang'], ['s_c_ang','v_c_ang']
+  ];
+
+  function applyConventionToUI(){
+    const min = angleConvention === '360' ? 0 : -180;
+    const max = angleConvention === '360' ? 360 : 180;
+    ANGLE_SLIDER_IDS.forEach(([sliderId])=>{
+      const el = document.getElementById(sliderId);
+      el.min = min; el.max = max;
+    });
+    document.querySelectorAll('.angle-minmax-min').forEach(el=>{ el.innerHTML = min + '&deg;'; });
+    document.querySelectorAll('.angle-minmax-max').forEach(el=>{ el.innerHTML = max + '&deg;'; });
+    // refresh every angle slider's displayed position + label from the canonical state,
+    // WITHOUT changing any underlying value — this toggle only changes how angles are shown
+    setSliderVal('s_z0_ang','v_z0_ang', seqIn.z0.ang, true);
+    setSliderVal('s_p_ang','v_p_ang', seqIn.p.ang, true);
+    setSliderVal('s_n_ang','v_n_ang', seqIn.n.ang, true);
+    setSliderVal('s_a_ang','v_a_ang', abcIn.a.ang, true);
+    setSliderVal('s_b_ang','v_b_ang', abcIn.b.ang, true);
+    setSliderVal('s_c_ang','v_c_ang', abcIn.c.ang, true);
+    render(); // stat readout angles also need reformatting
+  }
+
+  function setAngleConvention(conv){
+    angleConvention = conv;
+    btnConv180.classList.toggle('active', conv==='180');
+    btnConv360.classList.toggle('active', conv==='360');
+    applyConventionToUI();
+  }
+  btnConv180.addEventListener('click', ()=>setAngleConvention('180'));
+  btnConv360.addEventListener('click', ()=>setAngleConvention('360'));
+
+  const btnCompose = document.getElementById('btnCompose');
+  const btnDecompose = document.getElementById('btnDecompose');
+  const controlsCompose = document.getElementById('controlsCompose');
+  const controlsDecompose = document.getElementById('controlsDecompose');
+
+  function setMode(newMode){
+    mode = newMode;
+    btnCompose.classList.toggle('active', mode==='compose');
+    btnDecompose.classList.toggle('active', mode==='decompose');
+    controlsCompose.style.display = mode==='compose' ? 'block' : 'none';
+    controlsDecompose.style.display = mode==='decompose' ? 'block' : 'none';
+    render();
+  }
+  btnCompose.addEventListener('click', ()=>setMode('compose'));
+  btnDecompose.addEventListener('click', ()=>setMode('decompose'));
+
+  function setSliderVal(sliderId, valId, v, isAngle){
+    if (isAngle){
+      document.getElementById(sliderId).value = toDisplayAngle(v, angleConvention);
+      document.getElementById(valId).innerHTML = fmtAng(v);
+    } else {
+      document.getElementById(sliderId).value = v;
+      document.getElementById(valId).innerHTML = fmt(v);
+    }
+  }
+
+  document.getElementById('btnBalanced').addEventListener('click', ()=>{
+    if (mode === 'compose'){
+      seqIn.z0.mag = 0; seqIn.z0.ang = 0; seqIn.p.mag = 1; seqIn.p.ang = 0; seqIn.n.mag = 0; seqIn.n.ang = 0;
+      setSliderVal('s_z0_mag','v_z0_mag',0,false); setSliderVal('s_z0_ang','v_z0_ang',0,true);
+      setSliderVal('s_p_mag','v_p_mag',1,false);   setSliderVal('s_p_ang','v_p_ang',0,true);
+      setSliderVal('s_n_mag','v_n_mag',0,false);   setSliderVal('s_n_ang','v_n_ang',0,true);
+    } else {
+      abcIn.a.mag = 1; abcIn.a.ang = 0; abcIn.b.mag = 1; abcIn.b.ang = -120; abcIn.c.mag = 1; abcIn.c.ang = 120;
+      setSliderVal('s_a_mag','v_a_mag',1,false); setSliderVal('s_a_ang','v_a_ang',0,true);
+      setSliderVal('s_b_mag','v_b_mag',1,false); setSliderVal('s_b_ang','v_b_ang',-120,true);
+      setSliderVal('s_c_mag','v_c_mag',1,false); setSliderVal('s_c_ang','v_c_ang',120,true);
+    }
+    render();
+  });
+
+  document.getElementById('btnDeckExample').addEventListener('click', ()=>{
+    // Deck's own example: phase a at 45 deg, b and c normal — only meaningful to load directly in Decompose mode
+    setMode('decompose');
+    abcIn.a.mag = 1; abcIn.a.ang = 45; abcIn.b.mag = 1; abcIn.b.ang = -120; abcIn.c.mag = 1; abcIn.c.ang = 120;
+    setSliderVal('s_a_mag','v_a_mag',1,false); setSliderVal('s_a_ang','v_a_ang',45,true);
+    setSliderVal('s_b_mag','v_b_mag',1,false); setSliderVal('s_b_ang','v_b_ang',-120,true);
+    setSliderVal('s_c_mag','v_c_mag',1,false); setSliderVal('s_c_ang','v_c_ang',120,true);
+    render();
+  });
+
+  document.getElementById('btnReset').addEventListener('click', ()=>{
+    setMode('compose');
+    seqIn.z0.mag = 0; seqIn.z0.ang = 0; seqIn.p.mag = 1; seqIn.p.ang = 0; seqIn.n.mag = 0; seqIn.n.ang = 0;
+    setSliderVal('s_z0_mag','v_z0_mag',0,false); setSliderVal('s_z0_ang','v_z0_ang',0,true);
+    setSliderVal('s_p_mag','v_p_mag',1,false);   setSliderVal('s_p_ang','v_p_ang',0,true);
+    setSliderVal('s_n_mag','v_n_mag',0,false);   setSliderVal('s_n_ang','v_n_ang',0,true);
+    abcIn.a.mag = 1; abcIn.a.ang = 0; abcIn.b.mag = 1; abcIn.b.ang = -120; abcIn.c.mag = 1; abcIn.c.ang = 120;
+    setSliderVal('s_a_mag','v_a_mag',1,false); setSliderVal('s_a_ang','v_a_ang',0,true);
+    setSliderVal('s_b_mag','v_b_mag',1,false); setSliderVal('s_b_ang','v_b_ang',-120,true);
+    setSliderVal('s_c_mag','v_c_mag',1,false); setSliderVal('s_c_ang','v_c_ang',120,true);
+    showConstructionEl.checked = true;
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
