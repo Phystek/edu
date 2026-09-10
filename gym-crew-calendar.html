@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gym Crew Availability</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F4F6F1;
+    --panel: #FFFFFF;
+    --ink: #1F2A24;
+    --ink-soft: #5B6960;
+    --line: #DCE3D8;
+    --weekend: #FCEFD8;
+    --weekend-line: #F2DFB8;
+    --accent: #1F8A70;
+    --accent-soft: #E3F4EA;
+    --today-ring: #1F2A24;
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap{
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  header.page-head{
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 18px;
+  }
+
+  h1{
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 2.6rem;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+
+  .subtitle{
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 0.98rem;
+    max-width: 46ch;
+  }
+
+  .legend-note{
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    text-align: right;
+  }
+
+  .layout{
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 28px;
+    align-items: start;
+  }
+
+  /* ---- Month tabs ---- */
+  .month-tabs{
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .month-tab{
+    font-family: 'Inter', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 600;
+    padding: 9px 18px;
+    border-radius: 999px;
+    border: 1.5px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .month-tab:hover{ background: rgba(31,42,36,0.06); }
+  .month-tab.active{
+    background: var(--ink);
+    color: var(--bg);
+  }
+
+  /* ---- Calendar ---- */
+  .calendar-card{
+    background: var(--panel);
+    border: 1.5px solid var(--ink);
+    border-radius: 14px;
+    padding: 22px;
+  }
+
+  .weekday-row{
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .weekday-row span{
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+  }
+  .weekday-row span.weekend-label{ color: #B8863D; }
+
+  .day-grid{
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+  }
+
+  .day-cell{
+    position: relative;
+    min-height: 92px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: #FBFCFA;
+    padding: 7px 7px 8px;
+    cursor: pointer;
+    transition: box-shadow 0.12s ease, transform 0.12s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .day-cell:hover{
+    box-shadow: 0 0 0 2px var(--ink);
+  }
+  .day-cell.empty{
+    background: transparent;
+    border: none;
+    cursor: default;
+  }
+  .day-cell.empty:hover{ box-shadow: none; }
+
+  .day-cell.weekend{
+    background: var(--weekend);
+    border-color: var(--weekend-line);
+  }
+
+  .day-cell.selected{
+    box-shadow: 0 0 0 2.5px var(--accent);
+  }
+
+  .day-cell.today .day-num{
+    background: var(--today-ring);
+    color: #fff;
+  }
+
+  .day-cell.great{
+    background: var(--accent-soft);
+    border-color: #BEE3D0;
+  }
+  .day-cell.great.weekend{
+    background: linear-gradient(135deg, var(--accent-soft) 55%, var(--weekend) 55%);
+  }
+
+  .day-num{
+    font-size: 0.82rem;
+    font-weight: 600;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  .great-mark{
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    font-size: 0.7rem;
+  }
+
+  .dot-row{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    margin-top: 4px;
+  }
+  .dot{
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ---- Sidebar ---- */
+  .sidebar{
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .side-card{
+    background: var(--panel);
+    border: 1.5px solid var(--ink);
+    border-radius: 14px;
+    padding: 18px 18px 20px;
+  }
+
+  .side-card h2{
+    font-family: 'Fraunces', serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 0 0 12px;
+  }
+
+  .person-toggle{
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 4px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    user-select: none;
+  }
+  .person-toggle:hover{ background: rgba(31,42,36,0.05); }
+  .person-toggle input{ display: none; }
+  .swatch{
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 1.5px solid rgba(0,0,0,0.15);
+  }
+  .person-toggle.off{ opacity: 0.35; }
+  .person-toggle.off .name{ text-decoration: line-through; }
+
+  .side-actions{
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .side-actions button{
+    font-family: 'Inter', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border: 1px solid var(--ink);
+    background: transparent;
+    border-radius: 999px;
+    padding: 5px 12px;
+    cursor: pointer;
+  }
+  .side-actions button:hover{ background: rgba(31,42,36,0.06); }
+
+  .great-key{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+  .great-key .swatch.great-swatch{
+    width: 16px; height: 16px; border-radius: 5px;
+    background: var(--accent-soft);
+    border: 1px solid #BEE3D0;
+  }
+
+  /* Detail panel */
+  #detail .placeholder{
+    color: var(--ink-soft);
+    font-size: 0.88rem;
+  }
+  #detail .detail-date{
+    font-family: 'Fraunces', serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  #detail .detail-section{ margin-bottom: 12px; }
+  #detail .detail-label{
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+  #detail .person-line{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.88rem;
+    padding: 3px 0;
+  }
+  #detail .away-range{
+    color: var(--ink-soft);
+    font-size: 0.8rem;
+    margin-left: auto;
+  }
+  #detail .great-banner{
+    background: var(--accent-soft);
+    border: 1px solid #BEE3D0;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #146149;
+    margin-bottom: 12px;
+  }
+
+  footer.note{
+    margin-top: 28px;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    max-width: 70ch;
+  }
+
+  @media (max-width: 860px){
+    .layout{ grid-template-columns: 1fr; }
+    .sidebar{ flex-direction: row; flex-wrap: wrap; }
+    .side-card{ flex: 1 1 260px; }
+    h1{ font-size: 2.1rem; }
+  }
+  @media (max-width: 520px){
+    .day-cell{ min-height: 68px; padding: 5px; }
+    .day-num{ font-size: 0.72rem; width: 18px; height: 18px; }
+    .dot{ width: 7px; height: 7px; }
+    .weekday-row span{ font-size: 0.62rem; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page-head">
+    <div>
+      <h1>Gym Crew Availability</h1>
+      <p class="subtitle">Who's around and who's away over the next four months — tap any day for the details, or untick names to plan around a smaller group.</p>
+    </div>
+    <div class="legend-note">Today · Thu 10 Sep 2026</div>
+  </header>
+
+  <div class="layout">
+    <div>
+      <div class="month-tabs" id="monthTabs"></div>
+      <div class="calendar-card">
+        <div class="weekday-row">
+          <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span>
+          <span class="weekend-label">Sat</span><span class="weekend-label">Sun</span>
+        </div>
+        <div class="day-grid" id="dayGrid"></div>
+      </div>
+      <footer class="note">Weekends are shaded gold. Days shaded mint are clear for everyone currently ticked on the right — good bets for a catch-up.</footer>
+    </div>
+
+    <div class="sidebar">
+      <div class="side-card">
+        <h2>Who's in view</h2>
+        <div id="personList"></div>
+        <div class="side-actions">
+          <button id="selectAll">All</button>
+          <button id="selectNone">None</button>
+        </div>
+        <div class="great-key">
+          <span class="swatch great-swatch"></span> everyone ticked is free
+        </div>
+      </div>
+      <div class="side-card" id="detail">
+        <h2>Day details</h2>
+        <p class="placeholder">Tap a date to see who's free and who's away.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ---- Source data (parsed from Gym_Crew_Availability.xlsx) ----
+  const people = ["David","Rila","Bec","Lise","Tess","Trish","James","John"];
+
+  const colors = {
+    David: "#FC8D62",
+    Rila:  "#8DA0CB",
+    Bec:   "#E78AC3",
+    Lise:  "#A6D854",
+    Tess:  "#66C2A5",
+    Trish: "#E8B93D",
+    James: "#E5C494",
+    John:  "#6A4C93"
+  };
+
+  const unavailability = {
+    David: [{start:"2026-12-09", end:"2027-01-15"}],
+    Rila:  [],
+    Bec:   [{start:"2026-09-12", end:"2026-09-16"}],
+    Lise:  [],
+    Tess:  [{start:"2026-09-18", end:"2026-09-19"},
+            {start:"2026-10-09", end:"2026-10-12"},
+            {start:"2026-11-21", end:"2026-11-23"}],
+    Trish: [{start:"2026-09-16", end:"2026-09-17"},
+            {start:"2026-10-09", end:"2026-10-20"}],
+    James: [{start:"2026-09-27", end:"2026-10-10"}],
+    John:  []
+  };
+
+  const months = [
+    {year:2026, month:8},  // September (0-indexed)
+    {year:2026, month:9},  // October
+    {year:2026, month:10}, // November
+    {year:2026, month:11}, // December
+    {year:2027, month:0}   // January
+  ];
+  const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+  const today = new Date(Date.UTC(2026,8,10));
+
+  const active = new Set(people); // toggled-on people
+  let currentMonthIdx = 0;
+  let selectedDateStr = null;
+
+  function pad(n){ return n.toString().padStart(2,"0"); }
+  function dateStr(y,m,d){ return `${y}-${pad(m+1)}-${pad(d)}`; }
+
+  function unavailableOn(dStr){
+    return people.filter(p => unavailability[p].some(r => dStr >= r.start && dStr <= r.end));
+  }
+  function rangeFor(person, dStr){
+    return unavailability[person].find(r => dStr >= r.start && dStr <= r.end);
+  }
+  function fmtRange(r){
+    const opts = {day:"numeric", month:"short"};
+    const s = new Date(r.start+"T00:00:00Z");
+    const e = new Date(r.end+"T00:00:00Z");
+    const sameYear = s.getUTCFullYear() === e.getUTCFullYear();
+    const sStr = s.toLocaleDateString("en-AU", opts);
+    const eStr = e.toLocaleDateString("en-AU", {day:"numeric", month:"short", year: sameYear ? undefined : "numeric"});
+    return `${sStr} – ${eStr}${sameYear ? "" : ""}`;
+  }
+  function fmtLongDate(dStr){
+    const d = new Date(dStr+"T00:00:00Z");
+    return d.toLocaleDateString("en-AU", {weekday:"long", day:"numeric", month:"long", year:"numeric"});
+  }
+
+  function renderMonthTabs(){
+    const el = document.getElementById("monthTabs");
+    el.innerHTML = "";
+    months.forEach((m,i) => {
+      const btn = document.createElement("button");
+      btn.className = "month-tab" + (i===currentMonthIdx ? " active" : "");
+      btn.textContent = `${monthNames[m.month]} ${m.year}`;
+      btn.addEventListener("click", () => { currentMonthIdx = i; renderAll(); });
+      el.appendChild(btn);
+    });
+  }
+
+  function renderPersonList(){
+    const el = document.getElementById("personList");
+    el.innerHTML = "";
+    people.forEach(p => {
+      const label = document.createElement("label");
+      label.className = "person-toggle" + (active.has(p) ? "" : " off");
+      label.innerHTML = `
+        <input type="checkbox" ${active.has(p) ? "checked" : ""}>
+        <span class="swatch" style="background:${colors[p]}"></span>
+        <span class="name">${p}</span>
+      `;
+      label.querySelector("input").addEventListener("change", (e) => {
+        if(e.target.checked){ active.add(p); } else { active.delete(p); }
+        label.classList.toggle("off", !e.target.checked);
+        renderCalendar();
+        if(selectedDateStr) renderDetail(selectedDateStr);
+      });
+      el.appendChild(label);
+    });
+  }
+
+  function renderCalendar(){
+    const grid = document.getElementById("dayGrid");
+    grid.innerHTML = "";
+    const {year, month} = months[currentMonthIdx];
+
+    const firstDay = new Date(Date.UTC(year, month, 1));
+    // Monday-start offset: JS getUTCDay() 0=Sun..6=Sat -> convert to 0=Mon..6=Sun
+    const startOffset = (firstDay.getUTCDay() + 6) % 7;
+    const daysInMonth = new Date(Date.UTC(year, month+1, 0)).getUTCDate();
+
+    for(let i=0; i<startOffset; i++){
+      const blank = document.createElement("div");
+      blank.className = "day-cell empty";
+      grid.appendChild(blank);
+    }
+
+    for(let d=1; d<=daysInMonth; d++){
+      const dStr = dateStr(year, month, d);
+      const dow = new Date(Date.UTC(year, month, d)).getUTCDay();
+      const isWeekend = dow === 0 || dow === 6;
+      const isToday = dStr === dateStr(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+
+      const awayAll = unavailableOn(dStr);
+      const awayVisible = awayAll.filter(p => active.has(p));
+      const activeList = [...active];
+      const isGreat = activeList.length > 0 && awayVisible.length === 0;
+
+      const cell = document.createElement("div");
+      cell.className = "day-cell"
+        + (isWeekend ? " weekend" : "")
+        + (isToday ? " today" : "")
+        + (isGreat ? " great" : "")
+        + (dStr === selectedDateStr ? " selected" : "");
+      cell.dataset.date = dStr;
+
+      const num = document.createElement("div");
+      num.className = "day-num";
+      num.textContent = d;
+      cell.appendChild(num);
+
+      if(isGreat){
+        const mark = document.createElement("div");
+        mark.className = "great-mark";
+        mark.textContent = "●";
+        mark.style.color = "#1F8A70";
+        cell.appendChild(mark);
+      }
+
+      const dotRow = document.createElement("div");
+      dotRow.className = "dot-row";
+      awayVisible.forEach(p => {
+        const dot = document.createElement("span");
+        dot.className = "dot";
+        dot.style.background = colors[p];
+        dot.title = `${p} unavailable`;
+        dotRow.appendChild(dot);
+      });
+      cell.appendChild(dotRow);
+
+      cell.addEventListener("click", () => {
+        selectedDateStr = dStr;
+        renderCalendar();
+        renderDetail(dStr);
+      });
+
+      grid.appendChild(cell);
+    }
+  }
+
+  function renderDetail(dStr){
+    const el = document.getElementById("detail");
+    const activeList = [...active];
+    const awayAll = unavailableOn(dStr).filter(p => active.has(p));
+    const free = activeList.filter(p => !awayAll.includes(p));
+
+    let html = `<h2>Day details</h2>`;
+    html += `<div class="detail-date">${fmtLongDate(dStr)}</div>`;
+
+    if(activeList.length > 0 && awayAll.length === 0){
+      html += `<div class="great-banner">Everyone ticked is free this day</div>`;
+    }
+
+    html += `<div class="detail-section">
+      <div class="detail-label">Away (${awayAll.length})</div>`;
+    if(awayAll.length === 0){
+      html += `<p class="placeholder" style="margin:0;">No one ticked is away.</p>`;
+    } else {
+      awayAll.forEach(p => {
+        const r = rangeFor(p, dStr);
+        html += `<div class="person-line">
+          <span class="swatch" style="background:${colors[p]}"></span>
+          <span>${p}</span>
+          <span class="away-range">${r ? fmtRange(r) : ""}</span>
+        </div>`;
+      });
+    }
+    html += `</div>`;
+
+    html += `<div class="detail-section">
+      <div class="detail-label">Free (${free.length})</div>`;
+    if(free.length === 0){
+      html += `<p class="placeholder" style="margin:0;">No one ticked is free.</p>`;
+    } else {
+      free.forEach(p => {
+        html += `<div class="person-line">
+          <span class="swatch" style="background:${colors[p]}"></span>
+          <span>${p}</span>
+        </div>`;
+      });
+    }
+    html += `</div>`;
+
+    el.innerHTML = html;
+  }
+
+  function renderAll(){
+    renderMonthTabs();
+    renderCalendar();
+  }
+
+  document.getElementById("selectAll").addEventListener("click", () => {
+    people.forEach(p => active.add(p));
+    renderPersonList(); renderCalendar();
+    if(selectedDateStr) renderDetail(selectedDateStr);
+  });
+  document.getElementById("selectNone").addEventListener("click", () => {
+    active.clear();
+    renderPersonList(); renderCalendar();
+    if(selectedDateStr) renderDetail(selectedDateStr);
+  });
+
+  renderPersonList();
+  renderAll();
+</script>
+</body>
+</html>
