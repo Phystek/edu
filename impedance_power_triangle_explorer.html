@@ -24,6 +24,7 @@
   @media (max-width:640px){ .grid3{grid-template-columns:1fr;} }
   .panel{background:var(--panel); border:1px solid var(--grid); border-radius:4px; padding:14px 16px;}
   .panel + .panel{margin-top:14px;}
+  .grid3 .panel + .panel{margin-top:0;}
   .panel h2{font-family:"Iowan Old Style","Georgia",serif; font-size:15px; font-weight:700; margin:0 0 8px; color:var(--ink);}
   svg{display:block; width:100%; height:auto;}
   .axis-label{font-size:14px; fill:var(--muted);}
@@ -63,18 +64,17 @@
     <div class="tag">Impedance · Complex Power</div>
   </header>
   <p class="intro">
-    Build up an impedance Z = R + jX with the sliders below. Your lecture slides introduced Z algebraically,
-    without drawing it as a triangle — the impedance triangle here is a visual tool being introduced for the
-    first time, not something you've already seen on a slide. It's worth showing because it's the exact same
-    shape as the power triangle you <em>have</em> covered, sharing the same angle φ.
+    Build up an impedance Z = R + jX with the sliders below. Your lecture slides introduce Z algebraically,
+    without drawing it as a triangle. The impedance triangle here is a new visual, not something you've seen
+    on a slide yet. It's worth showing because it's the same shape as the power triangle you have covered,
+    sharing the same angle φ.
   </p>
   <p class="intro">
-    The phasor diagram on the left is different in kind from the other two, not just in appearance: V̄ and Ī
-    are real oscillating quantities — actual snapshots of things rotating in the circuit, the same idea from
-    the phasor explorer. Z and S̄ are <em>not</em> oscillating phasors of anything — Z is a fixed ratio V̄/Ī,
-    and S̄ is a power quantity computed from V̄ and Ī. All three happen to share the same angle φ, which is
-    exactly why they're drawn side by side here — but only the left-hand picture is a phasor diagram in the
-    strict sense.
+    The phasor diagram on the left is different from the other two, not just in appearance. V̄ and Ī are real
+    oscillating quantities, snapshots of things actually rotating in the circuit, the same idea as the phasor
+    explorer. Z and S̄ aren't oscillating phasors of anything: Z is a fixed ratio V̄/Ī, and S̄ is a power
+    quantity computed from V̄ and Ī. All three share the same angle φ, which is why they're drawn side by
+    side, but only the left-hand picture is a phasor diagram in the strict sense.
   </p>
 
   <div class="grid3">
@@ -180,7 +180,7 @@ function drawTriangle(svgId, horizVal, vertVal, hypMag, angleRad, horizFrame, ve
 
   // angle arc at origin (small, fixed radius, tucked into the corner regardless of angle steepness).
   // The endpoint is computed from the *actual on-screen direction* of the Z/S line (in pixel space),
-  // not from the true physical angle — R and X (or P and Q) can have different px-per-unit scales
+  // not from the true physical angle. R and X (or P and Q) can have different px-per-unit scales
   // depending on the frame sizes, which would otherwise make the arc visibly diverge from the line.
   const arcR = 18;
   const lineLen = Math.hypot(px-cx, py-cy) || 1;
@@ -221,7 +221,7 @@ function drawPhasor(V, I, angZ){
   svg.appendChild(el("line",{x1:cx,y1:cy,x2:ix,y2:iy,stroke:COL_R,"stroke-width":2.8}));
   svg.appendChild(el("circle",{cx:ix,cy:iy,r:4.5,fill:COL_R}));
 
-  // angle arc — single isotropic scale here, so the true angle iAngle can be used directly (no distortion risk)
+  // angle arc: single isotropic scale here, so the true angle iAngle can be used directly (no distortion risk)
   const arcR = 18;
   const largeArc = Math.abs(iAngle) > Math.PI/2 ? 1 : 0;
   const sweep = iAngle >= 0 ? 0 : 1;
@@ -267,13 +267,13 @@ function render(){
 
   const flag = document.getElementById("stateFlag");
   if (Math.abs(X) < 1e-6){
-    flag.textContent = "Purely resistive — unity power factor";
+    flag.textContent = "Purely resistive, unity power factor";
     flag.style.background = "#e5f3ea"; flag.style.color = "#2f7d4f"; flag.style.borderColor="#2f7d4f";
   } else if (X > 0){
-    flag.textContent = "Inductive-type — lagging power factor";
+    flag.textContent = "Inductive-type, lagging power factor";
     flag.style.background = "#e3eef4"; flag.style.color = "#1c5f7a"; flag.style.borderColor="#1c5f7a";
   } else {
-    flag.textContent = "Capacitive-type — leading power factor";
+    flag.textContent = "Capacitive-type, leading power factor";
     flag.style.background = "#f7e9e7"; flag.style.color = "#a3372c"; flag.style.borderColor="#a3372c";
   }
 
