@@ -72,18 +72,16 @@
     <div class="tag">Phasors · Rotating-Vector Representation</div>
   </header>
   <p class="intro">
-    The rms phasor V̄ = V∠δ (dashed maroon arrow) is a frozen snapshot, at t = 0, of a vector that's really
-    rotating counter-clockwise at angular speed ω. The phasor is always drawn in the same standard orientation
-    used throughout this course — Re horizontal, Im vertical — it never rotates or reorients, in either mode
-    below. What changes is which reference function is plotted, and that has a real consequence for how the
-    connecting line works: in <strong>sine</strong> mode, the imaginary part is already vertical, so it lines
-    up with the waveform's value axis for free — one clean line, exactly like the classic textbook figure. In
-    <strong>cosine</strong> mode (this course's actual convention), the real part is horizontal, so it does
-    <em>not</em> line up directly — the dashed line instead shows the real-axis projection first, then visibly
-    bends to reach the correct height. That bend isn't a flaw in the diagram — it's the honest picture of why
-    cosine-based phasors don't get the same free visual trick sine-based ones do. Turn on the current phasor
-    to see the same thing happen for Ī, and to explore how the phase angle φ = δ − β between them shows up as
-    a lag or lead.
+    The rms phasor V̄ = V∠δ (dashed maroon arrow) is a snapshot, at t = 0, of a vector rotating
+    counter-clockwise at speed ω. It's always drawn in standard orientation, Re horizontal and Im vertical,
+    matching the rest of this course. That never changes between the two modes below.
+    <br><br>
+    What changes is which function is plotted. In <strong>sine</strong> mode, the imaginary part is already
+    vertical, so it connects straight across to the waveform. In <strong>cosine</strong> mode, this course's
+    convention, the real part is horizontal, so it doesn't line up directly. The dashed line shows the
+    real-axis projection first, then bends to reach the correct height.
+    <br><br>
+    Turn on the current phasor to see the same thing for Ī, and to see how φ = δ − β shows up as a lag or lead.
   </p>
 
   <div class="panel">
@@ -97,8 +95,8 @@
     <h2>Controls</h2>
     <p style="font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--maroon); font-weight:700; margin:0 0 8px;">Reference function</p>
     <div class="mode-toggle" style="margin-bottom:16px;">
-      <button class="mode-btn active" id="modeCos">cos(ωt+·) — this course</button>
-      <button class="mode-btn" id="modeSin">sin(ωt+·) — textbook figure</button>
+      <button class="mode-btn active" id="modeCos">cos(ωt+·): this course</button>
+      <button class="mode-btn" id="modeSin">sin(ωt+·): textbook figure</button>
     </div>
     <div class="grid" style="grid-template-columns:1fr 1fr; gap:20px;">
       <div>
@@ -155,13 +153,9 @@
   </div>
 
   <p class="intro" style="font-size:12.5px; font-style:italic;">
-    Why cosine mode's line bends: v(t) = √2V cos(ωt+δ) uses the <em>real</em> part of the rotating vector as
-    its value, and Re is the horizontal coordinate in the standard orientation used throughout this course.
-    A waveform's value axis is always vertical, so the real part doesn't land there directly — the dashed line
-    has to explicitly convert a horizontal position into a vertical one, which is what the bend shows. Sine
-    mode has no such problem, since Im is already vertical in the very same standard orientation — nothing
-    needs to bend. This isn't a quirk of the diagram; it's a genuine reason phasor problems built around cosine
-    take a little more care than the sine-based version most introductory figures show.
+    Why cosine mode's line bends: v(t) = √2V cos(ωt+δ) uses the real part of the rotating vector, and Re is
+    horizontal in standard orientation. A waveform's value axis is always vertical, so the real part has to be
+    converted first, which is what the bend shows. Sine mode doesn't need this, since Im is already vertical.
   </p>
 
   <footer>ELEC2005 — Week 8 · for concept exploration, not assessment</footer>
@@ -342,7 +336,7 @@ function render(){
   // Cosine mode: Re is horizontal in standard orientation, so the tip is NOT at the right
   // height for a straight line to the (vertical-value-axis) waveform. Instead we show the
   // real-axis projection explicitly, then a visibly bent transfer line to the correct height —
-  // this is the honest picture: cosine doesn't get the free single-line trick that sine does.
+  // cosine doesn't get the same free single-line trick that sine does.
   const mx = xToPx(omt), my = yToPx(vNow);
   function drawConnector(tipX, tipY, projAxisY, markerX, markerY, color){
     if (waveMode === "sin"){
