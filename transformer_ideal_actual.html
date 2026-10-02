@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ideal vs Actual Transformer &mdash; ELEC2005</title>
+<style>
+  :root{
+    --ink:#1a1512; --paper:#faf7f2; --panel:#ffffff; --maroon:#7a1730;
+    --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a; --mustard:#c98a2c;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:#e6e6e4; color:var(--ink); font-family:"Helvetica Neue",Arial,sans-serif; }
+  .wrap{ max-width:960px; margin:0 auto; padding:28px 20px 48px; }
+  header{ display:flex; justify-content:space-between; align-items:flex-end; gap:12px;
+          border-bottom:1px solid var(--grid); padding-bottom:14px; }
+  .eyebrow{ font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--maroon); font-weight:700; margin:0 0 6px; }
+  h1{ font-family:"Iowan Old Style","Georgia",serif; font-weight:700; letter-spacing:-0.01em; font-size:28px; margin:0; }
+  .tag{ font-size:12px; color:var(--muted); white-space:nowrap; padding-bottom:4px; }
+  .intro{ font-size:14.5px; line-height:1.55; margin:16px 0 14px; }
+  .callout{ background:#fbe9c6; border:1px solid #e0be6f; color:#5c4a12; border-radius:4px;
+            padding:10px 12px; font-size:12.5px; line-height:1.45; margin:0 0 18px; }
+  .callout b{ margin-right:4px; }
+  .grid{ display:grid; grid-template-columns:1.35fr 1fr; gap:20px; align-items:start; }
+  @media (max-width:800px){ .grid{ grid-template-columns:1fr; } h1{ font-size:24px; } }
+  .panel{ background:var(--panel); border:1px solid var(--grid); border-radius:4px; padding:16px; }
+  .visual-stack{ display:flex; flex-direction:column; gap:14px; }
+  .panel-label{ font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); font-weight:700; margin:0 0 8px; }
+  .sym{ text-transform:none; letter-spacing:0; }
+  svg{ display:block; width:100%; height:auto; }
+  .slider-block{ margin-bottom:18px; }
+  .slider-label-row{ display:flex; justify-content:space-between; align-items:baseline; font-size:13px; margin-bottom:4px; }
+  .slider-value{ font-weight:700; color:var(--maroon); font-variant-numeric:tabular-nums; }
+  input[type=range]{ width:100%; accent-color:var(--maroon); margin:2px 0; }
+  input[type=range]:focus-visible, button:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+  .slider-caption{ display:flex; justify-content:space-between; font-size:11px; color:var(--muted); }
+  .reset-btn{ display:block; width:100%; margin-top:6px; padding:9px 12px; font:700 13px "Helvetica Neue",Arial,sans-serif;
+              color:var(--ink); background:transparent; border:1px solid var(--ink); border-radius:4px; cursor:pointer;
+              transition:background 0.15s, color 0.15s; }
+  .reset-btn:hover{ background:var(--ink); color:var(--paper); }
+  .stats{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
+  .stat-card{ background:var(--paper); border:1px solid var(--grid); border-radius:4px; padding:10px 12px; }
+  .stat-label{ font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
+  .stat-value{ font-size:18px; font-weight:700; font-variant-numeric:tabular-nums; }
+  .stat-value.accent{ color:var(--maroon); }
+  .stat-value.warn{ color:#a3372c; }
+  .stat-sub{ font-size:11px; color:var(--muted); margin-top:2px; min-height:13px; }
+  footer{ text-align:center; color:var(--muted); font-size:11.5px; margin-top:30px; }
+  .legend{ display:flex; flex-wrap:wrap; gap:6px 16px; font-size:11.5px; color:var(--muted); margin-top:8px; }
+  .legend > span{ display:inline-flex; align-items:center; gap:6px; }
+  .legend i{ display:inline-block; width:22px; height:0; border-top:3px solid; }
+  .toggle-block{ margin-bottom:18px; }
+  .toggle-name{ font-size:13px; margin-bottom:6px; display:block; }
+  .mode-toggle{ display:flex; border:1px solid var(--ink); border-radius:4px; overflow:hidden; }
+  .mode-btn{ flex:1; padding:9px 6px; font:700 12.5px "Helvetica Neue",Arial,sans-serif; background:var(--paper); color:var(--ink);
+             border:none; cursor:pointer; transition:background 0.15s, color 0.15s; }
+  .mode-btn + .mode-btn{ border-left:1px solid var(--ink); }
+  .mode-btn.active{ background:var(--maroon); color:#fff; }
+  input[type=range]:disabled{ opacity:0.35; }
+  .slider-block.off .slider-label-row, .slider-block.off .slider-caption{ opacity:0.45; }
+  .status{ grid-column:1 / -1; border-radius:4px; padding:10px 12px; font-size:13px; line-height:1.4; font-weight:700; border:1px solid; }
+  .status.ok{ background:#e5f3ea; border-color:#2f7d4f; color:#2f7d4f; }
+  .status.sat{ background:#f7e9e7; border-color:#a3372c; color:#a3372c; }
+  .status.ideal{ background:#eeece7; border-color:#6b6156; color:#6b6156; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <p class="eyebrow">Transformer Modelling</p>
+      <h1>Ideal vs Actual Transformer</h1>
+    </div>
+    <div class="tag">ELEC2005 &middot; Week 10</div>
+  </header>
+
+  <p class="intro">
+    An ideal transformer needs no magnetising current. A real one does, and how that current
+    behaves depends on how you drive it. The magnetising current is the running total of the
+    applied voltage (v<sub>1</sub> = L<sub>M</sub>&nbsp;di<sub>M</sub>/dt). Switch between a DC and an
+    AC source to see why a transformer only works on AC.
+  </p>
+
+  <div class="callout">
+    <b>Simplified model.</b>
+    L<sub>M</sub> is treated as constant, and the core is taken to saturate when the magnetising
+    current reaches a fixed 4&nbsp;A. A real core saturates gradually, at a level set by its
+    material and size, and the current that follows is limited only by the winding resistance.
+  </div>
+
+  <div class="grid">
+    <div class="visual-stack">
+      <div class="panel">
+        <p class="panel-label">Applied voltage and magnetising current</p>
+        <svg id="plotSvg" viewBox="0 0 460 322" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Applied voltage and magnetising current against time"></svg>
+        <div class="legend">
+          <span><i style="border-color:#1c5f7a"></i><span>applied voltage v<sub>1</sub></span></span>
+          <span><i style="border-color:#7a1730"></i><span>magnetising current i<sub>M</sub></span></span>
+          <span><i style="border-color:#c98a2c; border-top-style:dashed"></i><span>starting slope v<sub>1</sub>/L<sub>M</sub></span></span>
+        </div>
+      </div>
+      <div class="panel">
+        <p class="panel-label">Circuit</p>
+        <svg id="circuitSvg" viewBox="0 0 460 178" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Transformer equivalent circuit with magnetising inductance"></svg>
+      </div>
+    </div>
+
+    <div class="panel controls">
+      <p class="panel-label">Controls</p>
+
+      <div class="toggle-block">
+        <span class="toggle-name">Transformer model</span>
+        <div class="mode-toggle" id="modelToggle">
+          <button class="mode-btn active" data-val="actual">Actual (&#8475; &gt; 0)</button>
+          <button class="mode-btn" data-val="ideal">Ideal (&#8475; = 0)</button>
+        </div>
+      </div>
+
+      <div class="toggle-block">
+        <span class="toggle-name">Source</span>
+        <div class="mode-toggle" id="sourceToggle">
+          <button class="mode-btn" data-val="dc">DC</button>
+          <button class="mode-btn active" data-val="ac">AC</button>
+        </div>
+      </div>
+
+      <div class="slider-block">
+        <div class="slider-label-row"><span>Source voltage, V<sub>1</sub> <span id="v1-kind" style="color:var(--muted)"></span></span><span class="slider-value" id="val-v1"></span></div>
+        <input type="range" id="slider-v1" min="10" max="100" step="1" value="50" aria-label="Source voltage in volts">
+        <div class="slider-caption"><span>10 V</span><span>100 V</span></div>
+      </div>
+
+      <div class="slider-block" id="block-lm">
+        <div class="slider-label-row"><span>Magnetising inductance, L<sub>M</sub></span><span class="slider-value" id="val-lm"></span></div>
+        <input type="range" id="slider-lm" min="-1.3" max="0.7" step="0.01" value="-1" aria-label="Magnetising inductance, log scale">
+        <div class="slider-caption"><span>50 mH</span><span>5 H</span></div>
+      </div>
+
+      <div class="slider-block" id="block-f">
+        <div class="slider-label-row"><span>Frequency, f <span style="color:var(--muted)">(AC only)</span></span><span class="slider-value" id="val-f"></span></div>
+        <input type="range" id="slider-f" min="20" max="100" step="1" value="50" aria-label="Source frequency in hertz">
+        <div class="slider-caption"><span>20 Hz</span><span>100 Hz</span></div>
+      </div>
+
+      <button class="reset-btn" id="resetBtn">Reset to defaults</button>
+
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-label" id="stat1-label"></div>
+          <div class="stat-value accent" id="stat1"></div>
+          <div class="stat-sub" id="stat1-sub"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Rate of rise at <span class="sym">t</span> = 0</div>
+          <div class="stat-value" id="stat2"></div>
+          <div class="stat-sub">v<sub>1</sub> / L<sub>M</sub></div>
+        </div>
+        <div class="status" id="status"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>ELEC2005 &middot; Week 10 &middot; for concept exploration, not assessment</footer>
+</div>
+
+<script>
+const T_MAX = 0.05;    // s, fixed time window (50 ms)
+const I_AXIS = 5;      // A, fixed current axis (+/-)
+const I_SAT = 4;       // A, magnetising current at which the core is taken to saturate
+const V_AXIS = 110;    // V, fixed voltage axis (+/-)
+
+const INK = '#1a1512', MAROON = '#7a1730', FOCUS = '#1c5f7a', MUSTARD = '#c98a2c', MUTED = '#6b6156', GRID = '#e4ddd2';
+const DEFAULTS = { v1: 50, lm_log: -1, f: 50, model: 'actual', source: 'ac' };
+const state = { model: 'actual', source: 'ac' };
+
+const $ = id => document.getElementById(id);
+const sl = { v1: $('slider-v1'), lm: $('slider-lm'), f: $('slider-f') };
+
+function roundSig(x, n){
+  if (x === 0) return 0;
+  const e = Math.floor(Math.log10(Math.abs(x)));
+  const f = Math.pow(10, e - n + 1);
+  return Math.round(x / f) * f;
+}
+
+// ---------- model (pure functions, mirror the Python reference) ----------
+// v1 = LM * diM/dt, so iM is the running integral of v1 / LM, starting from zero
+function v1At(t, V1, f, source){ return source === 'dc' ? V1 : V1 * Math.cos(2 * Math.PI * f * t); }
+function iMAt(t, V1, LM, f, mdl, source){
+  if (mdl === 'ideal') return 0;
+  if (source === 'dc') return V1 * t / LM;
+  const w = 2 * Math.PI * f;
+  return V1 * Math.sin(w * t) / (w * LM);
+}
+function model(V1, LM, f, mdl, source){
+  const base = { V1, LM, f, model: mdl, source };
+  if (mdl === 'ideal') return Object.assign(base, { rate: 0, peak: 0, tsat: null, saturates: false, frac: 0 });
+  const rate = V1 / LM;
+  if (source === 'dc') return Object.assign(base, { rate, peak: null, tsat: I_SAT * LM / V1, saturates: true, frac: null });
+  const peak = V1 / (2 * Math.PI * f * LM);
+  return Object.assign(base, { rate, peak, tsat: null, saturates: peak > I_SAT, frac: peak / I_SAT });
+}
+function readInputs(){
+  return model(parseFloat(sl.v1.value), roundSig(Math.pow(10, parseFloat(sl.lm.value)), 2), parseFloat(sl.f.value), state.model, state.source);
+}
+
+function fmtLM(h){ return h < 1 ? `${Math.round(h * 1000)} mH` : `${h.toFixed(1)} H`; }
+function fmtI(a){ return Math.abs(a) >= 1 ? `${a.toFixed(2)} A` : `${(a * 1000).toFixed(0)} mA`; }
+function fmtT(s){ return s >= 1 ? `${s.toFixed(2)} s` : s >= 0.1 ? `${(s * 1000).toFixed(0)} ms` : `${(s * 1000).toFixed(1)} ms`; }
+function fmtRate(r){ return r >= 1000 ? `${(r / 1000).toFixed(2)} kA/s` : `${r.toFixed(0)} A/s`; }
+
+// ---------- SVG helpers ----------
+function el(tag, attrs, text){
+  const e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+// text with real subscripts: parts is a list of strings and {sub:'x'} items
+function txt(attrs, parts){
+  const t = el('text', attrs);
+  const fs = parseFloat(attrs['font-size'] || 12);
+  let shifted = false;
+  (Array.isArray(parts) ? parts : [parts]).forEach(p => {
+    const isSub = typeof p === 'object';
+    const a = {};
+    if (isSub){ a['font-size'] = (fs * 0.72).toFixed(1); a.dy = (fs * 0.28).toFixed(1); }
+    else if (shifted){ a.dy = (-fs * 0.28).toFixed(1); }
+    t.appendChild(el('tspan', a, isSub ? p.sub : p));
+    shifted = isSub;
+  });
+  return t;
+}
+function arrowHead(svg, x, y, dir, color){   // dir: 'r' right, 'd' down
+  const pts = dir === 'r' ? `${x},${y} ${x-9},${y-4.5} ${x-9},${y+4.5}` : `${x},${y} ${x-4.5},${y-9} ${x+4.5},${y-9}`;
+  svg.appendChild(el('polygon', {points: pts, fill: color}));
+}
+
+
+// ---------- plot: v1 strip on top, iM frame below, one shared time axis ----------
+const PL = { l:50, r:14, W:460, vTop:22, vH:62, iTop:112, iH:176 };
+function drawPlot(s){
+  const svg = $('plotSvg'); svg.innerHTML = '';
+  const pw = PL.W - PL.l - PL.r;
+  const X = t => PL.l + t / T_MAX * pw;
+  const vMid = PL.vTop + PL.vH / 2, YV = v => vMid - v / V_AXIS * (PL.vH / 2);
+  const iMid = PL.iTop + PL.iH / 2, YI = i => iMid - i / I_AXIS * (PL.iH / 2);
+  const iBot = PL.iTop + PL.iH;
+
+  const defs = el('defs', {});
+  const cp = el('clipPath', {id:'unsat'});
+  cp.appendChild(el('rect', {x:PL.l, y:YI(I_SAT), width:pw, height:YI(-I_SAT) - YI(I_SAT)}));
+  defs.appendChild(cp); svg.appendChild(defs);
+
+  // --- voltage strip ---
+  svg.appendChild(el('line', {x1:PL.l, y1:vMid, x2:PL.l + pw, y2:vMid, stroke:GRID, 'stroke-width':1}));
+  svg.appendChild(el('line', {x1:PL.l, y1:PL.vTop, x2:PL.l, y2:PL.vTop + PL.vH, stroke:INK, 'stroke-width':1.5}));
+  [[100, '+100 V'], [0, '0'], [-100, '\u2212100 V']].forEach(([v, lab]) =>
+    svg.appendChild(txt({x:PL.l - 6, y:YV(v) + 4, fill:MUTED, 'font-size':11.5, 'text-anchor':'end'}, lab)));
+  svg.appendChild(txt({x:PL.l + 6, y:PL.vTop - 8, fill:FOCUS, 'font-size':13, 'font-weight':700}, ['applied voltage v', {sub:'1'}]));
+  let dv = '';
+  for (let k = 0; k <= 300; k++){
+    const t = T_MAX * k / 300;
+    dv += (k ? 'L' : 'M') + X(t).toFixed(1) + ',' + YV(v1At(t, s.V1, s.f, s.source)).toFixed(1) + ' ';
+  }
+  svg.appendChild(el('path', {d: dv, fill:'none', stroke:FOCUS, 'stroke-width':2.5}));
+
+  // --- current frame: saturation bands first ---
+  [[I_SAT, I_AXIS], [-I_AXIS, -I_SAT]].forEach(([a, b]) =>
+    svg.appendChild(el('rect', {x:PL.l, y:YI(b), width:pw, height:YI(a) - YI(b), fill:'#fbe9c6'})));
+  [I_SAT, -I_SAT].forEach(i =>
+    svg.appendChild(el('line', {x1:PL.l, y1:YI(i), x2:PL.l + pw, y2:YI(i), stroke:'#e0be6f', 'stroke-width':1.5})));
+  svg.appendChild(el('line', {x1:PL.l, y1:iMid, x2:PL.l + pw, y2:iMid, stroke:INK, 'stroke-width':1.2}));
+  svg.appendChild(el('line', {x1:PL.l, y1:PL.iTop, x2:PL.l, y2:iBot, stroke:INK, 'stroke-width':1.5}));
+  [[I_SAT, '+4 A'], [0, '0'], [-I_SAT, '\u22124 A']].forEach(([i, lab]) =>
+    svg.appendChild(txt({x:PL.l - 6, y:YI(i) + 4, fill:MUTED, 'font-size':11.5, 'text-anchor':'end'}, lab)));
+  svg.appendChild(txt({x:PL.l + 6, y:PL.iTop - 8, fill:MAROON, 'font-size':13, 'font-weight':700}, ['magnetising current i', {sub:'M'}]));
+  svg.appendChild(txt({x:PL.l + pw - 5, y:YI(-I_SAT) + 13, fill:'#5c4a12', 'font-size':11.5, 'text-anchor':'end'}, 'core saturated'));
+
+  // time axis
+  [0, 10, 20, 30, 40, 50].forEach(ms => {
+    svg.appendChild(el('line', {x1:X(ms / 1000), y1:iBot, x2:X(ms / 1000), y2:iBot + 4, stroke:INK, 'stroke-width':1}));
+    svg.appendChild(txt({x:X(ms / 1000), y:iBot + 17, fill:MUTED, 'font-size':11.5, 'text-anchor':'middle'}, `${ms}`));
+  });
+  svg.appendChild(el('line', {x1:PL.l, y1:iBot, x2:PL.l + pw, y2:iBot, stroke:INK, 'stroke-width':1}));
+  svg.appendChild(txt({x:PL.l + pw, y:iBot + 30, fill:MUTED, 'font-size':11.5, 'text-anchor':'end'}, 't (ms)'));
+
+  const g = el('g', {'clip-path':'url(#unsat)'});
+  // starting slope v1/LM: where the current would go if the voltage never reversed (shown for AC)
+  if (s.model === 'actual' && s.source === 'ac'){
+    const tEnd = Math.min(T_MAX, I_SAT / s.rate);
+    g.appendChild(el('line', {x1:X(0), y1:YI(0), x2:X(tEnd), y2:YI(s.rate * tEnd), stroke:MUSTARD, 'stroke-width':2.2, 'stroke-dasharray':'5,3'}));
+  }
+  // the magnetising current itself, drawn only while the core is unsaturated
+  let di = '';
+  for (let k = 0; k <= 600; k++){
+    const t = T_MAX * k / 600;
+    const y = YI(Math.max(-I_AXIS, Math.min(I_AXIS, iMAt(t, s.V1, s.LM, s.f, s.model, s.source))));
+    di += (k ? 'L' : 'M') + X(t).toFixed(1) + ',' + y.toFixed(1) + ' ';
+  }
+  g.appendChild(el('path', {d: di, fill:'none', stroke:MAROON, 'stroke-width':3}));
+  svg.appendChild(g);
+
+  // annotations
+  const bandTextY = YI(I_SAT) - 6;
+  if (s.model === 'ideal'){
+    svg.appendChild(txt({x:PL.l + pw / 2, y:iMid - 12, fill:MUTED, 'font-size':13, 'text-anchor':'middle'},
+                        ['i', {sub:'M'}, ' = 0: an ideal core needs no magnetising current']));
+  } else if (s.source === 'dc'){
+    if (s.tsat <= T_MAX){
+      const xs = X(s.tsat);
+      svg.appendChild(el('line', {x1:xs, y1:YI(I_SAT), x2:xs + 3, y2:PL.iTop + 9, stroke:MAROON, 'stroke-width':3, 'stroke-dasharray':'3,3'}));
+      arrowHeadUp(svg, xs + 3.5, PL.iTop + 1, MAROON);
+      svg.appendChild(el('circle', {cx:xs, cy:YI(I_SAT), r:4.5, fill:INK, stroke:'#fff', 'stroke-width':1.5}));
+      const right = xs < PL.l + pw * 0.6;
+      svg.appendChild(txt({x: right ? xs + 14 : xs - 12, y:bandTextY, fill:'#a3372c', 'font-size':12.5, 'font-weight':700,
+                           'text-anchor': right ? 'start' : 'end'}, `saturates at ${fmtT(s.tsat)}`));
+    } else {
+      svg.appendChild(txt({x:PL.l + pw - 5, y:bandTextY, fill:'#a3372c', 'font-size':12.5, 'font-weight':700, 'text-anchor':'end'},
+                          `still climbing: saturates at ${fmtT(s.tsat)}`));
+    }
+  } else if (s.saturates){
+    svg.appendChild(txt({x:PL.l + pw / 2, y:bandTextY, fill:'#a3372c', 'font-size':12.5, 'font-weight':700, 'text-anchor':'middle'},
+                        'saturates on every half-cycle'));
+  }
+}
+function arrowHeadUp(svg, x, y, color){
+  svg.appendChild(el('polygon', {points:`${x},${y} ${x-5},${y+9} ${x+5},${y+9}`, fill:color}));
+}
+
+// ---------- circuit (same drawing as before; labels now use real subscripts and live values) ----------
+function drawCircuit(s){
+  const svg = $('circuitSvg');
+  svg.innerHTML = '';
+
+  const y0 = 30, y1 = 150;
+  const cxT = 300;                 // ideal-transformer centre x
+  const x1 = cxT-28, x2 = cxT+28;  // primary / secondary leg positions
+  const margin = 10;               // gap between rail and start of a winding/coil
+
+  // standard schematic inductor symbol: a continuous run of bumps, all bulging the same way.
+  // sweep=1 bulges to the +x side of travel, sweep=0 bulges to the -x side.
+  function inductorPath(x, ya, yb, n, bulge, sweep){
+    const h = (yb-ya)/n;
+    let d = `M ${x},${ya}`;
+    for (let k=0;k<n;k++){
+      const yNext = ya + h*(k+1);
+      d += ` A ${bulge},${h/2} 0 1,${sweep} ${x},${yNext.toFixed(2)}`;
+    }
+    return d;
+  }
+  function dot(x, y){
+    svg.appendChild(el('circle', {cx:x, cy:y, r:3.5, fill:INK}));
+  }
+
+  // ---- ideal transformer windings (legs run the full y0-y1 span; short stubs into the coil) ----
+  const coilTop = y0+margin, coilBot = y1-margin;
+  svg.appendChild(el('line', {x1:x1, y1:y0, x2:x1, y2:coilTop, stroke:INK, 'stroke-width':2}));
+  svg.appendChild(el('line', {x1:x1, y1:coilBot, x2:x1, y2:y1, stroke:INK, 'stroke-width':2}));
+  svg.appendChild(el('line', {x1:x2, y1:y0, x2:x2, y2:coilTop, stroke:INK, 'stroke-width':2}));
+  svg.appendChild(el('line', {x1:x2, y1:coilBot, x2:x2, y2:y1, stroke:INK, 'stroke-width':2}));
+  // primary bulges away from the core (left), secondary bulges away from the core (right) - mirrored, like a real transformer symbol
+  svg.appendChild(el('path', {d: inductorPath(x1, coilTop, coilBot, 4, 13, 1), fill:'none', stroke:INK, 'stroke-width':2.75}));
+  svg.appendChild(el('path', {d: inductorPath(x2, coilTop, coilBot, 4, 13, 0), fill:'none', stroke:INK, 'stroke-width':2.75}));
+  svg.appendChild(el('line', {x1:cxT-5, y1:coilTop, x2:cxT-5, y2:coilBot, stroke:INK, 'stroke-width':1.6}));
+  svg.appendChild(el('line', {x1:cxT+5, y1:coilTop, x2:cxT+5, y2:coilBot, stroke:INK, 'stroke-width':1.6}));
+  dot(x1, coilTop+4); dot(x2, coilTop+4);
+  svg.appendChild(txt({x:cxT, y:y0-6, fill:INK, 'font-size':13, 'text-anchor':'middle'}, ['n', {sub:'1'}, ' : n', {sub:'2'}]));
+  svg.appendChild(txt({x:cxT, y:y1+18, fill:INK, 'font-size':12, 'font-style':'italic', 'text-anchor':'middle'}, 'ideal transformer'));
+  svg.appendChild(el('rect', {x:x1-20, y:y0+2, width:(x2-x1)+40, height:(y1-y0)-4, fill:'none',
+                               stroke:INK, 'stroke-width':1, 'stroke-dasharray':'4,3'}));
+
+  // ---- primary source (left) ----
+  const srcX = 55;
+  const srcCy = (y0+y1)/2;
+  const srcR = 20;
+  svg.appendChild(el('circle', {cx:srcX, cy:srcCy, r:srcR, fill:'none', stroke:INK, 'stroke-width':2.5}));
+  if (s.source === 'ac'){
+    svg.appendChild(el('path', {d:`M ${srcX-9},${srcCy} Q ${srcX-4.5},${srcCy-9} ${srcX},${srcCy} Q ${srcX+4.5},${srcCy+9} ${srcX+9},${srcCy}`,
+                                 fill:'none', stroke:INK, 'stroke-width':1.8}));
+  } else {
+    svg.appendChild(el('line', {x1:srcX-8, y1:srcCy-4, x2:srcX+8, y2:srcCy-4, stroke:INK, 'stroke-width':1.4}));
+    svg.appendChild(el('line', {x1:srcX-5, y1:srcCy+4, x2:srcX+5, y2:srcCy+4, stroke:INK, 'stroke-width':2.6}));
+  }
+  svg.appendChild(txt({x:srcX, y:y0-6, fill:INK, 'font-size':13, 'text-anchor':'middle'}, ['v', {sub:'1'}]));
+  svg.appendChild(txt({x:srcX - 30, y:y1+18, fill:MAROON, 'font-size':13, 'font-weight':700}, s.source === 'ac' ? `${s.V1} V, ${s.f} Hz` : `${s.V1} V DC`));
+  // stubs connect the rail exactly to the circle's own top/bottom edge - no fixed offsets
+  svg.appendChild(el('line', {x1:srcX, y1:y0, x2:srcX, y2:srcCy-srcR, stroke:INK, 'stroke-width':2}));
+  svg.appendChild(el('line', {x1:srcX, y1:srcCy+srcR, x2:srcX, y2:y1, stroke:INK, 'stroke-width':2}));
+
+  // ---- top / bottom rails: source -> Lm branch -> primary leg (one continuous wire, no gaps) ----
+  svg.appendChild(el('line', {x1:srcX, y1:y0, x2:x1, y2:y0, stroke:INK, 'stroke-width':2}));
+  svg.appendChild(el('line', {x1:srcX, y1:y1, x2:x1, y2:y1, stroke:INK, 'stroke-width':2}));
+
+  // ---- magnetising branch (shunt Lm) - drawn as a proper inductor symbol, only "live" in Actual mode ----
+  const lmX = (srcX + x1) / 2;
+  const branchOpacity = s.model === 'ideal' ? 0.28 : 1.0;
+  const branchWires = el('g', {opacity: branchOpacity});
+  branchWires.appendChild(el('line', {x1:lmX, y1:y0, x2:lmX, y2:coilTop, stroke:INK, 'stroke-width':2}));
+  branchWires.appendChild(el('line', {x1:lmX, y1:coilBot, x2:lmX, y2:y1, stroke:INK, 'stroke-width':2}));
+  branchWires.appendChild(el('path', {d: inductorPath(lmX, coilTop, coilBot, 4, 11, 1),
+                                       fill:'none', stroke:INK, 'stroke-width':2.6}));
+  branchWires.appendChild(txt({x:lmX-20, y:(y0+y1)/2+5, fill:MAROON, 'font-size':15, 'font-weight':700, 'text-anchor':'end'}, ['L', {sub:'M'}]));
+  if (s.model === 'actual') svg.appendChild(txt({x:lmX, y:y1+18, fill:MAROON, 'font-size':13, 'font-weight':700, 'text-anchor':'middle'}, fmtLM(s.LM)));
+  if (s.model === 'actual'){
+    branchWires.appendChild(el('line', {x1:lmX+22, y1:y0+40, x2:lmX+22, y2:y1-40, stroke:MAROON, 'stroke-width':1.6, 'marker-end':'url(#arrowMaroon)'}));
+    branchWires.appendChild(txt({x:lmX+29, y:(y0+y1)/2+4, fill:MAROON, 'font-size':14, 'text-anchor':'start'}, ['i', {sub:'M'}]));
+  } else {
+    // cross out the branch to show it's removed in the ideal model
+    branchWires.appendChild(el('line', {x1:lmX-16, y1:y0+34, x2:lmX+16, y2:y1-34, stroke:'#a3372c', 'stroke-width':2}));
+    branchWires.appendChild(el('line', {x1:lmX-16, y1:y1-34, x2:lmX+16, y2:y0+34, stroke:'#a3372c', 'stroke-width':2}));
+  }
+  svg.appendChild(branchWires);
+
+  // ---- secondary leg -> load (right), rails run the full distance, no gaps ----
+  const loadX = 405;
+  svg.appendChild(el('line', {x1:x2, y1:y0, x2:loadX, y2:y0, stroke:INK, 'stroke-width':2}));
+  svg.appendChild(el('line', {x1:x2, y1:y1, x2:loadX, y2:y1, stroke:INK, 'stroke-width':2}));
+
+  // secondary load: uniform-amplitude zigzag resistor symbol
+  const zn = 7, zamp = 8;
+  const zigPts = [];
+  for (let k=0;k<=zn;k++){
+    const yy = y0 + (y1-y0)*k/zn;
+    const xx = loadX + (k%2===0 ? -zamp : zamp);
+    zigPts.push([xx, yy]);
+  }
+  svg.appendChild(el('line', {x1:loadX, y1:y0, x2:zigPts[0][0], y2:zigPts[0][1], stroke:INK, 'stroke-width':2}));
+  svg.appendChild(el('line', {x1:loadX, y1:y1, x2:zigPts[zn][0], y2:zigPts[zn][1], stroke:INK, 'stroke-width':2}));
+  svg.appendChild(el('polyline', {points: zigPts.map(p=>p.join(',')).join(' '), fill:'none', stroke:FOCUS, 'stroke-width':2.5,
+                                   'stroke-linejoin':'round'}));
+  svg.appendChild(txt({x:loadX+16, y:(y0+y1)/2+4, fill:FOCUS, 'font-size':13, 'text-anchor':'start'}, 'load'));
+  svg.appendChild(txt({x:loadX-6, y:y0-6, fill:INK, 'font-size':13, 'text-anchor':'end'}, ['v', {sub:'2'}]));
+
+  const defs = el('defs', {});
+  const m2 = el('marker', {id:'arrowMaroon', markerWidth:8, markerHeight:8, refX:6, refY:3, orient:'auto'});
+  m2.appendChild(el('path', {d:'M0,0 L6,3 L0,6 Z', fill:MAROON}));
+  defs.appendChild(m2);
+  svg.appendChild(defs);
+}
+
+// ---------- render ----------
+function render(){
+  const s = readInputs();
+  const ideal = s.model === 'ideal', dc = s.source === 'dc';
+  $('val-v1').textContent = `${s.V1} V`;
+  $('v1-kind').textContent = dc ? '(constant)' : '(peak)';
+  $('val-lm').textContent = ideal ? '\u221e (ideal)' : fmtLM(s.LM);
+  $('val-f').textContent = dc ? '\u2014' : `${s.f} Hz`;
+  sl.f.disabled = dc;   $('block-f').classList.toggle('off', dc);
+  sl.lm.disabled = ideal; $('block-lm').classList.toggle('off', ideal);
+
+  const st = $('status');
+  if (ideal){
+    $('stat1-label').innerHTML = 'Magnetising current';
+    $('stat1').textContent = '0 A';  $('stat1-sub').textContent = 'whatever the source';
+    $('stat2').textContent = '\u2014';
+    st.className = 'status ideal'; st.textContent = 'Ideal core: zero reluctance, so no current is needed to set up the flux.';
+  } else if (dc){
+    $('stat1-label').innerHTML = 'Time to saturation';
+    $('stat1').textContent = fmtT(s.tsat);  $('stat1-sub').innerHTML = 'when i<sub>M</sub> reaches 4 A';
+    $('stat2').textContent = fmtRate(s.rate);
+    st.className = 'status sat'; st.textContent = 'DC: the voltage never reverses, so the current never turns back. The core saturates and the primary becomes close to a short circuit.';
+  } else {
+    $('stat1-label').innerHTML = 'Peak <span class="sym">i<sub>M</sub></span>';
+    $('stat1').textContent = fmtI(s.peak);  $('stat1-sub').textContent = `${(s.frac * 100).toFixed(0)}% of the saturation level`;
+    $('stat2').textContent = fmtRate(s.rate);
+    if (s.saturates){ st.className = 'status sat'; st.innerHTML = 'AC, but too much voltage for this frequency: the core saturates on every half-cycle. Raise f or L<sub>M</sub>, or lower the voltage.'; }
+    else { st.className = 'status ok'; st.textContent = 'AC: the voltage reverses before the current gets far, so the core stays unsaturated.'; }
+  }
+  drawPlot(s); drawCircuit(s);
+}
+
+function setupToggle(id, key){
+  const box = $(id);
+  box.querySelectorAll('.mode-btn').forEach(btn => btn.addEventListener('click', () => {
+    state[key] = btn.dataset.val; syncToggles(); render();
+  }));
+}
+function syncToggles(){
+  document.querySelectorAll('#modelToggle .mode-btn').forEach(b => b.classList.toggle('active', b.dataset.val === state.model));
+  document.querySelectorAll('#sourceToggle .mode-btn').forEach(b => b.classList.toggle('active', b.dataset.val === state.source));
+}
+setupToggle('modelToggle', 'model'); setupToggle('sourceToggle', 'source');
+Object.values(sl).forEach(x => x.addEventListener('input', render));
+$('resetBtn').addEventListener('click', () => {
+  sl.v1.value = DEFAULTS.v1; sl.lm.value = DEFAULTS.lm_log; sl.f.value = DEFAULTS.f;
+  state.model = DEFAULTS.model; state.source = DEFAULTS.source; syncToggles(); render();
+});
+render();
+</script>
+</body>
+</html>

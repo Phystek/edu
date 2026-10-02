@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Magnetic Circuit Reluctance Explorer &mdash; ELEC2005</title>
+<style>
+  :root{
+    --ink:#1a1512; --paper:#faf7f2; --panel:#ffffff; --maroon:#7a1730;
+    --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a; --mustard:#c98a2c;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:#e6e6e4; color:var(--ink); font-family:"Helvetica Neue",Arial,sans-serif; }
+  .wrap{ max-width:960px; margin:0 auto; padding:28px 20px 48px; }
+  header{ display:flex; justify-content:space-between; align-items:flex-end; gap:12px;
+          border-bottom:1px solid var(--grid); padding-bottom:14px; }
+  .eyebrow{ font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--maroon); font-weight:700; margin:0 0 6px; }
+  h1{ font-family:"Iowan Old Style","Georgia",serif; font-weight:700; letter-spacing:-0.01em; font-size:28px; margin:0; }
+  .tag{ font-size:12px; color:var(--muted); white-space:nowrap; padding-bottom:4px; }
+  .intro{ font-size:14.5px; line-height:1.55; margin:16px 0 14px; }
+  .callout{ background:#fbe9c6; border:1px solid #e0be6f; color:#5c4a12; border-radius:4px;
+            padding:10px 12px; font-size:12.5px; line-height:1.45; margin:0 0 18px; }
+  .callout b{ margin-right:4px; }
+  .grid{ display:grid; grid-template-columns:1.35fr 1fr; gap:20px; align-items:start; }
+  @media (max-width:800px){ .grid{ grid-template-columns:1fr; } h1{ font-size:24px; } }
+  .panel{ background:var(--panel); border:1px solid var(--grid); border-radius:4px; padding:16px; }
+  .visual-stack{ display:flex; flex-direction:column; gap:14px; }
+  .panel-label{ font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); font-weight:700; margin:0 0 8px; }
+  .sym{ text-transform:none; letter-spacing:0; }
+  svg{ display:block; width:100%; height:auto; }
+  .slider-block{ margin-bottom:18px; }
+  .slider-label-row{ display:flex; justify-content:space-between; align-items:baseline; font-size:13px; margin-bottom:4px; }
+  .slider-value{ font-weight:700; color:var(--maroon); font-variant-numeric:tabular-nums; }
+  input[type=range]{ width:100%; accent-color:var(--maroon); margin:2px 0; }
+  input[type=range]:focus-visible, button:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+  .slider-caption{ display:flex; justify-content:space-between; font-size:11px; color:var(--muted); }
+  .reset-btn{ display:block; width:100%; margin-top:6px; padding:9px 12px; font:700 13px "Helvetica Neue",Arial,sans-serif;
+              color:var(--ink); background:transparent; border:1px solid var(--ink); border-radius:4px; cursor:pointer;
+              transition:background 0.15s, color 0.15s; }
+  .reset-btn:hover{ background:var(--ink); color:var(--paper); }
+  .stats{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
+  .stat-card{ background:var(--paper); border:1px solid var(--grid); border-radius:4px; padding:10px 12px; }
+  .stat-label{ font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
+  .stat-value{ font-size:18px; font-weight:700; font-variant-numeric:tabular-nums; }
+  .stat-value.accent{ color:var(--maroon); }
+  .stat-value.warn{ color:#a3372c; }
+  .stat-sub{ font-size:11px; color:var(--muted); margin-top:2px; min-height:13px; }
+  footer{ text-align:center; color:var(--muted); font-size:11.5px; margin-top:30px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <p class="eyebrow">Magnetic Circuits</p>
+      <h1>Reluctance Explorer</h1>
+    </div>
+    <div class="tag">ELEC2005 &middot; Week 10</div>
+  </header>
+
+  <p class="intro">
+    A core with an air gap can be analysed like a simple electric circuit. The winding's
+    ampere-turns act as the source, and the core and the gap are two reluctances in series.
+    Change the gap, the core material, the turns and the current to see what sets the flux,
+    and notice how quickly even a small gap takes over.
+  </p>
+
+  <div class="callout">
+    <b>Simplified model.</b>
+    The core is treated as linear (a fixed &mu;<sub>r</sub>), with no saturation and no fringing
+    at the gap. A real core saturates at roughly 1.5 to 2&nbsp;T, so a flux density above that
+    is shown in red and is illustrative only.
+  </div>
+
+  <div class="grid">
+    <div class="visual-stack">
+      <div class="panel">
+        <p class="panel-label">Magnetic Circuit</p>
+        <svg id="coreSvg" viewBox="0 0 460 285" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Core with winding and air gap"></svg>
+      </div>
+      <div class="panel">
+        <p class="panel-label">Equivalent Circuit</p>
+        <svg id="eqSvg" viewBox="0 0 460 208" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Equivalent circuit with core and gap reluctances"></svg>
+      </div>
+    </div>
+
+    <div class="panel controls">
+      <p class="panel-label">Controls</p>
+
+      <div class="slider-block">
+        <div class="slider-label-row"><span>Air gap, g</span><span class="slider-value" id="val-g"></span></div>
+        <input type="range" id="slider-g" min="0" max="5" step="0.1" value="1" aria-label="Air gap in millimetres">
+        <div class="slider-caption"><span>0 mm</span><span>5 mm</span></div>
+      </div>
+
+      <div class="slider-block">
+        <div class="slider-label-row"><span>Core relative permeability, &mu;<sub>r</sub></span><span class="slider-value" id="val-mu"></span></div>
+        <input type="range" id="slider-mu" min="2" max="4" step="0.01" value="3.3" aria-label="Core relative permeability, log scale">
+        <div class="slider-caption"><span>100</span><span>10,000</span></div>
+      </div>
+
+      <div class="slider-block">
+        <div class="slider-label-row"><span>Turns, n</span><span class="slider-value" id="val-n"></span></div>
+        <input type="range" id="slider-n" min="50" max="500" step="10" value="200" aria-label="Number of turns">
+        <div class="slider-caption"><span>50</span><span>500</span></div>
+      </div>
+
+      <div class="slider-block">
+        <div class="slider-label-row"><span>Current, i</span><span class="slider-value" id="val-i"></span></div>
+        <input type="range" id="slider-i" min="0" max="5" step="0.1" value="1" aria-label="Winding current in amperes">
+        <div class="slider-caption"><span>0 A</span><span>5 A</span></div>
+      </div>
+
+      <button class="reset-btn" id="resetBtn">Reset to defaults</button>
+
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-label">Flux, <span class="sym">&Phi;</span></div>
+          <div class="stat-value accent" id="stat-phi"></div>
+          <div class="stat-sub">&Phi; = ni / &#8475;</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Flux density, <span class="sym">B</span></div>
+          <div class="stat-value accent" id="stat-B"></div>
+          <div class="stat-sub" id="stat-Bsub"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total reluctance</div>
+          <div class="stat-value" id="stat-R"></div>
+          <div class="stat-sub">A/Wb</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Inductance, <span class="sym">L</span></div>
+          <div class="stat-value" id="stat-L"></div>
+          <div class="stat-sub">L = n&sup2; / &#8475;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>ELEC2005 &middot; Week 10 &middot; for concept exploration, not assessment</footer>
+</div>
+
+<script>
+const MU0 = 4 * Math.PI * 1e-7;
+const L_CORE = 0.15;   // m, fixed mean core path length
+const AC = 4e-4;       // m^2, fixed core cross-sectional area
+const B_REAL_LIMIT = 1.8;   // T, above this the linear model is flagged
+
+const INK = '#1a1512', MAROON = '#7a1730', FOCUS = '#1c5f7a', MUTED = '#6b6156', CORE_FILL = '#e4ddd2';
+const DEFAULTS = { g: 1.0, mu_log: 3.3, n: 200, i: 1.0 };
+
+const $ = id => document.getElementById(id);
+const sl = { g: $('slider-g'), mu: $('slider-mu'), n: $('slider-n'), i: $('slider-i') };
+
+function roundSig(x, n){
+  if (x === 0) return 0;
+  const e = Math.floor(Math.log10(Math.abs(x)));
+  const f = Math.pow(10, e - n + 1);
+  return Math.round(x / f) * f;
+}
+
+// ---------- model (pure function, mirrors the Python reference) ----------
+function model(g_mm, mu_r, n, i){
+  const Rc = L_CORE / (MU0 * mu_r * AC);
+  const Rg = (g_mm / 1000) / (MU0 * AC);
+  const Rt = Rc + Rg;
+  const F = n * i;
+  const phi = F / Rt;
+  return { g_mm, mu_r, n, i, Rc, Rg, Rt, F, phi, B: phi / AC, L: n * n / Rt, gapShare: Rg / Rt };
+}
+function readInputs(){
+  return model(parseFloat(sl.g.value), roundSig(Math.pow(10, parseFloat(sl.mu.value)), 2),
+               parseFloat(sl.n.value), parseFloat(sl.i.value));
+}
+
+// ---------- formatting ----------
+const SUP = {'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+function fmtSci(x){
+  if (x === 0) return '0';
+  let e = Math.floor(Math.log10(Math.abs(x)));
+  let m = x / Math.pow(10, e);
+  if (m.toFixed(2) === '10.00'){ m = 1; e += 1; }
+  return `${m.toFixed(2)}×10${String(e).split('').map(c => SUP[c]).join('')}`;
+}
+function fmtPhi(wb){ return Math.abs(wb) >= 1e-3 ? `${(wb*1e3).toFixed(2)} mWb` : `${(wb*1e6).toFixed(1)} µWb`; }
+function fmtL(h){ return h >= 1 ? `${h.toFixed(2)} H` : h >= 1e-3 ? `${(h*1e3).toFixed(1)} mH` : `${(h*1e6).toFixed(0)} µH`; }
+function fmtB(b){ return b >= 10 ? `${b.toFixed(0)} T` : `${b.toFixed(2)} T`; }
+
+// ---------- SVG helpers ----------
+function el(tag, attrs, text){
+  const e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+// text with real subscripts: parts is a list of strings and {sub:'x'} items
+function txt(attrs, parts){
+  const t = el('text', attrs);
+  const fs = parseFloat(attrs['font-size'] || 12);
+  let shifted = false;
+  (Array.isArray(parts) ? parts : [parts]).forEach(p => {
+    const isSub = typeof p === 'object';
+    const a = {};
+    if (isSub){ a['font-size'] = (fs * 0.72).toFixed(1); a.dy = (fs * 0.28).toFixed(1); }
+    else if (shifted){ a.dy = (-fs * 0.28).toFixed(1); }
+    t.appendChild(el('tspan', a, isSub ? p.sub : p));
+    shifted = isSub;
+  });
+  return t;
+}
+function arrowHead(svg, x, y, dir, color){   // dir: 'r' right, 'd' down
+  const pts = dir === 'r' ? `${x},${y} ${x-9},${y-4.5} ${x-9},${y+4.5}` : `${x},${y} ${x-4.5},${y-9} ${x+4.5},${y-9}`;
+  svg.appendChild(el('polygon', {points: pts, fill: color}));
+}
+
+// ---------- magnetic circuit drawing ----------
+const CORE = { x0:150, y0:52, w:215, h:180, t:30 };
+function drawCore(s){
+  const svg = $('coreSvg'); svg.innerHTML = '';
+  const {x0, y0, w, h, t} = CORE;
+  const gapCY = y0 + h / 2;
+  const gapPx = s.g_mm > 0 ? 5 + s.g_mm * 7 : 0;
+
+  // winding geometry: nT turns wrapped round the left leg
+  const nT = 5, ya = y0 + t + 14, yb = y0 + h - t - 14, p = (yb - ya) / nT, ov = 7;
+  // the half of each turn that passes BEHIND the leg is drawn first, so the core hides its middle
+  for (let k = 0; k < nT; k++){
+    svg.appendChild(el('line', {x1:x0 + t + ov, y1:ya + k*p + p*0.55, x2:x0 - ov, y2:ya + (k+1)*p,
+                                 stroke:INK, 'stroke-width':3.2, 'stroke-linecap':'round'}));
+  }
+
+  const bar = (bx, by, bw, bh) => svg.appendChild(el('rect', {x:bx, y:by, width:bw, height:bh, fill:CORE_FILL,
+                                                             stroke:INK, 'stroke-width':2.5, 'stroke-linejoin':'round'}));
+  bar(x0, y0, w, t);                 // top
+  bar(x0, y0 + h - t, w, t);         // bottom
+  bar(x0, y0, t, h);                 // left leg (carries the winding)
+  if (gapPx > 0){
+    bar(x0 + w - t, y0, t, gapCY - gapPx/2 - y0);
+    bar(x0 + w - t, gapCY + gapPx/2, t, (y0 + h) - (gapCY + gapPx/2));
+  } else {
+    bar(x0 + w - t, y0, t, h);
+  }
+
+  // mean flux path (dashed), drawn before the winding so the wire sits on top of it
+  const px0 = x0 + t/2, px1 = x0 + w - t/2, py0 = y0 + t/2, py1 = y0 + h - t/2;
+  svg.appendChild(el('rect', {x:px0, y:py0, width:px1 - px0, height:py1 - py0, fill:'none', stroke:MAROON,
+                               'stroke-width':1.6, 'stroke-dasharray':'6,4'}));
+  arrowHead(svg, (px0 + px1)/2 + 6, py0, 'r', MAROON);
+  svg.appendChild(txt({x:(px0 + px1)/2, y:y0 - 12, fill:MAROON, 'font-size':14, 'font-weight':700, 'text-anchor':'middle'},
+                      `Φ = ${fmtPhi(s.phi)}`));
+
+  // winding: the half of each turn that passes in FRONT of the leg, then two leads out to terminals
+  for (let k = 0; k < nT; k++){
+    svg.appendChild(el('line', {x1:x0 - ov, y1:ya + k*p, x2:x0 + t + ov, y2:ya + k*p + p*0.55,
+                                 stroke:INK, 'stroke-width':3.2, 'stroke-linecap':'round'}));
+  }
+  const termX = 46;
+  svg.appendChild(el('line', {x1:termX + 4, y1:ya, x2:x0 - 7, y2:ya, stroke:INK, 'stroke-width':2.2}));
+  svg.appendChild(el('line', {x1:termX + 4, y1:yb, x2:x0 - 7, y2:yb, stroke:INK, 'stroke-width':2.2, 'stroke-linecap':'round'}));
+  svg.appendChild(el('circle', {cx:termX, cy:ya, r:4, fill:'#fff', stroke:INK, 'stroke-width':2}));
+  svg.appendChild(el('circle', {cx:termX, cy:yb, r:4, fill:'#fff', stroke:INK, 'stroke-width':2}));
+  arrowHead(svg, 104, ya, 'r', INK);
+  svg.appendChild(txt({x:termX - 4, y:ya - 12, fill:MAROON, 'font-size':14, 'font-weight':700}, `i = ${s.i.toFixed(1)} A`));
+  svg.appendChild(txt({x:termX + 8, y:(ya + yb)/2 + 5, fill:MAROON, 'font-size':14, 'font-weight':700}, `n = ${s.n}`));
+
+  // air gap: hatching + label
+  if (gapPx >= 9){
+    for (let k = 0; k < 4; k++){
+      const hx = x0 + w - t + 5 + k * ((t - 10) / 3);
+      svg.appendChild(el('line', {x1:hx - 3, y1:gapCY + gapPx/2 - 2, x2:hx + 3, y2:gapCY - gapPx/2 + 2, stroke:'#b8ac98', 'stroke-width':1.4}));
+    }
+  }
+  svg.appendChild(txt({x:x0 + w + 10, y:gapCY + 5, fill:FOCUS, 'font-size':13, 'font-weight':700},
+                      s.g_mm > 0 ? `g = ${s.g_mm.toFixed(1)} mm` : 'no gap'));
+
+  // core labels
+  const midX = x0 + w/2;
+  svg.appendChild(txt({x:midX, y:y0 + h + 22, fill:MAROON, 'font-size':13, 'font-weight':700, 'text-anchor':'middle'},
+                      ['core: μ', {sub:'r'}, ` = ${s.mu_r.toLocaleString('en-AU')}`]));
+  svg.appendChild(txt({x:midX, y:y0 + h + 40, fill:MUTED, 'font-size':12.5, 'text-anchor':'middle'},
+                      ['mean path ℓ', {sub:'m'}, ' = 150 mm,  area A', {sub:'c'}, ' = 4 cm² (fixed)']));
+}
+
+// ---------- equivalent circuit drawing ----------
+function zigzag(xa, xb, y, n, amp){
+  const pts = [];
+  for (let k = 0; k <= n; k++){
+    const yy = (k === 0 || k === n) ? y : y + (k % 2 === 1 ? -amp : amp);
+    pts.push(`${(xa + (xb - xa) * k / n).toFixed(1)},${yy}`);
+  }
+  return pts.join(' ');
+}
+function drawEquivalent(s){
+  const svg = $('eqSvg'); svg.innerHTML = '';
+  const lx = 88, rx = 410, topY = 62, botY = 132, midY = (topY + botY) / 2, r = 20;
+  const wire = (x1, y1, x2, y2) => svg.appendChild(el('line', {x1, y1, x2, y2, stroke:INK, 'stroke-width':2.6, 'stroke-linecap':'round'}));
+
+  // MMF source
+  svg.appendChild(el('circle', {cx:lx, cy:midY, r, fill:'none', stroke:INK, 'stroke-width':2.6}));
+  svg.appendChild(txt({x:lx, y:midY - 4, fill:INK, 'font-size':13, 'text-anchor':'middle'}, '+'));
+  svg.appendChild(txt({x:lx, y:midY + 13, fill:INK, 'font-size':13, 'text-anchor':'middle'}, '−'));
+  wire(lx, midY - r, lx, topY); wire(lx, midY + r, lx, botY);
+  svg.appendChild(txt({x:34, y:midY - 3, fill:INK, 'font-size':13, 'text-anchor':'middle'}, 'ni ='));
+  svg.appendChild(txt({x:34, y:midY + 14, fill:MAROON, 'font-size':13, 'font-weight':700, 'text-anchor':'middle'}, `${s.F.toFixed(0)} At`));
+
+  // series reluctances
+  const c0 = 150, c1 = 236, g0 = 278, g1 = 364;
+  wire(lx, topY, c0, topY);
+  svg.appendChild(el('polyline', {points: zigzag(c0, c1, topY, 8, 9), fill:'none', stroke:MAROON, 'stroke-width':3, 'stroke-linejoin':'round'}));
+  wire(c1, topY, g0, topY);
+  if (s.g_mm > 0){
+    svg.appendChild(el('polyline', {points: zigzag(g0, g1, topY, 8, 9), fill:'none', stroke:FOCUS, 'stroke-width':3, 'stroke-linejoin':'round'}));
+  } else {
+    wire(g0, topY, g1, topY);
+  }
+  wire(g1, topY, rx, topY); wire(rx, topY, rx, botY); wire(rx, botY, lx, botY);
+
+  svg.appendChild(txt({x:(c0 + c1)/2, y:topY - 34, fill:MAROON, 'font-size':14, 'font-weight':700, 'text-anchor':'middle'}, ['ℛ', {sub:'c'}, '  core']));
+  svg.appendChild(txt({x:(c0 + c1)/2, y:topY - 16, fill:MAROON, 'font-size':13, 'text-anchor':'middle'}, `${fmtSci(s.Rc)} A/Wb`));
+  svg.appendChild(txt({x:(g0 + g1)/2, y:topY - 34, fill:FOCUS, 'font-size':14, 'font-weight':700, 'text-anchor':'middle'}, ['ℛ', {sub:'g'}, '  gap']));
+  svg.appendChild(txt({x:(g0 + g1)/2, y:topY - 16, fill:FOCUS, 'font-size':13, 'text-anchor':'middle'},
+                      s.g_mm > 0 ? `${fmtSci(s.Rg)} A/Wb` : '0 (no gap)'));
+
+  // flux arrow on the top wire
+  arrowHead(svg, 128, topY, 'r', INK);
+  svg.appendChild(txt({x:118, y:topY - 9, fill:INK, 'font-size':13, 'text-anchor':'middle'}, 'Φ'));
+
+  // share-of-reluctance bar
+  const bx = 60, bw = 350, by = 166, bh = 13;
+  const cw = bw * (1 - s.gapShare);
+  svg.appendChild(txt({x:bx, y:by - 7, fill:MUTED, 'font-size':12}, 'SHARE OF TOTAL RELUCTANCE'));
+  svg.appendChild(el('rect', {x:bx, y:by, width:bw, height:bh, fill:FOCUS}));
+  svg.appendChild(el('rect', {x:bx, y:by, width:cw.toFixed(1), height:bh, fill:MAROON}));
+  svg.appendChild(el('rect', {x:bx, y:by, width:bw, height:bh, fill:'none', stroke:INK, 'stroke-width':1}));
+  const pc = 100 * (1 - s.gapShare);
+  const fp = v => (v > 0 && v < 1) ? '<1' : (v > 99 && v < 100) ? '>99' : v.toFixed(0);
+  svg.appendChild(txt({x:bx, y:by + bh + 15, fill:MAROON, 'font-size':13, 'font-weight':700}, `core ${fp(pc)}%`));
+  svg.appendChild(txt({x:bx + bw, y:by + bh + 15, fill:FOCUS, 'font-size':13, 'font-weight':700, 'text-anchor':'end'}, `gap ${fp(100 - pc)}%`));
+}
+
+// ---------- render ----------
+function render(){
+  const s = readInputs();
+  $('val-g').textContent = `${s.g_mm.toFixed(1)} mm`;
+  $('val-mu').textContent = s.mu_r.toLocaleString('en-AU');
+  $('val-n').textContent = `${s.n}`;
+  $('val-i').textContent = `${s.i.toFixed(1)} A`;
+
+  $('stat-phi').textContent = fmtPhi(s.phi);
+  const over = s.B > B_REAL_LIMIT;
+  $('stat-B').textContent = fmtB(s.B);
+  $('stat-B').className = 'stat-value ' + (over ? 'warn' : 'accent');
+  $('stat-Bsub').innerHTML = over ? 'beyond a real core (it would saturate)' : 'B = &Phi; / A<sub>c</sub>';
+  $('stat-R').textContent = fmtSci(s.Rt);
+  $('stat-L').textContent = fmtL(s.L);
+
+  drawCore(s);
+  drawEquivalent(s);
+}
+
+Object.values(sl).forEach(x => x.addEventListener('input', render));
+$('resetBtn').addEventListener('click', () => {
+  sl.g.value = DEFAULTS.g; sl.mu.value = DEFAULTS.mu_log; sl.n.value = DEFAULTS.n; sl.i.value = DEFAULTS.i;
+  render();
+});
+render();
+</script>
+</body>
+</html>
