@@ -5,69 +5,128 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Three-Phase Instantaneous Power Explorer — ELEC2005</title>
 <style>
-  :root{
-    --ink:#1a1512;
-    --paper:#faf7f2;
-    --panel:#ffffff;
-    --maroon:#7a1730;
-    --muted:#6b6156;
-    --grid:#e4ddd2;
-    --focus:#1c5f7a;
-    --amber:#c98a2c;
-    --page-bg:#e6e6e4;
-  }
-  *{box-sizing:border-box;}
-  body{margin:0;background:var(--page-bg);color:var(--ink);font-family:"Helvetica Neue",Arial,sans-serif;}
-  .wrap{max-width:1020px;margin:0 auto;padding:28px 20px 40px;}
-  header{
-    border-bottom:1px solid var(--grid);
-    padding-bottom:14px;margin-bottom:16px;
-    display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px;
-  }
-  .eyebrow{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin:0 0 4px;}
-  h1{font-family:"Iowan Old Style","Georgia",serif;font-size:26px;letter-spacing:-0.01em;margin:0;font-weight:700;}
-  .tag{font-size:12px;color:var(--muted);white-space:nowrap;}
-  .intro{font-size:14px;line-height:1.5;color:var(--ink);max-width:820px;margin:0 0 20px;}
-  .grid{display:grid;grid-template-columns:1.5fr 1fr;gap:16px;}
-  @media (max-width:800px){.grid{grid-template-columns:1fr;}}
-  .panel{background:var(--panel);border:1px solid var(--grid);border-radius:4px;padding:14px 16px;}
-  .panel + .panel{margin-top:14px;}
-  .panel h2{font-family:"Iowan Old Style","Georgia",serif;font-size:15px;margin:0 0 2px;font-weight:700;}
-  .panel .sub{font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--maroon);margin:0 0 10px;font-weight:700;}
-  svg{display:block;margin:0 auto;max-width:100%;height:auto;}
-  .legend{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-top:6px;font-size:11.5px;color:var(--muted);}
-  .legend span.sw{display:inline-block;width:16px;height:2px;margin-right:5px;vertical-align:middle;}
-  .legend span.sw.thick{height:3px;}
-  .mode-toggle{display:flex;border:1px solid var(--grid);border-radius:4px;overflow:hidden;margin-bottom:14px;}
-  .mode-btn{flex:1;padding:9px 6px;text-align:center;font-size:12.5px;font-weight:700;background:var(--paper);color:var(--muted);cursor:pointer;border:none;font-family:inherit;}
-  .mode-btn.active{background:var(--maroon);color:#fff;}
-  .group{border-top:1px solid var(--grid);padding-top:10px;margin-top:10px;}
-  .group:first-of-type{border-top:none;margin-top:0;padding-top:0;}
-  .group-label{font-size:12px;font-weight:700;margin-bottom:6px;}
-  .slider-row{margin-bottom:8px;}
-  .slider-row label{display:flex;justify-content:space-between;font-size:12px;color:var(--ink);margin-bottom:2px;}
-  .slider-row .val{font-weight:700;color:var(--maroon);font-variant-numeric:tabular-nums;}
-  input[type=range]{width:100%;accent-color:var(--maroon);}
-  .minmax{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:1px;}
-  .btnrow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
-  .btn{flex:1;min-width:110px;padding:8px 10px;font-size:11.5px;font-weight:700;border-radius:4px;border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;font-family:inherit;}
-  .btn:hover{background:var(--ink);color:#fff;}
-  .btn.wide{flex:1 1 100%;}
-  .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:4px;}
-  .stat{background:var(--paper);border:1px solid var(--grid);border-radius:4px;padding:8px 6px;text-align:center;}
-  .stat .lbl{font-size:9.5px;letter-spacing:0.05em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
-  .stat .v{font-size:14px;font-weight:700;color:var(--ink);}
-  .note-box{
-    font-size:12px;line-height:1.5;color:var(--muted);
-    padding:10px 12px;background:var(--paper);border:1px solid var(--grid);border-radius:4px;margin-top:10px;
-  }
-  .note-box strong{color:var(--ink);}
-  footer{text-align:center;color:var(--muted);font-size:11px;margin-top:24px;}
+:root{
+  --ink:#1a1512; --paper:#faf7f2; --panel:#ffffff; --maroon:#7a1730;
+  --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a; --amber:#c98a2c; --amber-text:#96640f;
+  --serif:"Iowan Old Style","Georgia",serif;
+  --sans:"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+body{margin:0;background:#e6e6e4;color:var(--ink);font-family:var(--sans);}
+.wrap{max-width:960px;margin:0 auto;padding:24px 20px 36px;}
+header.top{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:6px 16px;
+  border-bottom:1px solid var(--grid);padding-bottom:12px;margin-bottom:14px;}
+.eyebrow{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin:0 0 4px;}
+h1{font-family:var(--serif);font-size:26px;letter-spacing:-0.01em;line-height:1.15;margin:0;font-weight:700;}
+.tag{font-size:12px;color:var(--muted);white-space:nowrap;}
+.intro{font-size:14px;line-height:1.5;max-width:800px;margin:0 0 14px;}
+.note-box{font-size:12px;line-height:1.5;color:var(--muted);padding:10px 12px;background:var(--paper);
+  border:1px solid var(--grid);border-radius:4px;}
+.note-box strong{color:var(--ink);}
+.note-box .ok{color:#2f7d4f;font-weight:700;}
+details.note-box{margin:0 0 14px;max-width:800px;}
+details.note-box summary{cursor:pointer;font-weight:700;color:var(--ink);}
+details.note-box p{margin:6px 0 0;}
+
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start;}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0;}
+.panel{background:var(--panel);border:1px solid var(--grid);border-radius:4px;padding:14px 16px;min-width:0;}
+.panel h2{font-family:var(--serif);font-size:15px;letter-spacing:-0.01em;margin:0 0 2px;font-weight:700;}
+.sub{font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--maroon);margin:0 0 10px;font-weight:700;}
+.nt{text-transform:none;letter-spacing:0;}
+svg{display:block;width:100%;height:auto;margin:0 auto;}
+svg text{user-select:none;-webkit-user-select:none;}
+.cap{font-size:11.5px;line-height:1.35;color:var(--muted);text-align:center;margin-top:4px;}
+.cap b{color:var(--ink);}
+.num{font-variant-numeric:tabular-nums;}
+
+.seg{display:flex;border:1px solid var(--grid);border-radius:4px;overflow:hidden;}
+.seg button{flex:1;padding:8px 6px;text-align:center;font-size:12px;font-weight:700;line-height:1.2;background:var(--paper);
+  color:var(--muted);cursor:pointer;border:none;border-left:1px solid var(--grid);font-family:inherit;}
+.seg button:first-child{border-left:none;}
+.seg button small{display:block;font-weight:400;font-size:10.5px;margin-top:1px;}
+.seg button[aria-pressed="true"]{background:var(--maroon);color:#fff;}
+.seg.small button{padding:6px 4px;font-size:11px;}
+.ctl-label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin:0 0 5px;}
+.ctl-block{margin-bottom:12px;}
+
+.group{border-top:1px solid var(--grid);padding-top:10px;margin-top:10px;}
+.group-label{font-size:12px;font-weight:700;margin-bottom:6px;}
+.group-note{font-size:11px;color:var(--muted);line-height:1.4;margin:-2px 0 6px;}
+.slider-row{margin-bottom:8px;}
+.slider-row label{display:flex;justify-content:space-between;gap:8px;font-size:12px;margin-bottom:2px;}
+.slider-row .val{font-weight:700;color:var(--maroon);font-variant-numeric:tabular-nums;white-space:nowrap;}
+input[type=range]{width:100%;margin:0;accent-color:var(--maroon);display:block;}
+input[type=range]:disabled{opacity:0.45;}
+.minmax{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:1px;}
+.btnrow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.btn{flex:1 1 0;min-width:104px;padding:8px 8px;font-size:11.5px;font-weight:700;border-radius:4px;border:1px solid var(--ink);
+  background:transparent;color:var(--ink);cursor:pointer;font-family:inherit;line-height:1.2;}
+.btn small{display:block;font-weight:400;font-size:10px;margin-top:1px;}
+.btn.wide{flex:1 1 100%;}
+.btn.half{flex:1 1 40%;}
+.btn.quiet{border-color:var(--grid);background:var(--paper);}
+@media (hover:hover){.btn:hover{background:var(--ink);color:var(--paper);border-color:var(--ink);}}
+.btn:active{background:var(--ink);color:var(--paper);}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
+
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.stat{background:var(--paper);border:1px solid var(--grid);border-radius:4px;padding:8px 6px;text-align:center;min-width:0;}
+.stat .lbl{font-size:9.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+.stat .v{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.stat .v2{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:1px;white-space:nowrap;}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+.legend{display:flex;gap:4px 14px;flex-wrap:wrap;justify-content:center;margin-top:6px;font-size:11px;color:var(--muted);}
+.sw{display:inline-block;width:18px;height:0;border-top:2px solid var(--ink);margin-right:5px;vertical-align:middle;}
+.handle{cursor:grab;touch-action:none;}
+.handle.dragging{cursor:grabbing;}
+footer{text-align:center;color:var(--muted);font-size:11px;margin-top:22px;}
+
+/* Desktop: keep the picture in view while the (taller) control column scrolls. */
+@media (min-width:801px) and (min-height:760px){
+  .col.visual{position:sticky;top:12px;}
+}
+@media (max-width:800px){
+  .wrap{padding:16px 12px 28px;}
+  h1{font-size:22px;}
+  .intro{font-size:13.5px;}
+  .grid{grid-template-columns:minmax(0,1fr);gap:12px;}
+  .col{display:contents;}
+  .panel{padding:10px 12px;}
+}
+/* Phone: the picture stays pinned to the top of the screen while the sliders scroll beneath it. */
+@media (max-width:800px) and (min-height:620px){
+  .panel.sticky{position:sticky;top:0;z-index:5;border-radius:0 0 4px 4px;box-shadow:0 8px 12px -8px rgba(26,21,18,0.3);}
+}
+@media (pointer:coarse){
+  input[type=range]{height:30px;}
+  .btn,.seg button{min-height:40px;}
+}
+
+.why{display:grid;grid-template-columns:minmax(0,190px) minmax(0,1fr);gap:14px;align-items:center;border-top:1px solid var(--grid);margin-top:10px;padding-top:10px;}
+.why figure{margin:0;}
+.why .cap{text-align:left;margin:0 0 8px;font-size:12px;line-height:1.45;}
+.why .sub{margin-bottom:4px;}
+.legend .sw{border-top-width:2px;}
+.legend .sw.total{border-top-width:3px;}
+.legend .sw.avg{border-top-style:dashed;}
+@media (max-width:800px){
+  .vis-inner{max-width:clamp(260px,calc((62vh - 190px) / 0.66),560px);margin:0 auto;}
+  .panel.sticky h2{display:none;}
+  .panel.sticky .sub{margin-bottom:2px;text-align:center;}
+  .why{grid-template-columns:minmax(0,132px) minmax(0,1fr);gap:10px;margin-top:6px;padding-top:6px;}
+  .why .cap{display:none;}
+  .why .sub{font-size:9.5px;}
+  .why .stat{padding:5px 6px;}
+  .legend{font-size:10.5px;gap:2px 9px;margin-top:2px;}
+  .legend .sw{width:12px;margin-right:3px;}
+}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
+  <header class="top">
     <div>
       <p class="eyebrow">Power in Balanced Three-Phase Circuits</p>
       <h1>Three-Phase Instantaneous Power Explorer</h1>
@@ -75,86 +134,59 @@
     <div class="tag">ELEC2005 &middot; Week 9</div>
   </header>
 
-  <p class="intro">Each single phase delivers a pulsing instantaneous power &mdash; a steady term plus a ripple at
-  twice the line frequency. With enough evenly-spaced phases, those ripples cancel exactly and the total power
-  becomes perfectly constant. Adjust the number of phases and their spacing to discover the condition for
-  yourself, or use the unbalance controls to break a working configuration and watch the ripple return.</p>
+  <p class="intro">Every phase delivers a pulsing power: a steady part plus a ripple at twice the line frequency.
+  With the right number of phases at the right spacing those ripples cancel and the total becomes perfectly
+  constant. Change the number of phases and their spacing to find the condition, then unbalance phase a and
+  watch the ripple return.</p>
 
   <div class="grid">
-    <div>
-      <div class="panel">
-        <h2>Instantaneous power vs. time</h2>
-        <p class="sub" id="plotSub">BALANCED &mdash; TOTAL POWER IS CONSTANT</p>
-        <svg id="svgPlot" viewBox="0 0 620 300"></svg>
-        <div class="legend" id="legendRow">
-          <span><span class="sw" style="background:#7a1730;"></span>individual phases (dashed)</span>
-          <span><span class="sw thick" style="background:#1a1512;"></span>total power (bold)</span>
-        </div>
-      </div>
-      <div class="panel">
-        <h2>Readout</h2>
-        <p class="sub">OVER THE DISPLAYED WINDOW</p>
-        <div class="stats">
-          <div class="stat"><div class="lbl">Average P<sub id="lbl_avg_n">3&phi;</sub></div><div class="v" id="out_avg">&mdash;</div></div>
-          <div class="stat"><div class="lbl">P<sub id="lbl_ripple_n">3&phi;</sub> ripple (peak&ndash;peak)</div><div class="v" id="out_ripple">&mdash;</div></div>
+    <div class="col visual">
+      <div class="panel sticky">
+        <h2>Instantaneous power against time</h2>
+        <p class="sub" id="plotSub"></p>
+        <div class="vis-inner">
+          <svg id="svgPlot" viewBox="0 0 620 290" role="img" aria-label="Instantaneous power of each phase and their total"></svg>
+          <div class="legend" id="legendRow"></div>
+          <div class="why">
+            <figure>
+              <svg id="svgStar" viewBox="0 0 200 200" role="img" aria-label="Ripple phasors of each phase and their average"></svg>
+            </figure>
+            <div>
+              <p class="sub">Why it cancels (or doesn't)</p>
+              <p class="cap">Each phase's ripple is a phasor at <b>twice</b> that phase's angle. The black arrow is
+              their average: when it shrinks to nothing, the ripples cancel and the total power is constant.</p>
+              <div class="stats">
+                <div class="stat"><div class="lbl">Average power</div><div class="v" id="out_avg">&mdash;</div></div>
+                <div class="stat"><div class="lbl">Ripple, peak to peak</div><div class="v" id="out_ripple">&mdash;</div></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <div>
+    <div class="col controls">
       <div class="panel">
-        <div class="group">
-          <div class="group-label">Number of phases &amp; spacing</div>
-          <div class="slider-row">
-            <label>Number of phases n <span class="val" id="v_n">3</span></label>
-            <input type="range" id="s_n" min="1" max="8" step="1" value="3">
-            <div class="minmax"><span>1</span><span>8</span></div>
-          </div>
-          <div class="slider-row">
-            <label>Spacing between adjacent phases <span class="val" id="v_spacing">120&deg;</span></label>
-            <input type="range" id="s_spacing" min="0" max="180" step="1" value="120">
-            <div class="minmax"><span>0&deg;</span><span>180&deg;</span></div>
+        <div class="ctl-block" style="margin-bottom:0">
+          <span class="ctl-label" id="lblSys">Common systems</span>
+          <div class="btnrow" style="margin-top:0" role="group" aria-labelledby="lblSys">
+            <button type="button" class="btn quiet half" id="pre1">Single-phase</button>
+            <button type="button" class="btn quiet half" id="pre2s">Split-phase<small>2 at 180&deg;</small></button>
+            <button type="button" class="btn quiet half" id="pre2q">Two-phase<small>2 at 90&deg;</small></button>
+            <button type="button" class="btn quiet half" id="pre3">Three-phase<small>3 at 120&deg;</small></button>
           </div>
         </div>
-
-        <div class="group">
-          <div class="group-label">Balanced source &amp; load</div>
-          <div class="slider-row">
-            <label><span>Voltage |V<sub>LN</sub>|</span> <span class="val" id="v_V">230 V</span></label>
-            <input type="range" id="s_V" min="100" max="400" step="5" value="230">
-            <div class="minmax"><span>100 V</span><span>400 V</span></div>
-          </div>
-          <div class="slider-row">
-            <label>Current |I| <span class="val" id="v_I">20 A</span></label>
-            <input type="range" id="s_I" min="5" max="50" step="1" value="20">
-            <div class="minmax"><span>5 A</span><span>50 A</span></div>
-          </div>
-          <div class="slider-row">
-            <label>Power-factor angle &phi; <span class="val" id="v_phi">30&deg;</span></label>
-            <input type="range" id="s_phi" min="-90" max="90" step="1" value="30">
-            <div class="minmax"><span>&minus;90&deg; (leading)</span><span>90&deg; (lagging)</span></div>
-          </div>
+        <div class="group" id="grpN"><div class="group-label">Number of phases and spacing</div></div>
+        <div class="group" id="grpLoad"><div class="group-label">Balanced source and load</div></div>
+        <div class="group" id="grpUnb">
+          <div class="group-label">Unbalance phase a only</div>
+          <p class="group-note">The load is unchanged, so phase a's current scales with its voltage.</p>
         </div>
-
-        <div class="group">
-          <div class="group-label">Unbalance phase 1 only</div>
-          <div class="slider-row">
-            <label>Voltage scale (&times; nominal) <span class="val" id="v_scaleA">1.00&times;</span></label>
-            <input type="range" id="s_scaleA" min="0.5" max="1.5" step="0.01" value="1.0">
-            <div class="minmax"><span>0.5&times;</span><span>1.5&times;</span></div>
-          </div>
-          <div class="slider-row">
-            <label>Phase shift <span class="val" id="v_shiftA">0&deg;</span></label>
-            <input type="range" id="s_shiftA" min="-60" max="60" step="1" value="0">
-            <div class="minmax"><span>&minus;60&deg;</span><span>60&deg;</span></div>
-          </div>
-        </div>
-
         <div class="btnrow">
-          <button class="btn" id="btnBalance">Perfectly balanced</button>
-          <button class="btn" id="btnReset">Reset to defaults</button>
+          <button type="button" class="btn" id="btnBalance">Rebalance phase a</button>
+          <button type="button" class="btn" id="btnReset">Reset to defaults</button>
         </div>
-        <div class="note-box" id="noteBox"></div>
+        <div class="note-box" id="noteBox" style="margin-top:10px"></div>
       </div>
     </div>
   </div>
@@ -163,222 +195,480 @@
 </div>
 
 <script>
-(function(){
-  const NS = "http://www.w3.org/2000/svg";
-  function el(tag, attrs){
-    const e = document.createElementNS(NS, tag);
-    for (const k in attrs) e.setAttribute(k, attrs[k]);
-    return e;
+//#MODEL-START kit
+// ---- complex helpers (pure; verified against the Python reference) ----
+const C = {
+  of:(re,im)=>({re:re,im:im}),
+  add:(a,b)=>({re:a.re+b.re,im:a.im+b.im}),
+  sub:(a,b)=>({re:a.re-b.re,im:a.im-b.im}),
+  mul:(a,b)=>({re:a.re*b.re-a.im*b.im,im:a.re*b.im+a.im*b.re}),
+  div:(a,b)=>{const d=b.re*b.re+b.im*b.im;return {re:(a.re*b.re+a.im*b.im)/d,im:(a.im*b.re-a.re*b.im)/d};},
+  conj:(a)=>({re:a.re,im:-a.im}),
+  scale:(a,s)=>({re:a.re*s,im:a.im*s}),
+  polar:(m,deg)=>{const r=deg*Math.PI/180;return {re:m*Math.cos(r),im:m*Math.sin(r)};},
+  mag:(a)=>Math.hypot(a.re,a.im),
+  ang:(a)=>(Math.hypot(a.re,a.im)<1e-9?0:Math.atan2(a.im,a.re)*180/Math.PI)
+};
+// Number formatting with a real minus sign and no "−0".
+function num(x,d){
+  let s=(+x).toFixed(d);
+  if (parseFloat(s)===0) s=(0).toFixed(d);
+  return s.replace('-','−');
+}
+// 1-2-3-5-8 "nice" ceiling, for frames that must step rather than slide.
+function niceCeil(x){
+  if (!(x>0)) return 1;
+  const p=Math.pow(10,Math.floor(Math.log10(x)));
+  const m=x/p;
+  const steps=[1,2,3,5,8,10];
+  for (let i=0;i<steps.length;i++) if (m<=steps[i]*(1+1e-9)) return steps[i]*p;
+  return 10*p;
+}
+function niceStep(rough){
+  const p=Math.pow(10,Math.floor(Math.log10(rough)));
+  const m=rough/p;
+  return (m<1.5?1:m<3.5?2:m<7.5?5:10)*p;
+}
+//#MODEL-END kit
+
+// ---- SVG drawing kit ----
+const NS="http://www.w3.org/2000/svg";
+const INK="#1a1512", MUTED="#6b6156", GRIDC="#e4ddd2", SOFT="#b7ada0";
+const MAROON="#7a1730", TEAL="#1c5f7a", AMBER="#c98a2c", AMBER_TEXT="#96640f";
+const SANS='"Helvetica Neue",Arial,sans-serif';
+
+function el(tag,attrs,parent){
+  const e=document.createElementNS(NS,tag);
+  if (attrs) for (const k in attrs) if (attrs[k]!==undefined && attrs[k]!==null) e.setAttribute(k,attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function clear(node){ while(node.firstChild) node.removeChild(node.firstChild); }
+function $(id){ return document.getElementById(id); }
+
+// viewBox units per screen pixel. Every font size, stroke and arrowhead below is given
+// in screen pixels and multiplied by this, so a diagram squeezed onto a phone keeps
+// readable 10-12px text instead of shrinking it with the picture.
+function upp(svg){
+  const vb=svg.viewBox.baseVal, r=svg.getBoundingClientRect();
+  if (!r.width||!r.height||!vb.width) return 1;
+  return Math.min(3,Math.max(vb.width/r.width,vb.height/r.height));
+}
+// Each SVG gets a redraw layer (cleared every render) and a persistent layer on top
+// (drag handles live there so a pointer capture survives redraws).
+function layers(svg){
+  if (!svg._draw){ svg._draw=el('g',{},svg); svg._top=el('g',{},svg); }
+  clear(svg._draw);
+  return svg._draw;
+}
+
+// Text with subscripts written as "I_{AB}". Sizes in px; k converts to viewBox units.
+function visLen(str){
+  let n=0;
+  str.split(/(_\{[^}]*\})/).forEach(s=>{ if (/^_\{/.test(s)) n+=(s.length-3)*0.72; else n+=s.length; });
+  return n;
+}
+function textW(str,sizePx,k,bold){ return visLen(str)*sizePx*k*(bold?0.6:0.56); }
+function text(parent,x,y,str,o){
+  o=o||{};
+  const k=o.k||1, fs=(o.size||11)*k;
+  const t=el('text',{x:(+x).toFixed(2),y:(+y).toFixed(2),'font-size':fs.toFixed(2),'font-family':SANS,fill:o.fill||INK,
+    'font-weight':o.weight||400,'text-anchor':o.anchor||'middle','dominant-baseline':'central'},parent);
+  if (o.halo!==false){
+    t.setAttribute('stroke','#fff'); t.setAttribute('stroke-width',(3*k).toFixed(2));
+    t.setAttribute('stroke-linejoin','round'); t.setAttribute('paint-order','stroke');
   }
-  function fmtW(w){
-    const av = Math.abs(w);
-    if (av>=1000) return (w/1000).toFixed(2)+' kW';
-    return w.toFixed(0)+' W';
+  if (o.italic) t.setAttribute('font-style','italic');
+  const parts=String(str).split(/(_\{[^}]*\})/).filter(s=>s!=='');
+  if (parts.length===1 && !/^_\{/.test(parts[0])){ t.textContent=parts[0]; return t; }
+  let shifted=false;
+  parts.forEach(s=>{
+    if (/^_\{/.test(s)){
+      const ts=el('tspan',{'font-size':(fs*0.72).toFixed(2),dy:shifted?0:(fs*0.26).toFixed(2)},t);
+      ts.textContent=s.slice(2,-1); shifted=true;
+    } else {
+      const ts=el('tspan',shifted?{dy:(-fs*0.26).toFixed(2)}:{},t);
+      ts.textContent=s; shifted=false;
+    }
+  });
+  return t;
+}
+
+// Arrow from (x1,y1) to (x2,y2). The head is a polygon whose tip sits exactly on the
+// end point, and it shrinks with the arrow so a short phasor is never all head.
+function arrow(parent,x1,y1,x2,y2,o){
+  o=o||{};
+  const k=o.k||1, col=o.color||INK;
+  const g=el('g',{opacity:o.opacity===undefined?1:o.opacity},parent);
+  const dx=x2-x1, dy=y2-y1, L=Math.hypot(dx,dy);
+  if (L<1.2*k){ el('circle',{cx:x1,cy:y1,r:(o.dot||2.2)*k,fill:col},g); return g; }
+  const ux=dx/L, uy=dy/L;
+  const h=Math.min((o.head||8)*k,L*0.45), hw=h*0.4;
+  const w=Math.min((o.width||2)*k,Math.max(0.7*k,hw*0.9));
+  const bx=x2-ux*h, by=y2-uy*h;
+  const line=el('line',{x1:x1.toFixed(2),y1:y1.toFixed(2),x2:(bx+ux*h*0.2).toFixed(2),y2:(by+uy*h*0.2).toFixed(2),
+    stroke:col,'stroke-width':w.toFixed(2)},g);
+  if (o.dash) line.setAttribute('stroke-dasharray',o.dash.map(d=>(d*k).toFixed(2)).join(' '));
+  if (o.round) line.setAttribute('stroke-linecap','round');
+  el('polygon',{points:[[x2,y2],[bx-uy*hw,by+ux*hw],[bx+uy*hw,by-ux*hw]].map(p=>p[0].toFixed(2)+','+p[1].toFixed(2)).join(' '),fill:col},g);
+  return g;
+}
+
+// Place labels just beyond an anchor along a direction, then push overlapping labels
+// apart and keep everything inside the frame. items: {x,y,ux,uy,str,fill,size,weight,d}
+function placeLabels(parent,items,o){
+  const k=o.k||1, B=o.bounds;
+  const boxes=items.map(it=>{
+    const size=it.size||12;
+    const w=textW(it.str,size,k,(it.weight||700)>=600)+4*k, h=size*k*1.25;
+    const d=(it.d===undefined?5:it.d)*k;
+    return {it:it,w:w,h:h,cx:it.x+it.ux*(d+Math.abs(it.ux)*w/2+Math.abs(it.uy)*h/2),
+            cy:it.y+it.uy*(d+Math.abs(it.ux)*w/2+Math.abs(it.uy)*h/2)};
+  });
+  // obstacles (e.g. ring labels) never move; labels are pushed off them
+  const all=boxes.concat((o.obstacles||[]).map(b=>({w:b.w,h:b.h,cx:b.cx,cy:b.cy,fixed:true})));
+  function clamp(b){
+    if (!B||b.fixed) return;
+    b.cx=Math.min(B[2]-b.w/2,Math.max(B[0]+b.w/2,b.cx));
+    b.cy=Math.min(B[3]-b.h/2,Math.max(B[1]+b.h/2,b.cy));
   }
-
-  const COLOR_TOTAL = "#1a1512";
-  const FIXED_PALETTE = ["#7a1730", "#1c5f7a", "#c98a2c"]; // exact colors used elsewhere for n<=3
-  function phaseColor(k, n){
-    if (n<=3) return FIXED_PALETTE[k];
-    // beyond 3 phases, cycle hue around a muted wheel matching the house palette's
-    // saturation/lightness rather than hand-picking a fixed-size color list
-    const hue = Math.round((360/n)*k + 350) % 360; // start near the maroon hue
-    return `hsl(${hue}, 45%, 34%)`;
+  // Move a label off a fixed obstacle by the shortest of up/down/left/right that keeps it in the frame.
+  function escape(m,f){
+    const g=0.6*k, cands=[
+      [0,(f.cy-f.h/2)-(m.cy+m.h/2)-g],[0,(f.cy+f.h/2)-(m.cy-m.h/2)+g],
+      [(f.cx-f.w/2)-(m.cx+m.w/2)-g,0],[(f.cx+f.w/2)-(m.cx-m.w/2)+g,0]];
+    let best=null, bestCost=Infinity;
+    cands.forEach(c=>{
+      const nx=m.cx+c[0], ny=m.cy+c[1];
+      const inside=!B||(nx-m.w/2>=B[0]&&nx+m.w/2<=B[2]&&ny-m.h/2>=B[1]&&ny+m.h/2<=B[3]);
+      const cost=Math.abs(c[0])+Math.abs(c[1])+(inside?0:1e6);
+      if (cost<bestCost){ bestCost=cost; best=c; }
+    });
+    m.cx+=best[0]; m.cy+=best[1];
   }
-
-  const state = { nPhases:3, spacing:120, V:230, I:20, phi:30, scaleA:1.0, shiftA:0 };
-
-  const N = 300; // samples across the displayed window
-  const DEG_MAX = 720; // two full fundamental cycles
-
-  function computeSeries(){
-    const phiR = state.phi*Math.PI/180;
-    const shiftAR = state.shiftA*Math.PI/180;
-    const spacingR = state.spacing*Math.PI/180;
-    const n = state.nPhases;
-    const perPhase = []; // perPhase[k] = array of samples for phase k
-    for (let k=0;k<n;k++) perPhase.push([]);
-    const total = [], degs = [];
-    for (let s=0;s<=N;s++){
-      const deg = DEG_MAX*s/N;
-      const wt = deg*Math.PI/180;
-      let sum = 0;
-      for (let k=0;k<n;k++){
-        const theta = spacingR*k;
-        const isUnbalanced = (k===0);
-        const scale = isUnbalanced ? state.scaleA : 1.0;
-        const extraShift = isUnbalanced ? shiftAR : 0;
-        const v = Math.SQRT2*state.V*scale*Math.cos(wt+theta+extraShift);
-        const i = Math.SQRT2*state.I*scale*Math.cos(wt+theta+extraShift-phiR);
-        const p = v*i;
-        perPhase[k].push(p);
-        sum += p;
+  boxes.forEach(clamp);
+  for (let pass=0;pass<24;pass++){
+    let moved=false;
+    for (let i=0;i<all.length;i++) for (let j=i+1;j<all.length;j++){
+      const a=all[i], b=all[j];
+      if (a.fixed&&b.fixed) continue;
+      const ox=(a.w+b.w)/2-Math.abs(a.cx-b.cx), oy=(a.h+b.h)/2-Math.abs(a.cy-b.cy);
+      if (ox>0 && oy>0){
+        moved=true;
+        if (a.fixed||b.fixed){ escape(a.fixed?b:a,a.fixed?a:b); continue; }
+        const fa=0.5, fb=0.5;
+        if (oy<=ox){ const s=(a.cy<b.cy||(a.cy===b.cy&&i<j))?-1:1; a.cy+=s*fa*(oy+0.6*k); b.cy-=s*fb*(oy+0.6*k); }
+        else { const s=(a.cx<b.cx||(a.cx===b.cx&&i<j))?-1:1; a.cx+=s*fa*(ox+0.6*k); b.cx-=s*fb*(ox+0.6*k); }
+        clamp(a); clamp(b);
       }
-      total.push(sum);
-      degs.push(deg);
     }
-    return {degs, perPhase, total, n};
+    if (!moved) break;
+  }
+  boxes.forEach(b=>{
+    text(parent,b.cx,b.cy,b.it.str,{k:k,size:b.it.size||12,fill:b.it.fill,weight:b.it.weight||700});
+  });
+  return boxes;
+}
+
+// Polar frame: rings (radius in viewBox units, optional label), cross-hair, origin dot.
+function polarFrame(parent,cx,cy,rings,o){
+  const k=o.k||1;
+  let rmax=0;
+  rings.forEach(r=>{ rmax=Math.max(rmax,r.r);
+    el('circle',{cx:cx,cy:cy,r:r.r.toFixed(2),fill:'none',stroke:GRIDC,'stroke-width':(1*k).toFixed(2)},parent); });
+  const ext=(o.ext||rmax)+4*k;
+  el('line',{x1:cx-ext,y1:cy,x2:cx+ext,y2:cy,stroke:GRIDC,'stroke-width':(1*k).toFixed(2)},parent);
+  el('line',{x1:cx,y1:cy-ext,x2:cx,y2:cy+ext,stroke:GRIDC,'stroke-width':(1*k).toFixed(2)},parent);
+  const obstacles=[];
+  rings.forEach(r=>{ if (r.label){
+    // just inside its ring, so the outermost label can never be clipped by the frame
+    text(parent,cx+3*k,cy-r.r+6.5*k,r.label,{k:k,size:9,fill:MUTED,anchor:'start'});
+    const w=textW(r.label,9,k,false)+5*k;
+    obstacles.push({cx:cx+3*k+w/2-1.5*k,cy:cy-r.r+6.5*k,w:w,h:13*k});
+  }});
+  el('circle',{cx:cx,cy:cy,r:(2*k).toFixed(2),fill:INK},parent);
+  // The ring labels form one column; hand it back as a single obstacle so a phasor
+  // label is pushed out sideways rather than trapped between two ring labels.
+  if (!obstacles.length) return [];
+  let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;
+  obstacles.forEach(b=>{ x0=Math.min(x0,b.cx-b.w/2); x1=Math.max(x1,b.cx+b.w/2); y0=Math.min(y0,b.cy-b.h/2); y1=Math.max(y1,b.cy+b.h/2); });
+  return [{cx:(x0+x1)/2,cy:(y0+y1)/2,w:x1-x0,h:y1-y0}];
+}
+
+// Angle arc from a1 to a2 (degrees, anticlockwise positive, the short way round).
+function angleArc(parent,cx,cy,r,a1,a2,o){
+  const k=o.k||1;
+  const d=((a2-a1)%360+540)%360-180;
+  const n=Math.max(2,Math.ceil(Math.abs(d)/4));
+  const pts=[];
+  for (let i=0;i<=n;i++){ const a=(a1+d*i/n)*Math.PI/180; pts.push((cx+r*Math.cos(a)).toFixed(2)+','+(cy-r*Math.sin(a)).toFixed(2)); }
+  el('polyline',{points:pts.join(' '),fill:'none',stroke:o.color||MUTED,'stroke-width':((o.width||1.1)*k).toFixed(2)},parent);
+  const am=(a1+d/2)*Math.PI/180;
+  return {ux:Math.cos(am),uy:-Math.sin(am),x:cx+r*Math.cos(am),y:cy-r*Math.sin(am)};
+}
+
+// Pointer position in viewBox coordinates.
+function svgPoint(svg,evt){
+  const pt=svg.createSVGPoint(); pt.x=evt.clientX; pt.y=evt.clientY;
+  return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
+// A persistent drag handle: generous invisible hit area + a small visible ring.
+function makeHandle(svg,color,onDrag){
+  const g=el('g',{'class':'handle'},svg._top);
+  const hit=el('circle',{fill:'transparent'},g);
+  const ring=el('circle',{fill:'#fff','fill-opacity':0.55,stroke:color,'stroke-opacity':0.75},g);
+  let active=null;
+  g.addEventListener('pointerdown',e=>{ active=e.pointerId; try{g.setPointerCapture(e.pointerId);}catch(_){}
+    g.classList.add('dragging'); e.preventDefault(); });
+  g.addEventListener('pointermove',e=>{ if (active!==e.pointerId) return; const p=svgPoint(svg,e); onDrag(p.x,p.y); });
+  const end=e=>{ if (active!==e.pointerId) return; active=null; g.classList.remove('dragging'); };
+  g.addEventListener('pointerup',end); g.addEventListener('pointercancel',end);
+  g.addEventListener('touchstart',e=>e.preventDefault(),{passive:false});
+  return { set:function(x,y,k,show){
+    g.style.display=show?'':'none';
+    hit.setAttribute('cx',x); hit.setAttribute('cy',y); hit.setAttribute('r',(16*k).toFixed(2));
+    ring.setAttribute('cx',x); ring.setAttribute('cy',y); ring.setAttribute('r',(5.5*k).toFixed(2));
+    ring.setAttribute('stroke-width',(1.4*k).toFixed(2));
+  }};
+}
+
+function setPressed(buttons,activeEl){ buttons.forEach(b=>b.setAttribute('aria-pressed',b===activeEl?'true':'false')); }
+function onResize(fn){
+  let raf=0;
+  window.addEventListener('resize',()=>{ cancelAnimationFrame(raf); raf=requestAnimationFrame(fn); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fn);
+}
+
+// One slider row in the house layout: label + live value above, min/max caption below.
+function sliderRow(id,label,min,max,step,value,lo,hi,cls){
+  return '<div class="slider-row"><label for="s_'+id+'"><span>'+label+'</span><span class="val" id="v_'+id+'"></span></label>'+
+    '<input type="range" id="s_'+id+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+value+'">'+
+    '<div class="minmax"><span'+(cls?' class="'+cls+'-min"':'')+'>'+lo+'</span><span'+(cls?' class="'+cls+'-max"':'')+'>'+hi+'</span></div></div>';
+}
+
+(function(){
+//#MODEL-START w3
+// Phase k has voltage sqrt2*V*cos(wt + theta_k) and current sqrt2*I*cos(wt + theta_k - phi).
+// Phases lag one another by `spacing`; phase a (k = 0) can be scaled and shifted.
+// Scaling a's voltage scales its current too (same load), so its power weight is scale^2.
+function phases(st){
+  const out=[];
+  for (let k=0;k<st.n;k++) out.push({theta:-k*st.spacing+(k===0?st.shiftA:0), w:(k===0?st.scaleA*st.scaleA:1)});
+  return out;
+}
+// p_k(t) = w*V*I*[cos(phi) + cos(2wt + 2theta_k - phi)]
+function pPhase(st,p,wtDeg){
+  const d=Math.PI/180;
+  return 2*st.V*st.I*p.w*Math.cos((wtDeg+p.theta)*d)*Math.cos((wtDeg+p.theta-st.phi)*d);
+}
+// Exact results (no sampling): the average, and the peak-to-peak size of the 2w ripple.
+// The ripple of each phase is a phasor w*exp(j*2*theta_k); the total ripple is their sum.
+function analytic(st){
+  const d=Math.PI/180, S=st.V*st.I, ps=phases(st);
+  let sw=0, re=0, im=0;
+  ps.forEach(p=>{ sw+=p.w; re+=p.w*Math.cos(2*p.theta*d); im+=p.w*Math.sin(2*p.theta*d); });
+  return { avg:S*Math.cos(st.phi*d)*sw, ripple:2*S*Math.hypot(re,im), sum:{re:re,im:im},
+           arms:ps.map(p=>({re:p.w*Math.cos(2*p.theta*d),im:p.w*Math.sin(2*p.theta*d)})) };
+}
+// Would a balanced set with this n and spacing give constant power?
+function cancels(n,spacing){
+  const a=n*spacing/180, b=spacing/180, tol=1e-6;
+  return Math.abs(a-Math.round(a))<tol && Math.abs(b-Math.round(b))>tol;
+}
+//#MODEL-END w3
+
+  const COLORS=[MAROON,TEAL,AMBER,"#4f6b3a","#6a4c7d","#a3542c","#2f7f78","#7d7468"];
+  const TEXTC=[MAROON,TEAL,AMBER_TEXT,"#4f6b3a","#6a4c7d","#a3542c","#2a716b","#6b6156"];
+  const LETTERS='abcdefgh';
+  const DEF={n:3,spacing:120,V:230,I:20,phi:30,scaleA:1,shiftA:0};
+  const state=Object.assign({},DEF);
+  const DEG_MAX=720, NS_=360;
+
+  $('grpN').insertAdjacentHTML('beforeend',
+    sliderRow('n','Number of phases n',1,8,1,DEF.n,'1','8')+
+    sliderRow('spacing','Spacing between adjacent phases',0,180,1,DEF.spacing,'0°','180°'));
+  $('grpLoad').insertAdjacentHTML('beforeend',
+    sliderRow('V','Phase voltage |V|',100,400,5,DEF.V,'100 V','400 V')+
+    sliderRow('I','Phase current |I|',5,50,1,DEF.I,'5 A','50 A')+
+    sliderRow('phi','Power-factor angle φ',-90,90,1,DEF.phi,'−90° leading','90° lagging'));
+  $('grpUnb').insertAdjacentHTML('beforeend',
+    sliderRow('scaleA','Phase a voltage (× nominal)',0.5,1.5,0.01,DEF.scaleA,'0.5×','1.5×')+
+    sliderRow('shiftA','Phase a angle shift',-60,60,1,DEF.shiftA,'−60°','60°'));
+
+  function fmtW(w){ return Math.abs(w)>=999.5?num(w/1000,2)+' kW':num(w,0)+' W'; }
+  function fmtSpacing(s){ return (Math.abs(s-Math.round(s))<1e-9?num(s,0):num(s,1))+'°'; }
+
+  // ---------- time plot ----------
+  function drawPlot(an){
+    const svg=$('svgPlot');
+    const narrow=svg.getBoundingClientRect().width<430;
+    const W=narrow?400:620, H=narrow?250:290;
+    svg.setAttribute('viewBox','0 0 '+W+' '+H);
+    const k=upp(svg), g=layers(svg), n=state.n, S=state.V*state.I, ps=phases(state);
+
+    const per=ps.map(()=>[]), total=[];
+    let dMax=-Infinity, dMin=Infinity;
+    for (let s=0;s<=NS_;s++){
+      const deg=DEG_MAX*s/NS_; let sum=0;
+      ps.forEach((p,i)=>{ const v=pPhase(state,p,deg); per[i].push(v); sum+=v; if (v>dMax) dMax=v; if (v<dMin) dMin=v; });
+      total.push(sum); if (sum>dMax) dMax=sum; if (sum<dMin) dMin=sum;
+    }
+    // Vertical frame: set by n, V and I only, so changing the power factor, the spacing or
+    // the unbalance moves the curves, not the axis. It steps out only if a curve would leave it.
+    let top=Math.max(Math.max(n,2)*S,dMax), bot=Math.min(-S,dMin);
+    const step=niceStep((top-bot)/5);
+    top=Math.ceil(top/step-1e-9)*step; bot=Math.floor(bot/step+1e-9)*step;
+    const kw=step>=1000?0:(step>=100?1:2);
+
+    const X0=(kw?40:32)*k, X1=W-8*k, Y0=21*k, Y1=H-20*k;
+    const X=deg=>X0+(deg/DEG_MAX)*(X1-X0), Y=p=>Y1-(p-bot)/(top-bot)*(Y1-Y0);
+
+    for (let v=bot; v<=top+step*1e-6; v+=step){
+      const y=Y(v);
+      el('line',{x1:X0,y1:y,x2:X1,y2:y,stroke:Math.abs(v)<step*1e-6?SOFT:GRIDC,'stroke-width':(1*k).toFixed(2)},g);
+      text(g,X0-5*k,y,num(v/1000,kw),{k:k,size:9.5,fill:MUTED,anchor:'end',halo:false});
+    }
+    text(g,X0-5*k,Y0-13*k,'kW',{k:k,size:9.5,fill:MUTED,anchor:'end',halo:false});
+    for (let d=0;d<=DEG_MAX;d+=180){
+      const x=X(d);
+      el('line',{x1:x,y1:Y0,x2:x,y2:Y1,stroke:GRIDC,'stroke-width':(1*k).toFixed(2)},g);
+      text(g,x,Y1+10*k,d+'°',{k:k,size:9.5,fill:MUTED,anchor:d===DEG_MAX?'end':(d===0?'start':'middle'),halo:false});
+    }
+    text(g,X0-5*k,Y1+10*k,'ωt',{k:k,size:9.5,fill:MUTED,anchor:'end',halo:false,italic:true});
+    el('rect',{x:X0,y:Y0,width:X1-X0,height:Y1-Y0,fill:'none',stroke:SOFT,'stroke-width':(1*k).toFixed(2)},g);
+
+    const line=(vals,color,width,opacity)=>el('polyline',{points:vals.map((v,i)=>X(DEG_MAX*i/NS_).toFixed(1)+','+Y(v).toFixed(1)).join(' '),
+      fill:'none',stroke:color,'stroke-width':(width*k).toFixed(2),'stroke-linejoin':'round',opacity:opacity},g);
+    per.forEach((vals,i)=>line(vals,COLORS[i],1.4,0.9));
+    const rippling=an.ripple>1e-6*S*n;
+    if (rippling){
+      const y=Y(an.avg);
+      el('line',{x1:X0,y1:y,x2:X1,y2:y,stroke:AMBER,'stroke-width':(1.6*k).toFixed(2),
+        'stroke-dasharray':(6*k).toFixed(2)+' '+(4*k).toFixed(2)},g);
+    }
+    line(total,INK,2.8,1);
+    return rippling;
   }
 
-  function predictsConstant(n, spacingDeg, tol){
-    tol = tol===undefined ? 1e-6 : tol;
-    const a = n*spacingDeg/180, b = spacingDeg/180;
-    const cond1 = Math.abs(a - Math.round(a)) < tol;   // n*spacing is a multiple of 180
-    const cond2 = Math.abs(b - Math.round(b)) > tol;   // spacing itself is not a multiple of 180
-    return cond1 && cond2;
-  }
+  // ---------- ripple-phasor diagram ----------
+  function drawStar(an){
+    const svg=$('svgStar'), k=upp(svg), g=layers(svg), cx=100, cy=100, R=68;
+    const n=state.n;
+    let maxW=1; an.arms.forEach(a=>{ maxW=Math.max(maxW,C.mag(a)); });
+    const sc=R/maxW;   // unit circle fills the frame; it only shrinks if phase a is scaled above nominal
+    const obs=polarFrame(g,cx,cy,[{r:sc,label:maxW>1.001?'1':''}],{k:k,ext:R});
+    const P=z=>[cx+z.re*sc,cy-z.im*sc];
+    const net=C.scale(an.sum,1/n), items=[];
 
-  // ---------- Plot geometry (fixed x-range, dynamic y-range fit to current data) ----------
-  const PLOT_X0=55, PLOT_X1=600, PLOT_Y0=25, PLOT_Y1=260;
-
-  function niceStep(rough){
-    const mag = Math.pow(10, Math.floor(Math.log10(rough)));
-    const norm = rough/mag;
-    let step;
-    if (norm < 1.5) step = 1;
-    else if (norm < 3.5) step = 2;
-    else if (norm < 7.5) step = 5;
-    else step = 10;
-    return step*mag;
-  }
-
-  function drawPlot(series){
-    const svg = document.getElementById('svgPlot');
-    while(svg.firstChild) svg.removeChild(svg.firstChild);
-
-    let allVals = series.total.slice();
-    series.perPhase.forEach(arr => { allVals = allVals.concat(arr); });
-    let yMin = Math.min(...allVals), yMax = Math.max(...allVals);
-    if (yMax-yMin < 1e-6){ yMax += 1; yMin -= 1; } // guard against a perfectly flat degenerate range
-    const pad = (yMax-yMin)*0.12;
-    yMin -= pad; yMax += pad;
-
-    function X(deg){ return PLOT_X0 + (deg/DEG_MAX)*(PLOT_X1-PLOT_X0); }
-    function Y(p){ return PLOT_Y1 - (p-yMin)/(yMax-yMin)*(PLOT_Y1-PLOT_Y0); }
-
-    // gridlines + y labels
-    const step = niceStep((yMax-yMin)/5);
-    let gridVal = Math.ceil(yMin/step)*step;
-    while (gridVal <= yMax){
-      const y = Y(gridVal);
-      svg.appendChild(el('line',{x1:PLOT_X0,y1:y,x2:PLOT_X1,y2:y,stroke:'#e4ddd2','stroke-width':1}));
-      const t = el('text',{x:PLOT_X0-6,y:y+3,'font-size':10,'text-anchor':'end',fill:'#6b6156','font-family':'Helvetica Neue,Arial,sans-serif'});
-      t.textContent = fmtW(gridVal);
-      svg.appendChild(t);
-      gridVal += step;
+    // net (average) ripple phasor underneath, so coincident arms stay visible on top of it
+    const zero=C.mag(net)<1e-6;
+    if (!zero){
+      const t=P(net); arrow(g,cx,cy,t[0],t[1],{k:k,color:INK,width:5,head:12});
     }
-    // zero line, emphasized, if in range
-    if (yMin<0 && yMax>0){
-      svg.appendChild(el('line',{x1:PLOT_X0,y1:Y(0),x2:PLOT_X1,y2:Y(0),stroke:'#b7ada0','stroke-width':1.2}));
+    // arms that coincide exactly are drawn once and labelled together
+    const groups=[];
+    an.arms.forEach((a,i)=>{
+      const hit=groups.find(gr=>C.mag(C.sub(gr.z,a))<1e-6);
+      if (hit) hit.idx.push(i); else groups.push({z:a,idx:[i]});
+    });
+    groups.forEach(gr=>{
+      const t=P(gr.z), col=COLORS[gr.idx[0]];
+      arrow(g,cx,cy,t[0],t[1],{k:k,color:col,width:2,head:7.5});
+      const a=Math.atan2(gr.z.im,gr.z.re);
+      const str=(gr.idx.length===n&&n>3)?('all '+n):gr.idx.map(i=>LETTERS[i]).join(',');
+      const fill=gr.idx.length>1?INK:TEXTC[gr.idx[0]];
+      if (str.length>3){
+        // a long shared label goes beside the arm rather than beyond its tip, where it would not fit
+        let ux=Math.sin(a), uy=Math.cos(a);
+        if (uy>0||(Math.abs(uy)<1e-9&&ux<0)){ ux=-ux; uy=-uy; }
+        items.push({x:cx+0.7*(t[0]-cx),y:cy+0.7*(t[1]-cy),ux:ux,uy:uy,str:str,fill:fill,size:11.5,d:5});
+      } else {
+        items.push({x:t[0],y:t[1],ux:Math.cos(a),uy:-Math.sin(a),str:str,fill:fill,size:11.5,d:5});
+      }
+    });
+    if (zero){
+      el('circle',{cx:cx,cy:cy,r:(5*k).toFixed(2),fill:'#fff',stroke:INK,'stroke-width':(2.2*k).toFixed(2)},g);
+      text(g,cx,198-8*k,'average = 0: no ripple',{k:k,size:10.5,weight:700,fill:INK});
+    } else {
+      text(g,cx,198-8*k,'black: average of the arms',{k:k,size:10,fill:MUTED});
     }
-    // vertical gridlines every 180 deg + x labels
-    for (let d=0; d<=DEG_MAX; d+=180){
-      const x = X(d);
-      svg.appendChild(el('line',{x1:x,y1:PLOT_Y0,x2:x,y2:PLOT_Y1,stroke:'#e4ddd2','stroke-width':1}));
-      const t = el('text',{x:x,y:PLOT_Y1+16,'font-size':10,'text-anchor':'middle',fill:'#6b6156','font-family':'Helvetica Neue,Arial,sans-serif'});
-      t.textContent = d+'\u00b0';
-      svg.appendChild(t);
-    }
-    // axis frame
-    svg.appendChild(el('rect',{x:PLOT_X0,y:PLOT_Y0,width:PLOT_X1-PLOT_X0,height:PLOT_Y1-PLOT_Y0,fill:'none',stroke:'#b7ada0','stroke-width':1}));
-
-    function poly(vals, color, width, dashed){
-      const pts = vals.map((v,i)=> X(series.degs[i]).toFixed(1)+','+Y(v).toFixed(1)).join(' ');
-      const attrs = {points:pts, fill:'none', stroke:color, 'stroke-width':width};
-      if (dashed) attrs['stroke-dasharray']='4,3';
-      svg.appendChild(el('polyline',attrs));
-    }
-    for (let k=0;k<series.n;k++){
-      poly(series.perPhase[k], phaseColor(k, series.n), 1.4, true);
-    }
-    poly(series.total, COLOR_TOTAL, 2.6, false);
+    placeLabels(g,items,{k:k,bounds:[2,2,198,198-18*k],obstacles:obs});
   }
 
   function render(){
-    const series = computeSeries();
-    drawPlot(series);
+    const an=analytic(state), n=state.n;
+    const rippling=drawPlot(an);
+    drawStar(an);
 
-    const avg = series.total.reduce((a,b)=>a+b,0)/series.total.length;
-    const ripple = Math.max(...series.total) - Math.min(...series.total);
-    document.getElementById('out_avg').textContent = fmtW(avg);
-    document.getElementById('out_ripple').textContent = fmtW(ripple);
-    document.getElementById('lbl_avg_n').innerHTML = state.nPhases+'\u03c6';
-    document.getElementById('lbl_ripple_n').innerHTML = state.nPhases+'\u03c6';
+    $('out_avg').textContent=fmtW(an.avg);
+    $('out_ripple').textContent=rippling?fmtW(an.ripple):'0 W';
 
-    const isUnbalanced = Math.abs(state.scaleA-1)>=0.005 || Math.abs(state.shiftA)>=0.5;
-    const wouldCancelIfBalanced = predictsConstant(state.nPhases, state.spacing);
-    const actuallyConstant = ripple < Math.max(1, avg*1e-6);
+    const what=n===1?'1 phase':(n+' phases, '+fmtSpacing(state.spacing)+' apart');
+    $('plotSub').textContent=what+' — total power '+(rippling?'ripples':'is constant');
 
-    document.getElementById('plotSub').textContent = actuallyConstant
-      ? `n=${state.nPhases}, ${state.spacing}\u00b0 apart \u2014 TOTAL POWER IS CONSTANT`
-      : `n=${state.nPhases}, ${state.spacing}\u00b0 apart \u2014 TOTAL POWER RIPPLES`;
+    let leg='';
+    for (let i=0;i<n;i++) leg+='<span><span class="sw" style="border-top-color:'+COLORS[i]+'"></span>'+LETTERS[i]+'</span>';
+    leg+='<span><span class="sw total"></span>total</span>';
+    if (rippling) leg+='<span><span class="sw avg" style="border-top-color:'+AMBER+'"></span>average</span>';
+    $('legendRow').innerHTML=leg;
 
-    const noteBox = document.getElementById('noteBox');
-    if (actuallyConstant){
-      noteBox.innerHTML = `<strong>Constant:</strong> with n=${state.nPhases} phases spaced ${state.spacing}\u00b0 apart ` +
-        `(and balanced), the n double-frequency ripples cancel exactly, leaving P = n|V||I|cos\u03c6, constant.`;
-    } else if (isUnbalanced && wouldCancelIfBalanced){
-      noteBox.innerHTML = `<strong>Unbalanced:</strong> n=${state.nPhases} at ${state.spacing}\u00b0 apart would ` +
-        `cancel perfectly if balanced \u2014 but phase 1 no longer matches the rest, so the ripples no longer cancel.`;
+    const unbalanced=Math.abs(state.scaleA-1)>=0.005||Math.abs(state.shiftA)>=0.5;
+    const would=cancels(n,state.spacing);
+    const box=$('noteBox');
+    if (!rippling){
+      box.innerHTML='<strong>Constant.</strong> The '+n+' ripple phasors point evenly round the circle, so they add to zero. '+
+        'What is left is P = n|V||I|cos φ = '+fmtW(an.avg)+' at every instant.';
+    } else if (n===1){
+      box.innerHTML='<strong>Single phase.</strong> There is only one ripple phasor and nothing to cancel it, so the power swings '+
+        'by '+fmtW(an.ripple)+' at twice the line frequency.';
+    } else if (unbalanced&&would){
+      box.innerHTML='<strong>Unbalanced.</strong> '+n+' phases at '+fmtSpacing(state.spacing)+' would cancel exactly if balanced, '+
+        'but phase a no longer matches the others, so its ripple phasor is the wrong length or angle and a net ripple is left over.';
+    } else if (n===2&&Math.abs(state.spacing-180)<1e-9){
+      box.innerHTML='<strong>Ripples.</strong> Two phases 180° apart have ripple phasors 360° apart, which is the same direction, '+
+        'so they reinforce instead of cancelling. Try 90°: that is the two-phase system that does work.';
     } else {
-      noteBox.innerHTML = `<strong>Ripples:</strong> with n=${state.nPhases} phases spaced ${state.spacing}\u00b0 apart, ` +
-        `the double-frequency terms don't cancel \u2014 try spacing = 360\u00b0/n (or any n\u00d7spacing that's a ` +
-        `multiple of 180\u00b0, while spacing itself isn't 0\u00b0 or 180\u00b0).`;
+      box.innerHTML='<strong>Ripples.</strong> The ripple phasors do not add to zero. They cancel when n × spacing is a multiple '+
+        'of 180° and the spacing itself is not 0° or 180°. The simplest choice is spacing = 360°/n with n ≥ 3.';
     }
   }
 
-  function bindSlider(sliderId, valId, key, suffix, decimals){
-    const slider = document.getElementById(sliderId);
-    const valEl = document.getElementById(valId);
-    slider.addEventListener('input', ()=>{
-      const v = parseFloat(slider.value);
-      state[key] = v;
-      valEl.textContent = (decimals!==undefined ? v.toFixed(decimals) : v) + suffix;
-      render();
-    });
+  // ---------- controls ----------
+  function sync(setSliders){
+    if (setSliders) ['n','V','I','phi','scaleA','shiftA'].forEach(key=>{ $('s_'+key).value=state[key]; });
+    if (setSliders) $('s_spacing').value=Math.round(state.spacing);
+    $('s_spacing').disabled=(state.n===1);
+    $('v_n').textContent=state.n;
+    $('v_spacing').textContent=state.n===1?'—':fmtSpacing(state.spacing);
+    $('v_V').textContent=num(state.V,0)+' V';
+    $('v_I').textContent=num(state.I,0)+' A';
+    $('v_phi').textContent=num(state.phi,0)+'°';
+    $('v_scaleA').textContent=num(state.scaleA,2)+'×';
+    $('v_shiftA').textContent=num(state.shiftA,0)+'°';
   }
-  bindSlider('s_V','v_V','V',' V',0);
-  bindSlider('s_I','v_I','I',' A',0);
-  bindSlider('s_phi','v_phi','phi','\u00b0',0);
-  bindSlider('s_scaleA','v_scaleA','scaleA','\u00d7',2);
-  bindSlider('s_shiftA','v_shiftA','shiftA','\u00b0',0);
-  bindSlider('s_spacing','v_spacing','spacing','\u00b0',0);
-
-  // Number of phases: changing n auto-resets spacing to the "evenly spaced" default
-  // (360/n) as a sensible starting point, since that's what most students will want
-  // to explore first — spacing remains independently adjustable afterwards.
-  document.getElementById('s_n').addEventListener('input', ()=>{
-    const n = parseInt(document.getElementById('s_n').value, 10);
-    state.nPhases = n;
-    document.getElementById('v_n').textContent = n;
-    const evenSpacing = Math.round(360/n);
-    state.spacing = evenSpacing;
-    document.getElementById('s_spacing').value = evenSpacing;
-    document.getElementById('v_spacing').textContent = evenSpacing + '\u00b0';
-    render();
+  ['V','I','phi','scaleA','shiftA','spacing'].forEach(key=>{
+    $('s_'+key).addEventListener('input',e=>{ state[key]=parseFloat(e.target.value); sync(false); render(); });
   });
-
-  document.getElementById('btnBalance').addEventListener('click', ()=>{
-    state.scaleA = 1.0; state.shiftA = 0;
-    document.getElementById('s_scaleA').value = 1.0; document.getElementById('v_scaleA').textContent = '1.00\u00d7';
-    document.getElementById('s_shiftA').value = 0; document.getElementById('v_shiftA').textContent = '0\u00b0';
-    render();
+  // Changing n starts from the evenly spaced set, 360/n, held exactly (51.43 deg for n = 7,
+  // not a rounded 51), so the cancellation is exact. The spacing stays adjustable afterwards.
+  $('s_n').addEventListener('input',e=>{
+    state.n=parseInt(e.target.value,10);
+    state.spacing=state.n===1?0:360/state.n;
+    sync(true); render();
   });
+  function balanceA(){ state.scaleA=1; state.shiftA=0; }
+  function system(n,spacing){ return ()=>{ state.n=n; state.spacing=spacing; balanceA(); sync(true); render(); }; }
+  $('pre1').addEventListener('click',system(1,0));
+  $('pre2s').addEventListener('click',system(2,180));
+  $('pre2q').addEventListener('click',system(2,90));
+  $('pre3').addEventListener('click',system(3,120));
+  $('btnBalance').addEventListener('click',()=>{ balanceA(); sync(true); render(); });
+  $('btnReset').addEventListener('click',()=>{ Object.assign(state,DEF); sync(true); render(); });
 
-  document.getElementById('btnReset').addEventListener('click', ()=>{
-    state.nPhases=3; state.spacing=120; state.V=230; state.I=20; state.phi=30; state.scaleA=1.0; state.shiftA=0;
-    document.getElementById('s_n').value=3; document.getElementById('v_n').textContent='3';
-    document.getElementById('s_spacing').value=120; document.getElementById('v_spacing').textContent='120\u00b0';
-    document.getElementById('s_V').value=230; document.getElementById('v_V').textContent='230 V';
-    document.getElementById('s_I').value=20; document.getElementById('v_I').textContent='20 A';
-    document.getElementById('s_phi').value=30; document.getElementById('v_phi').textContent='30\u00b0';
-    document.getElementById('s_scaleA').value=1.0; document.getElementById('v_scaleA').textContent='1.00\u00d7';
-    document.getElementById('s_shiftA').value=0; document.getElementById('v_shiftA').textContent='0\u00b0';
-    render();
-  });
-
-  render();
+  onResize(render);
+  sync(true); render();
 })();
+
 </script>
 </body>
 </html>
