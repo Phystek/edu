@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Worked Example: Reactive Power in a Delta-Connected Load — ELEC2005</title>
+<style>
+:root{
+  --ink:#1a1512; --paper:#faf7f2; --panel:#ffffff; --maroon:#7a1730;
+  --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a; --amber:#c98a2c; --amber-text:#96640f;
+  --serif:"Iowan Old Style","Georgia",serif;
+  --sans:"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+body{margin:0;background:#e6e6e4;color:var(--ink);font-family:var(--sans);}
+.wrap{max-width:960px;margin:0 auto;padding:24px 20px 36px;}
+header.top{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:6px 16px;
+  border-bottom:1px solid var(--grid);padding-bottom:12px;margin-bottom:14px;}
+.eyebrow{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin:0 0 4px;}
+h1{font-family:var(--serif);font-size:26px;letter-spacing:-0.01em;line-height:1.15;margin:0;font-weight:700;}
+.tag{font-size:12px;color:var(--muted);white-space:nowrap;}
+.intro{font-size:14px;line-height:1.5;max-width:800px;margin:0 0 14px;}
+.note-box{font-size:12px;line-height:1.5;color:var(--muted);padding:10px 12px;background:var(--paper);
+  border:1px solid var(--grid);border-radius:4px;}
+.note-box strong{color:var(--ink);}
+.note-box .ok{color:#2f7d4f;font-weight:700;}
+details.note-box{margin:0 0 14px;max-width:800px;}
+details.note-box summary{cursor:pointer;font-weight:700;color:var(--ink);}
+details.note-box p{margin:6px 0 0;}
+
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start;}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0;}
+.panel{background:var(--panel);border:1px solid var(--grid);border-radius:4px;padding:14px 16px;min-width:0;}
+.panel h2{font-family:var(--serif);font-size:15px;letter-spacing:-0.01em;margin:0 0 2px;font-weight:700;}
+.sub{font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--maroon);margin:0 0 10px;font-weight:700;}
+.nt{text-transform:none;letter-spacing:0;}
+svg{display:block;width:100%;height:auto;margin:0 auto;}
+svg text{user-select:none;-webkit-user-select:none;}
+.cap{font-size:11.5px;line-height:1.35;color:var(--muted);text-align:center;margin-top:4px;}
+.cap b{color:var(--ink);}
+.num{font-variant-numeric:tabular-nums;}
+
+.seg{display:flex;border:1px solid var(--grid);border-radius:4px;overflow:hidden;}
+.seg button{flex:1;padding:8px 6px;text-align:center;font-size:12px;font-weight:700;line-height:1.2;background:var(--paper);
+  color:var(--muted);cursor:pointer;border:none;border-left:1px solid var(--grid);font-family:inherit;}
+.seg button:first-child{border-left:none;}
+.seg button small{display:block;font-weight:400;font-size:10.5px;margin-top:1px;}
+.seg button[aria-pressed="true"]{background:var(--maroon);color:#fff;}
+.seg.small button{padding:6px 4px;font-size:11px;}
+.ctl-label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin:0 0 5px;}
+.ctl-block{margin-bottom:12px;}
+
+.group{border-top:1px solid var(--grid);padding-top:10px;margin-top:10px;}
+.group-label{font-size:12px;font-weight:700;margin-bottom:6px;}
+.group-note{font-size:11px;color:var(--muted);line-height:1.4;margin:-2px 0 6px;}
+.slider-row{margin-bottom:8px;}
+.slider-row label{display:flex;justify-content:space-between;gap:8px;font-size:12px;margin-bottom:2px;}
+.slider-row .val{font-weight:700;color:var(--maroon);font-variant-numeric:tabular-nums;white-space:nowrap;}
+input[type=range]{width:100%;margin:0;accent-color:var(--maroon);display:block;}
+input[type=range]:disabled{opacity:0.45;}
+.minmax{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:1px;}
+.btnrow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.btn{flex:1 1 0;min-width:104px;padding:8px 8px;font-size:11.5px;font-weight:700;border-radius:4px;border:1px solid var(--ink);
+  background:transparent;color:var(--ink);cursor:pointer;font-family:inherit;line-height:1.2;}
+.btn small{display:block;font-weight:400;font-size:10px;margin-top:1px;}
+.btn.wide{flex:1 1 100%;}
+.btn.half{flex:1 1 40%;}
+.btn.quiet{border-color:var(--grid);background:var(--paper);}
+@media (hover:hover){.btn:hover{background:var(--ink);color:var(--paper);border-color:var(--ink);}}
+.btn:active{background:var(--ink);color:var(--paper);}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
+
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.stat{background:var(--paper);border:1px solid var(--grid);border-radius:4px;padding:8px 6px;text-align:center;min-width:0;}
+.stat .lbl{font-size:9.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+.stat .v{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.stat .v2{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:1px;white-space:nowrap;}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+.legend{display:flex;gap:4px 14px;flex-wrap:wrap;justify-content:center;margin-top:6px;font-size:11px;color:var(--muted);}
+.sw{display:inline-block;width:18px;height:0;border-top:2px solid var(--ink);margin-right:5px;vertical-align:middle;}
+.handle{cursor:grab;touch-action:none;}
+.handle.dragging{cursor:grabbing;}
+footer{text-align:center;color:var(--muted);font-size:11px;margin-top:22px;}
+
+/* Desktop: keep the picture in view while the (taller) control column scrolls. */
+@media (min-width:801px) and (min-height:760px){
+  .col.visual{position:sticky;top:12px;}
+}
+@media (max-width:800px){
+  .wrap{padding:16px 12px 28px;}
+  h1{font-size:22px;}
+  .intro{font-size:13.5px;}
+  .grid{grid-template-columns:minmax(0,1fr);gap:12px;}
+  .col{display:contents;}
+  .panel{padding:10px 12px;}
+}
+/* Phone: the picture stays pinned to the top of the screen while the sliders scroll beneath it. */
+@media (max-width:800px) and (min-height:620px){
+  .panel.sticky{position:sticky;top:0;z-index:5;border-radius:0 0 4px 4px;box-shadow:0 8px 12px -8px rgba(26,21,18,0.3);}
+}
+@media (pointer:coarse){
+  input[type=range]{height:30px;}
+  .btn,.seg button{min-height:40px;}
+}
+
+:root{--math:"STIX Two Text","Cambria","Times New Roman","Noto Serif",serif;}
+.grid.we{grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);}
+.q{font-family:var(--serif);font-size:15.5px;line-height:1.5;margin:6px 0 0;}
+.given{display:flex;flex-wrap:wrap;gap:4px 22px;align-items:center;justify-content:center;margin:2px 0 6px;}
+.given .lbl{font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--maroon);font-weight:700;}
+#cktCap{min-height:4.1em;color:var(--focus);font-size:12px;margin-top:2px;}
+#exNav{margin:0 0 14px;}
+#exNav[hidden]{display:none;}
+#cktCap.idle{color:var(--muted);}
+
+/* ---- circuit ---- */
+.ckt .w{fill:none;stroke:var(--ink);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transition:stroke .2s,stroke-width .2s;}
+.ckt .f{fill:var(--ink);transition:fill .2s;}
+.ckt .src{fill:#fff;}
+.ckt text{font-family:var(--math);font-style:italic;font-size:21px;fill:var(--ink);text-anchor:middle;dominant-baseline:central;}
+.ckt text.up{font-style:normal;}
+.ckt .cur{fill:var(--maroon);} .ckt .curw{stroke:var(--maroon);stroke-width:2;fill:none;}
+.ckt [data-p]{transition:opacity .25s;}
+.ckt.has-hl [data-p]:not(.on){opacity:0.26;}
+.ckt [data-p].on .w{stroke:var(--focus);stroke-width:3.4;}
+.ckt [data-p].on .f{fill:var(--focus);}
+.ckt [data-p="vab"]{opacity:0 !important;}
+.ckt [data-p="vab"].on{opacity:1 !important;}
+.ckt .vabw{fill:none;stroke:var(--focus);stroke-width:2;stroke-dasharray:6 5;stroke-linecap:round;}
+.ckt .vabt{fill:var(--focus);}
+
+/* ---- maths ---- */
+.math{font-family:var(--math);font-size:19px;line-height:1.35;color:var(--ink);font-variant-numeric:lining-nums;}
+.math .sg{display:inline-block;white-space:nowrap;margin-right:0.32em;vertical-align:middle;}
+.var{font-style:italic;white-space:nowrap;}
+.var sub{font-size:0.7em;font-style:italic;vertical-align:-0.28em;line-height:0;margin-left:0.03em;}
+.bar{display:inline-block;border-top:0.065em solid currentColor;line-height:0.92;padding-top:0.05em;}
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 0.12em;}
+.frac>span:first-child{border-bottom:0.065em solid currentColor;padding:0 0.3em 0.14em;}
+.frac>span:last-child{padding:0.12em 0.3em 0;}
+.sqrt{position:relative;display:inline-block;white-space:nowrap;padding-left:0.5em;}
+.sqrt>svg{position:absolute;left:0;top:0;width:0.5em;height:100%;margin:0;display:block;overflow:visible;}
+.sqrt>svg path{fill:none;stroke:currentColor;stroke-width:1.5;stroke-linejoin:miter;vector-effect:non-scaling-stroke;}
+.sqrt>span{display:inline-block;border-top:1.5px solid currentColor;padding:0.04em 0.1em 0 0.06em;line-height:1.08;}
+svg.ang{display:inline-block;width:0.62em;height:0.62em;margin:0 0.1em 0 0.16em;vertical-align:-0.02em;overflow:visible;}
+svg.ang path{fill:none;stroke:currentColor;stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round;}
+.unit{font-style:normal;}
+.fn{font-style:normal;}
+.result{display:inline-block;border:1.5px solid var(--maroon);color:var(--maroon);font-weight:700;padding:1px 9px;border-radius:2px;}
+.tick{color:#2f7d4f;font-weight:700;margin-left:0.3em;}
+
+/* ---- working ---- */
+.working{display:flex;flex-direction:column;}
+.toolbar{order:-2;}
+.toolbar .btnrow{margin-top:0;align-items:stretch;}
+.btn.primary{background:var(--ink);color:var(--paper);flex:2 1 150px;font-size:12.5px;}
+@media (hover:hover){.btn.primary:hover{background:var(--maroon);border-color:var(--maroon);}}
+.btn:disabled{opacity:0.4;cursor:default;pointer-events:none;}
+.toolmeta{order:-1;display:flex;justify-content:space-between;align-items:center;gap:10px;margin:9px 0 6px;padding-bottom:11px;border-bottom:1px solid var(--grid);font-size:11.5px;color:var(--muted);}
+.switch{display:inline-flex;align-items:center;gap:7px;cursor:pointer;user-select:none;-webkit-user-select:none;}
+.switch input{accent-color:var(--maroon);width:15px;height:15px;margin:0;}
+.step{padding:12px 0 6px;border-top:1px solid var(--grid);}
+.step:first-of-type{border-top:none;padding-top:6px;}
+.step-n{display:block;font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin-bottom:5px;}
+.goal{font-family:var(--serif);font-size:16px;font-weight:700;letter-spacing:-0.01em;line-height:1.3;margin:0;}
+.item{scroll-margin-top:var(--stick,12px);scroll-margin-bottom:76px;}
+.line{display:flex;align-items:center;gap:8px;margin-top:8px;min-height:40px;}
+.line .math{flex:1 1 auto;min-width:0;}
+.math .lhs{min-width:2.05em;margin-right:0.2em;}
+.reveal{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;border:1px dashed #cdc3b4;
+  background:var(--paper);border-radius:4px;padding:9px 12px;font-family:var(--sans);font-size:13px;line-height:1.3;color:var(--muted);cursor:pointer;min-height:40px;}
+.reveal::after{content:"reveal";flex:none;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;font-weight:700;color:var(--maroon);}
+@media (hover:hover){.reveal:hover{border-color:var(--ink);border-style:solid;color:var(--ink);}}
+.reveal.next{border-color:var(--maroon);color:var(--ink);}
+.shown{animation:fadein .28s ease-out;}
+@keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+@media (prefers-reduced-motion:reduce){.shown{animation:none;} .ckt *{transition:none !important;}}
+.tip{font:inherit;color:inherit;background:none;border:none;border-bottom:1.5px dotted var(--maroon);padding:0 1px 1px;margin:0 -1px;cursor:help;
+  border-radius:2px 2px 0 0;-webkit-appearance:none;appearance:none;line-height:inherit;}
+@media (hover:hover){.tip:hover{background:#f6ecee;}}
+.tip[aria-expanded="true"],.why[aria-expanded="true"]{background:#f6ecee;}
+.why{flex:none;width:24px;height:24px;border-radius:50%;border:1px solid var(--grid);background:var(--paper);color:var(--maroon);font-family:var(--sans);
+  font-weight:700;font-size:12px;line-height:1;cursor:help;padding:0;}
+@media (hover:hover){.why:hover{border-color:var(--maroon);}}
+.nohelp .why{display:none;}
+.nohelp .tip{border-bottom-color:transparent;cursor:default;pointer-events:none;}
+.takeaway{margin-top:12px;font-size:13px;line-height:1.5;color:#5c4a12;background:#fbe9c6;border:1px solid #e0be6f;border-radius:4px;padding:10px 12px;}
+.takeaway strong{color:#3d3009;}
+
+#pop{position:absolute;z-index:30;width:max-content;max-width:min(320px,calc(100vw - 16px));background:#fff;border:1px solid var(--ink);border-radius:4px;
+  padding:10px 12px 11px;font-family:var(--sans);font-size:13px;line-height:1.5;color:var(--ink);box-shadow:0 8px 22px rgba(26,21,18,0.2);}
+#pop[hidden]{display:none;}
+#pop .eyebrow{font-size:9.5px;margin-bottom:3px;}
+#pop .math{font-size:15px;}
+
+/* ---- answer check ---- */
+.check-row{display:flex;gap:8px;align-items:center;margin-top:8px;}
+.check-row .math{font-size:18px;white-space:nowrap;}
+.check-row input{flex:1 1 60px;min-width:0;font:inherit;font-size:15px;font-variant-numeric:tabular-nums;padding:8px 10px;border:1px solid var(--ink);border-radius:4px;background:var(--paper);color:var(--ink);}
+.check-row .btn{flex:none;min-width:76px;}
+#fb{font-size:13px;line-height:1.5;margin-top:8px;min-height:1.5em;color:var(--muted);}
+#fb.good{color:#2f7d4f;} #fb.bad{color:#a3372c;} #fb.warn{color:#8a5a00;}
+#fb strong{font-weight:700;}
+.hintline{font-size:12px;color:var(--muted);line-height:1.45;margin:4px 0 0;}
+
+@media (max-width:800px){
+  .vis-inner{max-width:clamp(250px,calc((46vh - 40px) * 1.75),520px);margin:0 auto;}
+  .panel.sticky h2{display:none;}
+  .given{margin:0 0 2px;gap:2px 16px;}
+  .given .math{font-size:16px;}
+  .grid.we{grid-template-columns:minmax(0,1fr);}
+  #cktCap{min-height:4.05em;font-size:11.5px;margin-top:0;}
+  .toolmeta{margin-top:0;}
+  .toolbar .btnrow{flex-wrap:nowrap;gap:6px;}
+  .toolbar .btn{min-width:0;flex:1 1 auto;padding:8px 6px;}
+  .toolbar .btn.primary{flex:2.2 1 auto;}
+  .toolbar{order:99;position:sticky;bottom:0;margin:10px -12px -10px;padding:9px 12px;background:var(--panel);border-top:1px solid var(--grid);
+    box-shadow:0 -8px 12px -8px rgba(26,21,18,0.25);z-index:4;}
+  .math{font-size:18px;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow" id="exEyebrow"></p>
+      <h1 id="exTitle"></h1>
+    </div>
+    <div class="tag">ELEC2005 &middot; Week 9</div>
+  </header>
+
+  <p class="intro">Try the question on paper first. Then either check your final answer, or reveal the working one
+  line at a time. Each hidden line tells you what it does, so you can attempt it before you look. Terms with a dotted
+  underline and the <strong>?</strong> buttons explain more when you want it.</p>
+
+  <div class="seg" id="exNav" role="group" aria-label="Choose an example" hidden></div>
+
+  <div class="grid we">
+    <div class="col visual">
+      <div class="panel">
+        <h2>Question</h2>
+        <p class="q" id="exQuestion"></p>
+      </div>
+      <div class="panel sticky" id="cktPanel">
+        <h2>Circuit and given values</h2>
+        <div class="vis-inner">
+          <div class="given" id="exGiven"></div>
+          <svg id="ckt" class="ckt" viewBox="0 0 548 310" role="img" aria-label="Balanced star-connected three-phase source supplying a balanced star-connected load, with a neutral wire"></svg>
+        </div>
+        <p class="cap idle" id="cktCap"></p>
+      </div>
+      <div class="panel">
+        <h2>Check your answer</h2>
+        <p class="hintline" id="ansHint"></p>
+        <div class="check-row" id="checkRow" role="group" aria-label="Check your answer">
+          <label class="math" for="ans" id="ansLabel"></label>
+          <input id="ans" type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off" aria-describedby="fb" placeholder="your answer">
+          <span class="math" id="ansUnit"></span>
+          <button type="button" class="btn" id="btnCheck">Check</button>
+        </div>
+        <div id="fb" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <div class="col controls">
+      <div class="panel working" id="working">
+        <div class="toolbar">
+          <div class="btnrow">
+            <button type="button" class="btn primary" id="btnNext">Reveal next line</button>
+            <button type="button" class="btn" id="btnAll">Show all</button>
+            <button type="button" class="btn" id="btnReset">Start again</button>
+          </div>
+        </div>
+        <div class="toolmeta">
+          <span id="progress" aria-live="polite"></span>
+          <label class="switch"><input type="checkbox" id="helpToggle" checked> Show extra help</label>
+        </div>
+        <div id="steps"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>ELEC2005 &middot; Week 9 &mdash; for concept exploration, not assessment.</footer>
+</div>
+<div id="pop" role="tooltip" hidden></div>
+
+<script>
+(function(){
+'use strict';
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent){
+  const e=document.createElementNS(NS,tag);
+  if (attrs) for (const k in attrs) if (attrs[k]!==undefined&&attrs[k]!==null) e.setAttribute(k,attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+const $=id=>document.getElementById(id);
+
+// =====================================================================================
+// Maths markup: small helpers that return HTML. No external maths library is needed, so
+// the page stays a single self-contained file and every term can be made interactive.
+// =====================================================================================
+const ANG='<svg class="ang" viewBox="0 0 12 12" aria-hidden="true"><path d="M10.5 10.5H1.5L8.2 2.2"/></svg>';
+const M={
+  v:(s,sub,bar)=>'<span class="var">'+(bar?'<span class="bar">'+s+'</span>':s)+(sub?'<sub>'+sub+'</sub>':'')+'</span>',
+  ph:(mag,deg)=>'<span class="nw">'+mag+ANG+deg+'°</span>',
+  frac:(a,b)=>'<span class="frac"><span>'+a+'</span><span>'+b+'</span></span>',
+  sqrt:x=>'<span class="sqrt"><svg viewBox="0 0 10 20" preserveAspectRatio="none" aria-hidden="true"><path d="M0.6 12.5 L2.6 11.3 L5.6 19 L9.9 0.8"/></svg><span>'+x+'</span></span>',
+  tip:(id,html)=>'<button type="button" class="tip" data-tip="'+id+'">'+html+'</button>',
+  u:x=>'<span class="unit"> '+x+'</span>',
+  fn:x=>'<span class="fn">'+x+'</span>'
+};
+const Ean=M.v('E','an',true), Vab=M.v('V','ab',true), Ia=M.v('I','a',true), ZY=M.v('Z','Y');
+const P3=M.v('P','3ϕ'), VLN=M.v('V','LN'), VLL=M.v('V','LL'), Imag=M.v('I'), dmb='('+M.v('δ')+' − '+M.v('β')+')';
+const R3=M.sqrt('3');
+
+// =====================================================================================
+// Example data. To add another example, append an object to EXAMPLES with the same shape;
+// a selector appears automatically once there is more than one.
+//   steps[].lines[].segs  : pieces of one line of working (the line can wrap between pieces)
+//   steps[].lines[].prompt: what the student sees before revealing the line
+//   steps[].lines[].why   : optional explanation behind the "?" button
+//   steps[].hl            : which parts of the circuit light up for this step
+//   tips                  : explanations for the dotted-underlined terms
+// =====================================================================================
+const UPD='<span class="fn">Δ</span>';                 // upright capital delta in subscripts, as on the slides
+const Iab=M.v('I','ab',true), ZD=M.v('Z',UPD), Q3=M.v('Q','3ϕ'), ID=M.v('I',UPD);
+const EXAMPLES=[{
+  eyebrow:'Balanced Three-Phase Circuits · Worked Example',
+  title:'Reactive Power in a Delta-Connected Load',
+  question:'A balanced three-phase source supplies a balanced delta-connected (Δ) load, as shown. '+
+           'Find the <strong>total reactive power</strong> absorbed by the load, across all three phases.',
+  given:[Vab+' = '+M.ph('169.7','120')+M.u('V'), ZD+' = '+M.ph('15.6','45')+M.u('Ω')],
+  diagram:'ySourceDeltaLoad',
+  idleCap:'Reveal a step and the part of the circuit it uses lights up here.',
+  idleCapOpen:'Point at a step, or tap it, to see which part of the circuit it uses.',
+  answer:{
+    label:Q3+' =', unit:'var', units:['vars?'], value:3916.024, tol:0.006,
+    hint:'Solved it on paper? Enter your total reactive power in var. To answer in kvar, type the unit as well.',
+    right:'<strong>Correct.</strong> The exact value is 3916 var, or 3.92 kvar. Reveal the working if you want to compare methods.',
+    wrong:[
+      {v:1305.34, msg:'That is one third of the answer. Either only one of the three impedances was counted, or the line voltage was divided by √3 as you would for a star load.'},
+      {v:5538.09, msg:'That is the apparent power, in VA. Reactive power also needs sin(δ − β).'},
+      {v:4796.13, msg:'Check the angle in the sine. It looks as if the 120° of the line voltage was used. It should be the angle between the voltage across an impedance and the current through it.'},
+      {v:5349.39, msg:'Check the angle in the sine. It looks as if the 75° of the current was used on its own. It should be the angle between the voltage across an impedance and the current through it.'},
+      {v:6782.75, msg:'Too large. The factor of 3 goes with the current inside the delta. If you use the line current, the factor is √3.'},
+      {v:2260.92, msg:'Too small. The factor of √3 goes with the line current. If you use the current inside the delta, the factor is 3.'},
+      {v:-3916.02, msg:'Right size, wrong sign. This load is inductive, so it absorbs reactive power and Q is positive.'}
+    ],
+    other:'Not yet. Reveal the working one line at a time and compare it with yours.'
+  },
+  steps:[
+    { label:'Step 1', ask:'What voltage is across each load impedance?',
+      goal:'Identify the voltage across each load impedance',
+      hl:['lineA','lineB','vab'],
+      cap:'The given voltage is measured between lines a and b. One impedance of the delta is connected between exactly those two lines.',
+      lines:[
+        { prompt:'Write down the voltage across the impedance between A and B',
+          segs:[Vab,'= '+M.tip('direct',M.ph('169.7','120')+M.u('V'))],
+          why:'Before you can find a current you need the voltage across one impedance. The question gives the voltage between lines a and b, and one impedance of the delta is connected between exactly those two lines.' }
+      ]},
+    { label:'Step 2', ask:'What current flows in that impedance?',
+      goal:'Find the load current in one impedance of the delta',
+      hl:['lineA','lineB','vab','zAB','iab'],
+      cap:'One impedance on its own: the one between A and B, with the line voltage across it and its own current through it.',
+      lines:[
+        { prompt:'Apply Ohm’s law to the impedance between A and B',
+          segs:[M.tip('loadcur',Iab),'= '+M.tip('ohm',M.frac(Vab,ZD))],
+          why:'In a balanced load you only ever need one impedance. Find the current in it, and the other two currents are the same size, 120° apart.' },
+        { prompt:'Substitute the values', cont:true,
+          segs:['= '+M.frac(M.ph('169.7','120'),M.ph('15.6','45'))] },
+        { prompt:'Evaluate', cont:true,
+          segs:['= '+M.tip('divide',M.ph('10.88','75')+M.u('A'))] }
+      ]},
+    { label:'Step 3', ask:'How do you get from one impedance to the total reactive power?',
+      goal:'Find the total reactive power of the three phases',
+      hl:['zAB','zBC','zCA'],
+      cap:'Reactive power is absorbed in the three load impedances. They are identical, so each absorbs the same amount.',
+      lines:[
+        { prompt:'Write the formula for three-phase reactive power in a delta load',
+          segs:[Q3,'= '+M.tip('three','3')+' '+M.tip('vll',VLL)+' '+M.tip('idelta',ID)+' '+M.fn('sin')+M.tip('angle',dmb)],
+          why:'The reactive power of one impedance is its voltage magnitude, times its current magnitude, times the sine of the angle between them. The load is balanced, so the total is three times that.' },
+        { prompt:'Substitute the values', cont:true,
+          segs:['= 3 (169.7)(10.88) '+M.fn('sin')+M.tip('anglenum','(120° − 75°)')],
+          why:'Only magnitudes go in front of the sine. The angles appear only inside it.' },
+        { prompt:'Evaluate', cont:true,
+          segs:['≈ '+M.tip('round','<span class="result">3.92'+M.u('kvar')+'</span>')] }
+      ]},
+    { label:'Check', ask:'Can you confirm the answer using the line current?',
+      goal:'Check the result using the line current',
+      hl:['lineA','lineB','lineC','ia','ib','ic'],
+      cap:'The same reactive power written with quantities you could measure on the lines: the line-to-line voltage and the line current.',
+      lines:[
+        { prompt:'Find the magnitude of the line current',
+          segs:[Imag,'= '+M.tip('root3i',R3+' '+ID),'= '+R3+' (10.88)','= 18.84'+M.u('A')],
+          why:'Line quantities are the ones you can measure from outside the load, so the line-current form of the formula is the one used most in practice.' },
+        { prompt:'Write the same reactive power using the line current',
+          segs:[Q3,'= '+R3+' '+VLL+' '+M.tip('iline',Imag)+' '+M.fn('sin')+dmb] },
+        { prompt:'Substitute and evaluate', cont:true,
+          segs:['= '+R3+' (169.7)(18.84) '+M.fn('sin')+' 45°','≈ 3.92'+M.u('kvar')+'<span class="tick">✓</span>'] }
+      ],
+      takeaway:'<strong>Watch the voltage and the angle.</strong> Each impedance of a delta load has the full line-to-line voltage across it, so there is no √3 to remove. The 45° inside the sine is the angle of the load impedance, (δ − β). The 120° of the line voltage cancels out.'
+    }
+  ],
+  tips:{
+    direct:'In a delta load each impedance is connected directly between two lines, so it has the full line-to-line voltage across it. Nothing needs converting. For a star load you would first have to divide by √3 and take 30° off the angle.',
+    loadcur:'This is the current through the impedance connected between A and B, inside the delta. It is not the line current in line a. In a delta load each line feeds two impedances, so the two currents are different.',
+    ohm:'Ohm’s law for a single impedance: the voltage across it divided by the impedance. The voltage across this one is the given line voltage.',
+    divide:'169.7 ÷ 15.6 = 10.88, and 120° − 45° = 75°. The current lags the voltage across the impedance by 45°, which is the angle of the impedance.',
+    three:'The three impedances are identical and each has the same size of voltage across it, so each absorbs the same reactive power. The total is three times that of one impedance.',
+    vll:'The magnitude of the line-to-line voltage. In a delta load this is the voltage across each impedance: 169.7 V.',
+    idelta:'The magnitude of the current in each impedance of the delta, from Step 2: 10.88 A.',
+    angle:'δ is the angle of the voltage across an impedance and β is the angle of the current through that same impedance. Their difference is always the angle of the impedance.',
+    anglenum:'δ = 120° is the angle of the voltage from Step 1. β = 75° is the angle of the current from Step 2. So δ − β = 45°, the same as the angle of the impedance.',
+    round:'With full precision the answer is 3916 var. It is positive because an inductive load absorbs reactive power. The impedance angle is 45°, where sine and cosine are equal, so the active power happens to be the same number in watts.',
+    root3i:'For a balanced delta load, each line current is √3 times as large as the current in one impedance, and lags it by 30°. Line a feeds two impedances, so its current is the difference of two load currents.',
+    iline:'Here I is the magnitude of the line current, 18.84 A. It is not the current inside the delta.'
+  }
+}];
+
+// =====================================================================================
+// Circuit diagrams. Parts carry data-p names so a step can highlight them.
+// =====================================================================================
+const DIAGRAMS={
+  ySourceYLoad:function(svg){
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    svg.setAttribute('viewBox','0 0 548 310');
+    svg.setAttribute('aria-label','Balanced star-connected three-phase source supplying a balanced star-connected load, with a neutral wire');
+    const U=40, X0=-0.75, YT=7.45;                       // 40 px per drawing unit
+    const px=p=>[(p[0]-X0)*U,(YT-p[1])*U];
+    const unit=a=>[Math.cos(a*Math.PI/180),Math.sin(a*Math.PI/180)];
+    const add=(p,u,s)=>[p[0]+u[0]*s,p[1]+u[1]*s];
+    const perp=u=>[-u[1],u[0]];
+    const part=name=>el('g',{'data-p':name},svg);
+    const wire=(g,pts)=>el('polyline',{'class':'w',points:pts.map(p=>px(p).map(v=>v.toFixed(2)).join(',')).join(' ')},g);
+    const dot=(g,p)=>{ const q=px(p); el('circle',{'class':'f',cx:q[0],cy:q[1],r:3.5},g); };
+    function label(g,p,main,sub,o){
+      o=o||{}; const q=px(p);
+      const t=el('text',{x:q[0].toFixed(1),y:q[1].toFixed(1)},g);
+      if (o.cls) t.setAttribute('class',o.cls);
+      let css='';                                   // inline style: the stylesheet would override plain attributes
+      if (o.size) css+='font-size:'+o.size+'px;';
+      if (o.anchor) css+='text-anchor:'+o.anchor+';';
+      if (css) t.setAttribute('style',css);
+      el('tspan',{},t).textContent=main;
+      if (sub){ const s=el('tspan',{'font-size':'0.7em',dy:'0.32em'},t); s.textContent=sub; }
+      return t;
+    }
+    // shared connection points: every wire end and every symbol end is one of these
+    const n=[2.2,3.0], N=[10.0,3.0], LEG=2.9;
+    const ua=unit(35), uc=unit(145), ub=unit(-90);
+    const elbA=add(n,ua,LEG), elbC=add(n,uc,LEG), elbB=add(n,ub,LEG);
+    const YA=elbA[1], YC=6.5, YB=elbB[1], XS=4.95, XL=7.3;
+    const endA=add(N,unit(145),LEG), endC=add(N,unit(35),LEG), endB=add(N,unit(-90),LEG);
+
+    // sources
+    function source(name,u,main,sub,off,side){
+      const g=part(name), R=0.40, c=add(n,u,1.5);
+      wire(g,[n,add(c,u,-R)]); wire(g,[add(c,u,R),add(n,u,LEG)]);
+      const q=px(c); el('circle',{'class':'w src',cx:q[0],cy:q[1],r:R*U},g);
+      let d='';
+      for (let i=0;i<=40;i++){ const t=-1+i/20, p=px([c[0]+0.23*t,c[1]+0.125*Math.sin(Math.PI*t)]); d+=(i?'L':'M')+p[0].toFixed(2)+','+p[1].toFixed(2); }
+      el('path',{'class':'w',d:d,style:'stroke-width:1.9'},g);
+      const pv=perp(u).map(v=>v*side);
+      label(g,add(add(c,u,0.74),pv,0.36),'+',null,{cls:'up',size:18});
+      label(g,add(add(c,u,-0.70),pv,0.36),'−',null,{cls:'up',size:18});
+      label(g,[c[0]+off[0],c[1]+off[1]],main,sub);
+    }
+    source('srcA',ua,'E','an',[0.98,-0.30],1);
+    source('srcC',uc,'E','cn',[-0.62,-0.80],1);
+    source('srcB',ub,'E','bn',[0.98,0.0],-1);
+
+    // lines, terminals and current arrows
+    function line(name,pts,y,lo,up){
+      const g=part(name); wire(g,pts); dot(g,[XS,y]); dot(g,[XL,y]);
+      label(g,[XS,y+0.42],lo); label(g,[XL,y+0.42],up,null,{cls:'up',size:20});
+    }
+    line('lineA',[elbA,[XS,YA],[XL,YA],endA],YA,'a','A');
+    line('lineC',[elbC,[elbC[0],YC],[XS,YC],[XL,YC],[endC[0],YC],endC],YC,'c','C');
+    line('lineB',[elbB,[XS,YB],[XL,YB],endB],YB,'b','B');
+    wire(part('neutral'),[n,N]);
+    const mid=(XS+XL)/2;
+    function current(name,y,sub,left){
+      const g=part(name), a=px([mid-0.72,y]), b=px([mid-0.10,y]);
+      const tail=left?b:a, tip=left?a:b, s=left?-1:1;
+      el('line',{'class':'curw',x1:tail[0],y1:tail[1],x2:tip[0]-s*7,y2:tip[1]},g);
+      el('polygon',{'class':'cur',points:[[tip[0],tip[1]],[tip[0]-s*11,tip[1]-4.6],[tip[0]-s*11,tip[1]+4.6]].map(p=>p.join(',')).join(' ')},g);
+      label(g,[mid+0.04,y],'I',sub,{cls:'cur',anchor:'start'});
+    }
+    current('ic',YC+0.42,'c'); current('ia',YA+0.42,'a'); current('ib',YB+0.42,'b'); current('in',N[1]+0.40,'n',true);
+
+    // load: ONE impedance symbol (resistor then inductor, inductor at the neutral point), used three times
+    function impedance(name,P,Q,labSide,flip){
+      const g=part(name), L=Math.hypot(Q[0]-P[0],Q[1]-P[1]), u=[(Q[0]-P[0])/L,(Q[1]-P[1])/L];
+      const v=perp(u).map(x=>x*(flip?-1:1));
+      const nz=4, pitch=0.17, amp=0.15, nb=3, rb=0.125, gap=0.14;
+      const sym=nz*pitch+gap+nb*2*rb, s0=(L-sym)/2;
+      const at=(s,h)=>[P[0]+u[0]*s+v[0]*h,P[1]+u[1]*s+v[1]*h];
+      const pts=[P,at(s0,0)];
+      for (let i=0;i<nz;i++) pts.push(at(s0+pitch*(i+0.5),i%2===0?amp:-amp));
+      let x=s0+nz*pitch; pts.push(at(x,0)); x+=gap; pts.push(at(x,0));
+      for (let i=0;i<nb;i++){ const cc=x+rb+2*rb*i; for (let k=1;k<=22;k++){ const t=Math.PI*(1-k/22); pts.push(at(cc+rb*Math.cos(t),rb*Math.sin(t))); } }
+      pts.push(Q); wire(g,pts);
+      label(g,at(s0+sym/2,labSide*0.66),'Z','Y');
+    }
+    impedance('zA',endA,N,1); impedance('zC',endC,N,1); impedance('zB',endB,N,1,true);
+
+    // where the given line voltage is measured (only shown when a step highlights it)
+    const gv=part('vab'), a0=px([XL+0.16,YA-0.30]), b0=px([XL+0.16,YB+0.30]), cq=px([XL+1.25,(YA+YB)/2]);
+    el('path',{'class':'vabw',d:'M'+a0.join(',')+' Q'+cq.join(',')+' '+b0.join(',')},gv);
+    const vl=px([XL+1.38,(YA+YB)/2-0.75]);
+    el('line',{x1:vl[0]-8,y1:vl[1]-13.5,x2:vl[0]+5.5,y2:vl[1]-13.5,stroke:'currentColor','stroke-width':1.5,style:'color:var(--focus)'},gv);
+    label(gv,[XL+1.38,(YA+YB)/2-0.75],'V','ab',{cls:'vabt'});
+    label(gv,[XL+0.88,YA-0.66],'+',null,{cls:'up vabt',size:17});
+    label(gv,[XL+0.88,YB+0.62],'−',null,{cls:'up vabt',size:17});
+
+    // neutral points (never dimmed)
+    const g0=el('g',{},svg); dot(g0,n); dot(g0,N);
+    label(g0,[n[0]+0.34,n[1]-0.38],'n',null,{size:20}); label(g0,[N[0]+0.44,N[1]-0.30],'N',null,{size:20});
+  },
+  ySourceDeltaLoad:function(svg){
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    svg.setAttribute('viewBox','0 0 608 310');
+    svg.setAttribute('aria-label','Balanced star-connected three-phase source supplying a balanced delta-connected load');
+    const U=40, X0=-0.75, YT=7.45;                       // 40 px per drawing unit
+    const px=p=>[(p[0]-X0)*U,(YT-p[1])*U];
+    const unit=a=>[Math.cos(a*Math.PI/180),Math.sin(a*Math.PI/180)];
+    const add=(p,u,s)=>[p[0]+u[0]*s,p[1]+u[1]*s];
+    const perp=u=>[-u[1],u[0]];
+    const part=name=>el('g',{'data-p':name},svg);
+    const wire=(g,pts)=>el('polyline',{'class':'w',points:pts.map(p=>px(p).map(v=>v.toFixed(2)).join(',')).join(' ')},g);
+    const dot=(g,p)=>{ const q=px(p); el('circle',{'class':'f',cx:q[0],cy:q[1],r:3.5},g); };
+    function label(g,p,main,sub,o){
+      o=o||{}; const q=px(p);
+      const t=el('text',{x:q[0].toFixed(1),y:q[1].toFixed(1)},g);
+      if (o.cls) t.setAttribute('class',o.cls);
+      let css='';                                   // inline style: the stylesheet would override plain attributes
+      if (o.size) css+='font-size:'+o.size+'px;';
+      if (o.anchor) css+='text-anchor:'+o.anchor+';';
+      if (css) t.setAttribute('style',css);
+      el('tspan',{},t).textContent=main;
+      if (sub){ const s=el('tspan',{'font-size':'0.7em',dy:'0.32em'},t); s.textContent=sub; }
+      return t;
+    }
+    // current arrow between two drawing-space points (works at any angle)
+    function flow(g,a,b){
+      const A=px(a), B=px(b), L=Math.hypot(B[0]-A[0],B[1]-A[1]), ux=(B[0]-A[0])/L, uy=(B[1]-A[1])/L;
+      el('line',{'class':'curw',x1:A[0].toFixed(2),y1:A[1].toFixed(2),x2:(B[0]-ux*7).toFixed(2),y2:(B[1]-uy*7).toFixed(2)},g);
+      el('polygon',{'class':'cur',points:[[B[0],B[1]],[B[0]-ux*11-uy*4.6,B[1]-uy*11+ux*4.6],[B[0]-ux*11+uy*4.6,B[1]-uy*11-ux*4.6]]
+        .map(p=>p[0].toFixed(2)+','+p[1].toFixed(2)).join(' ')},g);
+    }
+    // shared connection points: every wire end and every symbol end is one of these
+    const n=[2.2,3.0], LEG=2.9, SIDE=4.4;
+    const ua=unit(35), uc=unit(145), ub=unit(-90);
+    const elbA=add(n,ua,LEG), elbC=add(n,uc,LEG), elbB=add(n,ub,LEG);
+    const YA=elbA[1], YC=6.5, YB=elbB[1], XS=4.95;
+    const A=[8.6,YA], C=[A[0]+SIDE,YA], B=add(A,unit(-60),SIDE);     // equilateral: A top-left, C top-right, B bottom
+
+    // sources (same as the star-load diagram)
+    function source(name,u,main,sub,off,side){
+      const g=part(name), R=0.40, c=add(n,u,1.5);
+      wire(g,[n,add(c,u,-R)]); wire(g,[add(c,u,R),add(n,u,LEG)]);
+      const q=px(c); el('circle',{'class':'w src',cx:q[0],cy:q[1],r:R*U},g);
+      let d='';
+      for (let i=0;i<=40;i++){ const t=-1+i/20, p=px([c[0]+0.23*t,c[1]+0.125*Math.sin(Math.PI*t)]); d+=(i?'L':'M')+p[0].toFixed(2)+','+p[1].toFixed(2); }
+      el('path',{'class':'w',d:d,style:'stroke-width:1.9'},g);
+      const pv=perp(u).map(v=>v*side);
+      label(g,add(add(c,u,0.74),pv,0.36),'+',null,{cls:'up',size:18});
+      label(g,add(add(c,u,-0.70),pv,0.36),'−',null,{cls:'up',size:18});
+      label(g,[c[0]+off[0],c[1]+off[1]],main,sub);
+    }
+    source('srcA',ua,'E','an',[0.98,-0.30],1);
+    source('srcC',uc,'E','cn',[-0.62,-0.80],1);
+    source('srcB',ub,'E','bn',[0.98,0.0],-1);
+
+    // lines: a straight to A, c over the top to C, b along the bottom to B (no crossings)
+    function line(name,pts,y,lo){ const g=part(name); wire(g,pts); dot(g,[XS,y]); label(g,[XS,y+0.42],lo); }
+    line('lineA',[elbA,[XS,YA],A],YA,'a');
+    line('lineC',[elbC,[elbC[0],YC],[XS,YC],[C[0],YC],C],YC,'c');
+    line('lineB',[elbB,[XS,YB],[B[0],YB],B],YB,'b');
+    const xm=6.0;
+    function current(name,y,sub){ const g=part(name); flow(g,[xm-0.62,y],[xm,y]); label(g,[xm+0.14,y],'I',sub,{cls:'cur',anchor:'start'}); }
+    current('ic',YC+0.42,'c'); current('ia',YA+0.42,'a'); current('ib',YB+0.42,'b');
+
+    // load: ONE impedance symbol (resistor then inductor), used three times, each drawn in the direction of its current
+    function impedance(zName,iName,P,Q,sub,labOff){
+      const g=part(zName), L=Math.hypot(Q[0]-P[0],Q[1]-P[1]), u=[(Q[0]-P[0])/L,(Q[1]-P[1])/L];
+      const v=perp(u).map(x=>-x);                       // +v is the outside of the triangle for A->B, B->C, C->A
+      const nz=4, pitch=0.17, amp=0.15, nb=3, rb=0.125, gap=0.14;
+      const sym=nz*pitch+gap+nb*2*rb, s0=(L-sym)/2;
+      const at=(s,h)=>[P[0]+u[0]*s+v[0]*h,P[1]+u[1]*s+v[1]*h];
+      const pts=[P,at(s0,0)];
+      for (let i=0;i<nz;i++) pts.push(at(s0+pitch*(i+0.5),i%2===0?amp:-amp));
+      let x=s0+nz*pitch; pts.push(at(x,0)); x+=gap; pts.push(at(x,0));
+      for (let i=0;i<nb;i++){ const cc=x+rb+2*rb*i; for (let k=1;k<=22;k++){ const t=Math.PI*(1-k/22); pts.push(at(cc+rb*Math.cos(t),rb*Math.sin(t))); } }
+      pts.push(Q); wire(g,pts);
+      label(g,at(L/2,-0.62),'Z','Δ').lastChild.setAttribute('style','font-style:normal');   // impedance label inside the triangle
+      const gi=part(iName), c=at(L/2,0.52);              // load-current arrow just outside it
+      flow(gi,[c[0]-0.42*u[0],c[1]-0.42*u[1]],[c[0]+0.42*u[0],c[1]+0.42*u[1]]);
+      label(gi,[c[0]+labOff[0],c[1]+labOff[1]],'I',sub,{cls:'cur'});
+    }
+    const vAB=perp(unit(-60)).map(x=>-x), vBC=perp(unit(60)).map(x=>-x);
+    impedance('zAB','iab',A,B,'ab',[vAB[0]*0.62-0.05,vAB[1]*0.62]);
+    impedance('zBC','ibc',B,C,'bc',[vBC[0]*0.66+0.05,vBC[1]*0.66]);
+    impedance('zCA','ica',C,A,'ca',[0,0.46]);
+
+    // where the given line voltage is measured (only shown when a step highlights it)
+    const gv=part('vab'), xv=7.45, ym=(YA+YB)/2;
+    const s1=px([xv,YA-0.82]), s2=px([xv,ym+0.42]), s3=px([xv,ym-0.42]), s4=px([xv,YB+0.78]);
+    el('path',{'class':'vabw',d:'M'+s1.join(',')+' L'+s2.join(',')+' M'+s3.join(',')+' L'+s4.join(',')},gv);
+    const vl=px([xv,ym]);
+    el('line',{x1:vl[0]-8,y1:vl[1]-13.5,x2:vl[0]+5.5,y2:vl[1]-13.5,stroke:'currentColor','stroke-width':1.5,style:'color:var(--focus)'},gv);
+    label(gv,[xv,ym],'V','ab',{cls:'vabt'});
+    label(gv,[xv,YA-0.48],'+',null,{cls:'up vabt',size:17});
+    label(gv,[xv,YB+0.44],'−',null,{cls:'up vabt',size:17});
+
+    // junctions and their labels (never dimmed)
+    const g0=el('g',{},svg); dot(g0,n); dot(g0,A); dot(g0,B); dot(g0,C);
+    label(g0,[n[0]+0.34,n[1]-0.38],'n',null,{size:20});
+    label(g0,[A[0]-0.05,A[1]+0.44],'A',null,{cls:'up',size:20});
+    label(g0,[C[0]+0.40,C[1]-0.06],'C',null,{cls:'up',size:20});
+    label(g0,[B[0]+0.42,B[1]-0.22],'B',null,{cls:'up',size:20});
+  }
+};
+
+// =====================================================================================
+// Page behaviour
+// =====================================================================================
+const svg=$('ckt'), stepsEl=$('steps'), pop=$('pop'), working=$('working');
+const CAN_HOVER=window.matchMedia('(hover:hover)').matches;
+let ex=EXAMPLES[0], order=[], revealed=new Set(), lastStep=-1, hoverStep=-1;
+
+function highlight(){
+  const i=hoverStep>=0?hoverStep:lastStep, cap=$('cktCap');
+  const on=i>=0?ex.steps[i].hl:null;
+  svg.classList.toggle('has-hl',!!on);
+  svg.querySelectorAll('[data-p]').forEach(g=>g.classList.toggle('on',!!on&&on.indexOf(g.getAttribute('data-p'))>=0));
+  cap.classList.toggle('idle',!on);
+  cap.textContent=on?ex.steps[i].label+': '+ex.steps[i].cap:(revealed.size?ex.idleCapOpen:ex.idleCap);
+}
+
+function build(){
+  $('exEyebrow').textContent=ex.eyebrow; $('exTitle').textContent=ex.title;
+  $('exQuestion').innerHTML=ex.question;
+  $('exGiven').innerHTML='<span class="lbl">Given</span>'+ex.given.map(g=>'<span class="math">'+g+'</span>').join('');
+  $('ansLabel').innerHTML=ex.answer.label; $('ansUnit').innerHTML=M.u(ex.answer.unit); $('ansHint').textContent=ex.answer.hint;
+  DIAGRAMS[ex.diagram](svg);
+  order=[]; stepsEl.innerHTML='';
+  ex.steps.forEach((st,si)=>{
+    const sec=document.createElement('section'); sec.className='step'; sec.dataset.step=si;
+    sec.innerHTML='<span class="step-n">'+st.label+'</span>';
+    const goal=document.createElement('div'); goal.className='item'; goal.dataset.id=si+'g'; sec.appendChild(goal); order.push(si+'g');
+    st.lines.forEach((ln,li)=>{
+      const d=document.createElement('div'); d.className='item'; d.dataset.id=si+'l'+li; sec.appendChild(d); order.push(si+'l'+li);
+    });
+    if (st.takeaway){ const t=document.createElement('div'); t.className='item'; t.dataset.id=si+'t'; sec.appendChild(t); }
+    if (CAN_HOVER){                                   // pointing at a step previews its part of the circuit (mouse only)
+      sec.addEventListener('mouseenter',()=>{ if (revealed.has(si+'g')){ hoverStep=si; highlight(); } });
+      sec.addEventListener('mouseleave',()=>{ hoverStep=-1; highlight(); });
+    }
+    sec.addEventListener('focusin',()=>{ if (revealed.has(si+'g')){ lastStep=si; highlight(); } });
+    sec.addEventListener('click',()=>{ if (revealed.has(si+'g')){ lastStep=si; highlight(); } });
+    stepsEl.appendChild(sec);
+  });
+  revealed=new Set(); lastStep=-1; hoverStep=-1;
+  render(); highlight();
+}
+
+function parse(id){ const m=/^(\d+)([glt])(\d*)$/.exec(id); return {s:+m[1],kind:m[2],l:m[3]===''?-1:+m[3]}; }
+function nextId(){ for (let i=0;i<order.length;i++) if (!revealed.has(order[i])) return order[i]; return null; }
+
+// Draw every item in its current state (hidden prompt, or revealed content).
+function render(fresh){
+  const nxt=nextId();
+  stepsEl.querySelectorAll('.item').forEach(node=>{
+    const id=node.dataset.id, p=parse(id), st=ex.steps[p.s], shown=revealed.has(id);
+    const goalShown=revealed.has(p.s+'g');
+    let html='';
+    if (p.kind==='g'){
+      html=shown?'<p class="goal">'+st.goal+'</p>'
+                :'<button type="button" class="reveal'+(id===nxt?' next':'')+'" data-reveal="'+id+'">'+st.ask+'</button>';
+    } else if (p.kind==='l'){
+      const ln=st.lines[p.l];
+      if (!goalShown) html='';
+      else if (shown) html='<div class="line'+(ln.cont?' cont':'')+'"><div class="math">'+(ln.cont?['']:[]).concat(ln.segs).map((s,i)=>'<span class="sg'+(i===0?' lhs':'')+'">'+s+'</span>').join('')+'</div>'+
+        (ln.why?'<button type="button" class="why" data-why="'+id+'" aria-label="Why this line?">?</button>':'')+'</div>';
+      else html='<div class="line"><button type="button" class="reveal'+(id===nxt?' next':'')+'" data-reveal="'+id+'">'+ln.prompt+'</button></div>';
+    } else {
+      const all=st.lines.every((_,li)=>revealed.has(p.s+'l'+li));
+      html=all?'<div class="takeaway">'+st.takeaway+'</div>':'';
+    }
+    if (node._html!==html){
+      node.innerHTML=html; node._html=html;
+      node.classList.toggle('shown',fresh===id||(p.kind==='t'&&html!==''&&fresh!==undefined));
+    }
+  });
+  const total=order.length, done=order.filter(id=>revealed.has(id)).length;
+  $('progress').textContent=done===0?'Nothing revealed yet':(done===total?'All of the working is shown':done+' of '+total+' revealed');
+  $('btnNext').disabled=(done===total); $('btnAll').disabled=(done===total); $('btnReset').disabled=(done===0);
+  $('btnNext').textContent=done===0?'Reveal the first step':'Reveal next line';
+}
+
+function reveal(id,scroll){
+  if (!id||revealed.has(id)) return;
+  const p=parse(id);
+  revealed.add(p.s+'g'); revealed.add(id);          // revealing a line always shows its step's goal too
+  lastStep=p.s; hoverStep=-1; hidePop();
+  render(id); highlight();
+  if (scroll){
+    const node=stepsEl.querySelector('.item[data-id="'+id+'"]');
+    const nxt=nextId(), nn=nxt?stepsEl.querySelector('.item[data-id="'+nxt+'"]'):null;
+    const target=(nn&&nn.innerHTML)?nn:node;       // keep the next prompt in view as well
+    const smooth=!window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (target&&target.scrollIntoView) target.scrollIntoView({block:'nearest',behavior:smooth?'smooth':'auto'});
+  }
+}
+
+stepsEl.addEventListener('click',e=>{
+  const r=e.target.closest('[data-reveal]');
+  if (r){ reveal(r.dataset.reveal,true); return; }
+  const t=e.target.closest('.tip'); if (t){ togglePop(t,ex.tips[t.dataset.tip],'Explanation'); e.stopPropagation(); return; }
+  const w=e.target.closest('.why'); if (w){ const p=parse(w.dataset.why); togglePop(w,ex.steps[p.s].lines[p.l].why,'Why this line?'); e.stopPropagation(); }
+});
+$('btnNext').addEventListener('click',()=>reveal(nextId(),true));
+$('btnAll').addEventListener('click',()=>{ order.forEach(id=>revealed.add(id)); lastStep=-1; hidePop(); render('all'); highlight(); });
+$('btnReset').addEventListener('click',()=>{ revealed=new Set(); lastStep=-1; hoverStep=-1; hidePop(); render(); highlight();
+  $('ans').value=''; setFb('',''); window.scrollTo({top:0,behavior:'auto'}); });
+$('helpToggle').addEventListener('change',e=>{ working.classList.toggle('nohelp',!e.target.checked); hidePop(); });
+
+// ---------- explanations (pop-ups): hover or focus to peek, click or tap to pin ----------
+let popFor=null, pinned=false;
+function placePop(target){
+  const r=target.getBoundingClientRect(), pw=pop.offsetWidth, ph=pop.offsetHeight, vw=document.documentElement.clientWidth;
+  let left=r.left+r.width/2-pw/2; left=Math.max(8,Math.min(vw-pw-8,left));
+  const stick=document.querySelector('.panel.sticky'), sr=stick?stick.getBoundingClientRect():null;
+  const topLimit=(sr&&getComputedStyle(stick).position==='sticky'&&sr.top<=0)?sr.bottom:0;
+  let top=r.bottom+8;
+  if (top+ph>window.innerHeight-8 && r.top-8-ph>topLimit) top=r.top-8-ph;
+  pop.style.left=(left+window.scrollX)+'px'; pop.style.top=(top+window.scrollY)+'px';
+}
+function showPop(target,html,title,pin){
+  if (popFor&&popFor!==target) popFor.setAttribute('aria-expanded','false');
+  pop.innerHTML='<p class="eyebrow">'+title+'</p>'+html; pop.hidden=false; popFor=target; pinned=!!pin;
+  target.setAttribute('aria-expanded','true'); target.setAttribute('aria-describedby','pop');
+  placePop(target);
+}
+function hidePop(){
+  if (popFor){ popFor.setAttribute('aria-expanded','false'); popFor.removeAttribute('aria-describedby'); }
+  pop.hidden=true; popFor=null; pinned=false;
+}
+function togglePop(target,html,title){ if (popFor===target&&pinned) hidePop(); else showPop(target,html,title,true); }
+function helpTarget(e){ return e.target.closest?e.target.closest('.tip,.why'):null; }
+function helpContent(t){
+  if (t.classList.contains('tip')) return [ex.tips[t.dataset.tip],'Explanation'];
+  const p=parse(t.dataset.why); return [ex.steps[p.s].lines[p.l].why,'Why this line?'];
+}
+if (CAN_HOVER){
+  stepsEl.addEventListener('mouseover',e=>{ const t=helpTarget(e); if (t&&!(pinned&&popFor)){ const c=helpContent(t); showPop(t,c[0],c[1],false); } });
+  stepsEl.addEventListener('mouseout',e=>{ const t=helpTarget(e); if (t&&!pinned&&(!e.relatedTarget||!t.contains(e.relatedTarget))) hidePop(); });
+}
+stepsEl.addEventListener('focusin',e=>{ const t=helpTarget(e); if (t&&!pinned&&t.matches(':focus-visible')){ const c=helpContent(t); showPop(t,c[0],c[1],false); } });
+stepsEl.addEventListener('focusout',e=>{ if (helpTarget(e)&&!pinned) hidePop(); });
+document.addEventListener('click',e=>{ if (!pop.hidden&&!pop.contains(e.target)&&!helpTarget(e)) hidePop(); });
+document.addEventListener('keydown',e=>{ if (e.key==='Escape') hidePop(); });
+window.addEventListener('resize',()=>{ if (popFor) placePop(popFor); setStick(); });
+
+// ---------- answer check ----------
+function setFb(cls,html){ const fb=$('fb'); fb.className=cls; fb.innerHTML=html; }
+// A plain button and an Enter key handler, not a form: a form submit is blocked outright when the
+// page is shown inside a sandboxed frame (in-app previews, some learning-management-system embeds).
+function checkAnswer(){
+  const a=ex.answer;
+  const raw=$('ans').value.trim().replace(/,/g,'.').replace(/[−–]/g,'-');
+  // a number, an optional kilo prefix, and optionally the unit this example uses
+  const m=new RegExp('^(-?\\d*\\.?\\d+)\\s*(k?)\\s*(?:'+a.units.join('|')+')?$','i').exec(raw);
+  if (!m){ setFb('bad','Enter a number, for example 250 or 250.5.'); return; }
+  const num=parseFloat(m[1]), val=num*(m[2]?1000:1);
+  const near=(v,x,t)=>Math.abs(v-x)<=Math.abs(x)*t;
+  const slip=v=>{ for (let i=0;i<a.wrong.length;i++) if (near(v,a.wrong[i].v,0.006)) return a.wrong[i].msg; return null; };
+  if (near(val,a.value,a.tol)){ setFb('good',a.right); return; }
+  let msg=slip(val);
+  if (msg){ setFb('bad','<strong>Not quite.</strong> '+msg); return; }
+  // A bare number that is only right as kilo-units: the value is fine but the units are not the ones
+  // shown beside the box, so say so instead of passing it silently.
+  if (!m[2] && Math.abs(a.value)>=1000){
+    const shown=m[1].replace('-','−');
+    if (near(num*1000,a.value,a.tol)){
+      setFb('warn','<strong>Right value, but check the units.</strong> '+shown+' is the answer in k'+a.unit+', and this box is in '+a.unit+
+        '. Enter it in '+a.unit+', or type the unit as well: '+shown+' k'+a.unit+'.'); return; }
+    msg=slip(num*1000);
+    if (msg){ setFb('bad','<strong>Not quite.</strong> (Reading your answer as '+shown+' k'+a.unit+'.) '+msg); return; }
+  }
+  setFb('bad',a.other);
+}
+$('btnCheck').addEventListener('click',checkAnswer);
+$('ans').addEventListener('keydown',e=>{ if (e.key==='Enter'){ e.preventDefault(); checkAnswer(); } });
+
+// Height of the pinned circuit panel on a phone, so a newly revealed line is not scrolled underneath it.
+function setStick(){
+  const s=document.querySelector('.panel.sticky');
+  const on=s&&getComputedStyle(s).position==='sticky'&&getComputedStyle(s).top==='0px';
+  document.documentElement.style.setProperty('--stick',(on?s.offsetHeight+10:12)+'px');
+}
+
+// Example selector: only appears when the page holds more than one example.
+const nav=$('exNav');
+if (EXAMPLES.length>1){
+  nav.hidden=false;
+  EXAMPLES.forEach((e,i)=>{
+    const b=document.createElement('button'); b.type='button'; b.textContent=e.navLabel||e.title; b.setAttribute('aria-pressed',i===0?'true':'false');
+    b.addEventListener('click',()=>{ ex=EXAMPLES[i]; nav.querySelectorAll('button').forEach((x,j)=>x.setAttribute('aria-pressed',j===i?'true':'false'));
+      hidePop(); $('ans').value=''; setFb('',''); build(); setStick(); });
+    nav.appendChild(b);
+  });
+}
+build(); setStick();
+if (document.fonts&&document.fonts.ready) document.fonts.ready.then(setStick);
+})();
+
+</script>
+</body>
+</html>
