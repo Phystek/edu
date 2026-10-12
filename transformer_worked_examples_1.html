@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Practice Problem: Ideal Transformer — ELEC2005</title>
+<style>
+:root{
+  --ink:#1a1512; --paper:#faf7f2; --panel:#ffffff; --maroon:#7a1730;
+  --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a; --amber:#c98a2c; --amber-text:#96640f;
+  --serif:"Iowan Old Style","Georgia",serif;
+  --sans:"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+body{margin:0;background:#e6e6e4;color:var(--ink);font-family:var(--sans);}
+.wrap{max-width:960px;margin:0 auto;padding:24px 20px 36px;}
+header.top{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:6px 16px;
+  border-bottom:1px solid var(--grid);padding-bottom:12px;margin-bottom:14px;}
+.eyebrow{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin:0 0 4px;}
+h1{font-family:var(--serif);font-size:26px;letter-spacing:-0.01em;line-height:1.15;margin:0;font-weight:700;}
+.tag{font-size:12px;color:var(--muted);white-space:nowrap;}
+.intro{font-size:14px;line-height:1.5;max-width:800px;margin:0 0 14px;}
+.note-box{font-size:12px;line-height:1.5;color:var(--muted);padding:10px 12px;background:var(--paper);
+  border:1px solid var(--grid);border-radius:4px;}
+.note-box strong{color:var(--ink);}
+.note-box .ok{color:#2f7d4f;font-weight:700;}
+details.note-box{margin:0 0 14px;max-width:800px;}
+details.note-box summary{cursor:pointer;font-weight:700;color:var(--ink);}
+details.note-box p{margin:6px 0 0;}
+
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start;}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0;}
+.panel{background:var(--panel);border:1px solid var(--grid);border-radius:4px;padding:14px 16px;min-width:0;}
+.panel h2{font-family:var(--serif);font-size:15px;letter-spacing:-0.01em;margin:0 0 2px;font-weight:700;}
+.sub{font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--maroon);margin:0 0 10px;font-weight:700;}
+.nt{text-transform:none;letter-spacing:0;}
+svg{display:block;width:100%;height:auto;margin:0 auto;}
+svg text{user-select:none;-webkit-user-select:none;}
+.cap{font-size:11.5px;line-height:1.35;color:var(--muted);text-align:center;margin-top:4px;}
+.cap b{color:var(--ink);}
+.num{font-variant-numeric:tabular-nums;}
+
+.seg{display:flex;border:1px solid var(--grid);border-radius:4px;overflow:hidden;}
+.seg button{flex:1;padding:8px 6px;text-align:center;font-size:12px;font-weight:700;line-height:1.2;background:var(--paper);
+  color:var(--muted);cursor:pointer;border:none;border-left:1px solid var(--grid);font-family:inherit;}
+.seg button:first-child{border-left:none;}
+.seg button small{display:block;font-weight:400;font-size:10.5px;margin-top:1px;}
+.seg button[aria-pressed="true"]{background:var(--maroon);color:#fff;}
+.seg.small button{padding:6px 4px;font-size:11px;}
+.ctl-label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin:0 0 5px;}
+.ctl-block{margin-bottom:12px;}
+
+.group{border-top:1px solid var(--grid);padding-top:10px;margin-top:10px;}
+.group-label{font-size:12px;font-weight:700;margin-bottom:6px;}
+.group-note{font-size:11px;color:var(--muted);line-height:1.4;margin:-2px 0 6px;}
+.slider-row{margin-bottom:8px;}
+.slider-row label{display:flex;justify-content:space-between;gap:8px;font-size:12px;margin-bottom:2px;}
+.slider-row .val{font-weight:700;color:var(--maroon);font-variant-numeric:tabular-nums;white-space:nowrap;}
+input[type=range]{width:100%;margin:0;accent-color:var(--maroon);display:block;}
+input[type=range]:disabled{opacity:0.45;}
+.minmax{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:1px;}
+.btnrow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.btn{flex:1 1 0;min-width:104px;padding:8px 8px;font-size:11.5px;font-weight:700;border-radius:4px;border:1px solid var(--ink);
+  background:transparent;color:var(--ink);cursor:pointer;font-family:inherit;line-height:1.2;}
+.btn small{display:block;font-weight:400;font-size:10px;margin-top:1px;}
+.btn.wide{flex:1 1 100%;}
+.btn.half{flex:1 1 40%;}
+.btn.quiet{border-color:var(--grid);background:var(--paper);}
+@media (hover:hover){.btn:hover{background:var(--ink);color:var(--paper);border-color:var(--ink);}}
+.btn:active{background:var(--ink);color:var(--paper);}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
+
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.stat{background:var(--paper);border:1px solid var(--grid);border-radius:4px;padding:8px 6px;text-align:center;min-width:0;}
+.stat .lbl{font-size:9.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+.stat .v{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.stat .v2{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:1px;white-space:nowrap;}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+.legend{display:flex;gap:4px 14px;flex-wrap:wrap;justify-content:center;margin-top:6px;font-size:11px;color:var(--muted);}
+.sw{display:inline-block;width:18px;height:0;border-top:2px solid var(--ink);margin-right:5px;vertical-align:middle;}
+.handle{cursor:grab;touch-action:none;}
+.handle.dragging{cursor:grabbing;}
+footer{text-align:center;color:var(--muted);font-size:11px;margin-top:22px;}
+
+/* Desktop: keep the picture in view while the (taller) control column scrolls. */
+@media (min-width:801px) and (min-height:760px){
+  .col.visual{position:sticky;top:12px;}
+}
+@media (max-width:800px){
+  .wrap{padding:16px 12px 28px;}
+  h1{font-size:22px;}
+  .intro{font-size:13.5px;}
+  .grid{grid-template-columns:minmax(0,1fr);gap:12px;}
+  .col{display:contents;}
+  .panel{padding:10px 12px;}
+}
+/* Phone: the picture stays pinned to the top of the screen while the sliders scroll beneath it. */
+@media (max-width:800px) and (min-height:620px){
+  .panel.sticky{position:sticky;top:0;z-index:5;border-radius:0 0 4px 4px;box-shadow:0 8px 12px -8px rgba(26,21,18,0.3);}
+}
+@media (pointer:coarse){
+  input[type=range]{height:30px;}
+  .btn,.seg button{min-height:40px;}
+}
+
+:root{--math:"STIX Two Text","Cambria","Times New Roman","Noto Serif",serif;}
+.grid.we{grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);}
+.q{font-family:var(--serif);font-size:15.5px;line-height:1.5;margin:6px 0 0;}
+.given{display:flex;flex-wrap:wrap;gap:4px 22px;align-items:center;justify-content:center;margin:2px 0 6px;}
+.given .lbl{font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--maroon);font-weight:700;}
+#cktCap{min-height:4.1em;color:var(--focus);font-size:12px;margin-top:2px;}
+#exNav{margin:0 0 14px;}
+#exNav[hidden]{display:none;}
+#cktCap.idle{color:var(--muted);}
+
+/* ---- circuit ---- */
+.ckt .w{fill:none;stroke:var(--ink);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transition:stroke .2s,stroke-width .2s;}
+.ckt .f{fill:var(--ink);transition:fill .2s;}
+.ckt .src{fill:#fff;}
+.ckt text{font-family:var(--math);font-style:italic;font-size:21px;fill:var(--ink);text-anchor:middle;dominant-baseline:central;}
+.ckt text.up{font-style:normal;}
+.ckt .cur{fill:var(--maroon);} .ckt .curw{stroke:var(--maroon);stroke-width:2;fill:none;}
+.ckt [data-p]{transition:opacity .25s;}
+.ckt.has-hl [data-p]:not(.on){opacity:0.26;}
+.ckt [data-p].on .w{stroke:var(--focus);stroke-width:3.4;}
+.ckt [data-p].on .f{fill:var(--focus);}
+.ckt [data-p="vab"]{opacity:0 !important;}
+.ckt [data-p="vab"].on{opacity:1 !important;}
+.ckt .vabw{fill:none;stroke:var(--focus);stroke-width:2;stroke-dasharray:6 5;stroke-linecap:round;}
+.ckt .vabt{fill:var(--focus);}
+
+/* ---- maths ---- */
+.math{font-family:var(--math);font-size:19px;line-height:1.35;color:var(--ink);font-variant-numeric:lining-nums;}
+.math .sg{display:inline-block;white-space:nowrap;margin-right:0.32em;vertical-align:middle;}
+.var{font-style:italic;white-space:nowrap;}
+.var sub{font-size:0.7em;font-style:italic;vertical-align:-0.28em;line-height:0;margin-left:0.03em;}
+.bar{display:inline-block;border-top:0.065em solid currentColor;line-height:0.92;padding-top:0.05em;}
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 0.12em;}
+.frac>span:first-child{border-bottom:0.065em solid currentColor;padding:0 0.3em 0.14em;}
+.frac>span:last-child{padding:0.12em 0.3em 0;}
+.sqrt{position:relative;display:inline-block;white-space:nowrap;padding-left:0.5em;}
+.sqrt>svg{position:absolute;left:0;top:0;width:0.5em;height:100%;margin:0;display:block;overflow:visible;}
+.sqrt>svg path{fill:none;stroke:currentColor;stroke-width:1.5;stroke-linejoin:miter;vector-effect:non-scaling-stroke;}
+.sqrt>span{display:inline-block;border-top:1.5px solid currentColor;padding:0.04em 0.1em 0 0.06em;line-height:1.08;}
+svg.ang{display:inline-block;width:0.62em;height:0.62em;margin:0 0.1em 0 0.16em;vertical-align:-0.02em;overflow:visible;}
+svg.ang path{fill:none;stroke:currentColor;stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round;}
+.unit{font-style:normal;}
+.fn{font-style:normal;}
+.result{display:inline-block;border:1.5px solid var(--maroon);color:var(--maroon);font-weight:700;padding:1px 9px;border-radius:2px;}
+.tick{color:#2f7d4f;font-weight:700;margin-left:0.3em;}
+
+/* ---- working ---- */
+.working{display:flex;flex-direction:column;}
+.toolbar{order:-2;}
+.toolbar .btnrow{margin-top:0;align-items:stretch;}
+.btn.primary{background:var(--ink);color:var(--paper);flex:2 1 150px;font-size:12.5px;}
+@media (hover:hover){.btn.primary:hover{background:var(--maroon);border-color:var(--maroon);}}
+.btn:disabled{opacity:0.4;cursor:default;pointer-events:none;}
+.toolmeta{order:-1;display:flex;justify-content:space-between;align-items:center;gap:10px;margin:9px 0 6px;padding-bottom:11px;border-bottom:1px solid var(--grid);font-size:11.5px;color:var(--muted);}
+.switch{display:inline-flex;align-items:center;gap:7px;cursor:pointer;user-select:none;-webkit-user-select:none;}
+.switch input{accent-color:var(--maroon);width:15px;height:15px;margin:0;}
+.step{padding:12px 0 6px;border-top:1px solid var(--grid);}
+.step:first-of-type{border-top:none;padding-top:6px;}
+.step-n{display:block;font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin-bottom:5px;}
+.goal{font-family:var(--serif);font-size:16px;font-weight:700;letter-spacing:-0.01em;line-height:1.3;margin:0;}
+.item{scroll-margin-top:var(--stick,12px);scroll-margin-bottom:76px;}
+.line{display:flex;align-items:center;gap:8px;margin-top:8px;min-height:40px;}
+.line .math{flex:1 1 auto;min-width:0;}
+.math .lhs{min-width:2.05em;margin-right:0.2em;}
+.reveal{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;border:1px dashed #cdc3b4;
+  background:var(--paper);border-radius:4px;padding:9px 12px;font-family:var(--sans);font-size:13px;line-height:1.3;color:var(--muted);cursor:pointer;min-height:40px;}
+.reveal::after{content:"reveal";flex:none;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;font-weight:700;color:var(--maroon);}
+@media (hover:hover){.reveal:hover{border-color:var(--ink);border-style:solid;color:var(--ink);}}
+.reveal.next{border-color:var(--maroon);color:var(--ink);}
+.shown{animation:fadein .28s ease-out;}
+@keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+@media (prefers-reduced-motion:reduce){.shown{animation:none;} .ckt *{transition:none !important;}}
+.tip{font:inherit;color:inherit;background:none;border:none;border-bottom:1.5px dotted var(--maroon);padding:0 1px 1px;margin:0 -1px;cursor:help;
+  border-radius:2px 2px 0 0;-webkit-appearance:none;appearance:none;line-height:inherit;}
+@media (hover:hover){.tip:hover{background:#f6ecee;}}
+.tip[aria-expanded="true"],.why[aria-expanded="true"]{background:#f6ecee;}
+.why{flex:none;width:24px;height:24px;border-radius:50%;border:1px solid var(--grid);background:var(--paper);color:var(--maroon);font-family:var(--sans);
+  font-weight:700;font-size:12px;line-height:1;cursor:help;padding:0;}
+@media (hover:hover){.why:hover{border-color:var(--maroon);}}
+.nohelp .why{display:none;}
+.nohelp .tip{border-bottom-color:transparent;cursor:default;pointer-events:none;}
+.takeaway{margin-top:12px;font-size:13px;line-height:1.5;color:#5c4a12;background:#fbe9c6;border:1px solid #e0be6f;border-radius:4px;padding:10px 12px;}
+.takeaway strong{color:#3d3009;}
+
+#pop{position:absolute;z-index:30;width:max-content;max-width:min(320px,calc(100vw - 16px));background:#fff;border:1px solid var(--ink);border-radius:4px;
+  padding:10px 12px 11px;font-family:var(--sans);font-size:13px;line-height:1.5;color:var(--ink);box-shadow:0 8px 22px rgba(26,21,18,0.2);}
+#pop[hidden]{display:none;}
+#pop .eyebrow{font-size:9.5px;margin-bottom:3px;}
+#pop .math{font-size:15px;}
+
+/* ---- answer check ---- */
+.check-row{display:flex;gap:8px;align-items:center;margin-top:8px;}
+.check-row .math{font-size:18px;white-space:nowrap;}
+.check-row input{flex:1 1 60px;min-width:0;font:inherit;font-size:15px;font-variant-numeric:tabular-nums;padding:8px 10px;border:1px solid var(--ink);border-radius:4px;background:var(--paper);color:var(--ink);}
+.check-row .btn{flex:none;min-width:76px;}
+#fb{font-size:13px;line-height:1.5;margin-top:8px;min-height:1.5em;color:var(--muted);}
+#fb.good{color:#2f7d4f;} #fb.bad{color:#a3372c;} #fb.warn{color:#8a5a00;}
+#fb strong{font-weight:700;}
+.hintline{font-size:12px;color:var(--muted);line-height:1.45;margin:4px 0 0;}
+
+@media (max-width:800px){
+  .vis-inner{max-width:clamp(250px,calc((46vh - 40px) * 1.75),520px);margin:0 auto;}
+  .panel.sticky h2{display:none;}
+  .given{margin:0 0 2px;gap:2px 16px;}
+  .given .math{font-size:16px;}
+  .grid.we{grid-template-columns:minmax(0,1fr);}
+  #cktCap{min-height:4.05em;font-size:11.5px;margin-top:0;}
+  .toolmeta{margin-top:0;}
+  .toolbar .btnrow{flex-wrap:nowrap;gap:6px;}
+  .toolbar .btn{min-width:0;flex:1 1 auto;padding:8px 6px;}
+  .toolbar .btn.primary{flex:2.2 1 auto;}
+  .toolbar{order:99;position:sticky;bottom:0;margin:10px -12px -10px;padding:9px 12px;background:var(--panel);border-top:1px solid var(--grid);
+    box-shadow:0 -8px 12px -8px rgba(26,21,18,0.25);z-index:4;}
+  .math{font-size:18px;}
+}
+
+/* ---- additions for multi-part problems ---- */
+.ss{display:inline-block;position:relative;}
+.ss .t{position:absolute;left:0.08em;top:-0.42em;font-size:0.7em;line-height:1;}
+.ss .up{font-style:normal;}
+.math sup{font-size:0.68em;line-height:0;vertical-align:0.62em;font-style:normal;}
+#partNav{margin:8px 0 2px;}
+.check-item{margin-top:6px;}
+.check-row .math{min-width:3.1em;}
+.check-row .math.unitc{min-width:1.6em;}
+.fb{font-size:13px;line-height:1.5;margin-top:5px;min-height:1.5em;color:var(--muted);}
+.fb.good{color:#2f7d4f;} .fb.bad{color:#a3372c;} .fb.warn{color:#8a5a00;}
+.fb strong{font-weight:700;}
+.ckt .barl{stroke:var(--ink);stroke-width:1.5;}
+.ckt [data-p="i1"] .barl,.ckt [data-p="i2"] .barl{stroke:var(--maroon);}
+.ckt [data-p].on .barl{stroke:var(--focus);}
+.ckt [data-p].on text{fill:var(--focus);}
+.ckt text.side{font-family:var(--sans);font-style:normal;font-size:12.5px;fill:var(--muted);letter-spacing:0.04em;}
+.ckt [data-p="zin"]{opacity:0 !important;}
+.ckt [data-p="zin"].on{opacity:1 !important;}
+.ckt .zinw{fill:rgba(28,95,122,0.05);stroke:var(--focus);stroke-width:2;stroke-dasharray:7 5;}
+.ckt .zint{fill:var(--focus);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow" id="exEyebrow"></p>
+      <h1 id="exTitle"></h1>
+    </div>
+    <div class="tag">ELEC2005 &middot; Week 10</div>
+  </header>
+
+  <p class="intro">Try the question on paper first. Then either check your final answer, or reveal the working one
+  line at a time. Each hidden line tells you what it does, so you can attempt it before you look. Terms with a dotted
+  underline and the <strong>?</strong> buttons explain more when you want it.</p>
+
+  <div class="seg" id="exNav" role="group" aria-label="Choose an example" hidden></div>
+
+  <div class="grid we">
+    <div class="col visual">
+      <div class="panel">
+        <h2>Question</h2>
+        <p class="q" id="exQuestion"></p>
+      </div>
+      <div class="panel sticky" id="cktPanel">
+        <h2>Circuit and given values</h2>
+        <div class="vis-inner">
+          <div class="given" id="exGiven"></div>
+          <svg id="ckt" class="ckt" viewBox="0 0 548 310" role="img" aria-label="Ideal transformer circuit"></svg>
+        </div>
+        <p class="cap idle" id="cktCap"></p>
+      </div>
+      <div class="panel">
+        <h2>Check your answers</h2>
+        <p class="hintline" id="ansHint"></p>
+        <div class="seg small" id="partNav" role="group" aria-label="Choose a part to check"></div>
+        <div id="checks"></div>
+      </div>
+    </div>
+
+    <div class="col controls">
+      <div class="panel working" id="working">
+        <div class="toolbar">
+          <div class="btnrow">
+            <button type="button" class="btn primary" id="btnNext">Reveal next line</button>
+            <button type="button" class="btn" id="btnAll">Show all</button>
+            <button type="button" class="btn" id="btnReset">Start again</button>
+          </div>
+        </div>
+        <div class="toolmeta">
+          <span id="progress" aria-live="polite"></span>
+          <label class="switch"><input type="checkbox" id="helpToggle" checked> Show extra help</label>
+        </div>
+        <div id="steps"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>ELEC2005 &middot; Week 10 &mdash; for concept exploration, not assessment.</footer>
+</div>
+<div id="pop" role="tooltip" hidden></div>
+
+<script>
+(function(){
+'use strict';
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent){
+  const e=document.createElementNS(NS,tag);
+  if (attrs) for (const k in attrs) if (attrs[k]!==undefined&&attrs[k]!==null) e.setAttribute(k,attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+const $=id=>document.getElementById(id);
+
+// =====================================================================================
+// Maths markup: small helpers that return HTML. No external maths library is needed, so
+// the page stays a single self-contained file and every term can be made interactive.
+// =====================================================================================
+const ANG='<svg class="ang" viewBox="0 0 12 12" aria-hidden="true"><path d="M10.5 10.5H1.5L8.2 2.2"/></svg>';
+const M={
+  v:(s,sub,bar)=>'<span class="var">'+(bar?'<span class="bar">'+s+'</span>':s)+(sub?'<sub>'+sub+'</sub>':'')+'</span>',
+  ph:(mag,deg)=>'<span class="nw">'+mag+ANG+deg+'°</span>',
+  frac:(a,b)=>'<span class="frac"><span>'+a+'</span><span>'+b+'</span></span>',
+  sqrt:x=>'<span class="sqrt"><svg viewBox="0 0 10 20" preserveAspectRatio="none" aria-hidden="true"><path d="M0.6 12.5 L2.6 11.3 L5.6 19 L9.9 0.8"/></svg><span>'+x+'</span></span>',
+  tip:(id,html)=>'<button type="button" class="tip" data-tip="'+id+'">'+html+'</button>',
+  u:x=>'<span class="unit"> '+x+'</span>',
+  fn:x=>'<span class="fn">'+x+'</span>'
+};
+const Ean=M.v('E','an',true), Vab=M.v('V','ab',true), Ia=M.v('I','a',true), ZY=M.v('Z','Y');
+const P3=M.v('P','3ϕ'), VLN=M.v('V','LN'), VLL=M.v('V','LL'), Imag=M.v('I'), dmb='('+M.v('δ')+' − '+M.v('β')+')';
+const R3=M.sqrt('3');
+
+// =====================================================================================
+// Example data. To add another example, append an object to EXAMPLES with the same shape;
+// a selector appears automatically once there is more than one.
+//   steps[].lines[].segs  : pieces of one line of working (the line can wrap between pieces)
+//   steps[].lines[].prompt: what the student sees before revealing the line
+//   steps[].lines[].why   : optional explanation behind the "?" button
+//   steps[].hl            : which parts of the circuit light up for this step
+//   tips                  : explanations for the dotted-underlined terms
+// =====================================================================================
+// ---- notation for this example (labels follow the circuit drawing) ----
+const SS=(top,bot,upTop)=>'<span class="ss"><sub>'+bot+'</sub><span class="t'+(upTop?' up':'')+'">'+top+'</span></span>';
+const at=M.v('a','t'), at2='<span class="var">a'+SS('2','t',true)+'</span>';
+const V1b=M.v('V','1',true), V2b=M.v('V','2',true), I1b=M.v('I','1',true), I2b=M.v('I','2',true);
+const S1b=M.v('S','1',true), S2b=M.v('S','2',true), Z2=M.v('Z','2');
+const Z2p='<span class="var">Z'+SS('′','2',true)+'</span>';
+const I2s='<span class="var"><span class="bar">I</span>'+SS('∗','2',true)+'</span>';
+const RES=(mag,deg,unit)=>'<span class="result">'+(deg===null?mag:M.ph(mag,deg))+M.u(unit)+'</span>';
+const TICK='<span class="tick">✓</span>';
+const EXAMPLES=[{
+  eyebrow:'Transformers · Practice Problem',
+  title:'Ideal Transformer: Load, Referred Impedance and Power',
+  question:'A single-phase, two-winding transformer is rated 20 kVA, 480/120 V, 60 Hz. A source on the 480 V side supplies a load on the 120 V side. '+
+           'The load draws 12 kVA at 0.8 p.f. lagging when its terminal voltage is 116 V. Assume the transformer is ideal.<br>'+
+           '<strong>Find:</strong> (a) the load current and load impedance; (b) the load impedance referred to the 480 V side; '+
+           '(c) the primary voltage and current; (d) the real and reactive power supplied to the primary.',
+  given:[M.v('S','<span class="fn">rated</span>')+' = 20'+M.u('kVA'), '480/120'+M.u('V')+', 60'+M.u('Hz'),
+         M.v('S','2')+' = 12'+M.u('kVA, 0.8 p.f. lagging'), M.v('V','2')+' = 116'+M.u('V')],
+  diagram:'idealTransformer',
+  idleCap:'Reveal a step and the part of the circuit it uses lights up here.',
+  idleCapOpen:'Point at a step, or tap it, to see which part of the circuit it uses.',
+  checkHint:'Solved it on paper? Choose a part and enter the magnitudes. The angles are in the working. You can type a unit with a prefix, such as 9.6 kW.',
+  other:'Not yet. Reveal the working for this part and compare it with yours.',
+  parts:[
+    { key:'a', nav:'(a)', small:'load', items:[
+      { label:M.v('I','2')+' =', unit:'A', units:['A','amps?'], value:103.448276, tol:0.006,
+        right:'<strong>Correct.</strong> The load current is 103.45 A, at −36.87° because the load is lagging.',
+        wrong:[
+          {v:100, msg:'That uses the rated 120 V. The load is actually at 116 V, so use that.'},
+          {v:172.4138, msg:'That uses the 20 kVA rating. The load only takes 12 kVA, and the rating plays no part in this answer.'},
+          {v:166.6667, msg:'That uses the nameplate values, 20 kVA and 120 V. Use the load’s own power and voltage.'},
+          {v:82.7586, msg:'That divides the real power, 9.6 kW, by the voltage. The size of the current comes from the apparent power.'},
+          {v:25.8621, msg:'That is the primary current. Part (a) asks for the current in the load, on the 120 V side.'},
+          {v:413.7931, msg:'That multiplies by the turns ratio. Part (a) needs no turns ratio: the load current comes straight from the load data.'}
+        ]},
+      { label:M.v('Z','2')+' =', unit:'Ω', units:['Ω','ohms?'], value:1.1213333, tol:0.006,
+        right:'<strong>Correct.</strong> The load impedance is 1.121 Ω, at +36.87°, so it is inductive.',
+        wrong:[
+          {v:1.2, msg:'That uses the rated 120 V. Use the actual load voltage, 116 V.'},
+          {v:1.16, msg:'That uses a current of 100 A, which came from the rated 120 V. Find the current from the 116 V load voltage first.'},
+          {v:1.401667, msg:'That uses the real power, 9.6 kW. The size of the impedance comes from the apparent power, 12 kVA.'},
+          {v:0.8970667, msg:'That is only the resistance, the real part of the impedance. Its magnitude also includes the reactance.'},
+          {v:17.941333, msg:'That is the impedance referred to the 480 V side, which is part (b).'},
+          {v:4.485333, msg:'That multiplies by the turns ratio. Part (a) asks for the load’s own impedance, on the 120 V side.'}
+        ]}
+    ]},
+    { key:'b', nav:'(b)', small:'referred', items:[
+      { label:Z2p+' =', unit:'Ω', units:['Ω','ohms?'], value:17.941333, tol:0.006,
+        right:'<strong>Correct.</strong> Seen from the 480 V side, the load looks like 17.94 Ω, still at +36.87°.',
+        wrong:[
+          {v:4.485333, msg:'That multiplies by the turns ratio once. An impedance is referred by the square of the turns ratio.'},
+          {v:0.0700833, msg:'That divides by the square of the turns ratio. Referring to the higher-voltage side makes an impedance larger, not smaller.'},
+          {v:0.2803333, msg:'That divides by the turns ratio. Referring to the higher-voltage side makes an impedance larger, and by the square of the turns ratio.'},
+          {v:19.2, msg:'That uses the rated 480 V. The primary is actually at 464 V.'},
+          {v:1.1213333, msg:'That is the load impedance itself. Part (b) asks how large it looks from the 480 V side.'}
+        ]}
+    ]},
+    { key:'c', nav:'(c)', small:'primary', items:[
+      { label:M.v('V','1')+' =', unit:'V', units:['V','volts?'], value:464, tol:0.006,
+        right:'<strong>Correct.</strong> The primary voltage is 464 V, at 0°.',
+        wrong:[
+          {v:480, msg:'That is the rated voltage. The load is at 116 V, not 120 V, so the primary is not at 480 V either.'},
+          {v:29, msg:'That divides by the turns ratio. The 480 V side is the higher-voltage side, so multiply.'},
+          {v:116, msg:'That is the secondary voltage. The primary voltage is larger by the turns ratio.'}
+        ]},
+      { label:M.v('I','1')+' =', unit:'A', units:['A','amps?'], value:25.862069, tol:0.006,
+        right:'<strong>Correct.</strong> The primary current is 25.86 A, at −36.87°, the same angle as the load current.',
+        wrong:[
+          {v:413.7931, msg:'That multiplies by the turns ratio. Current changes the opposite way to voltage: the higher-voltage side carries the smaller current.'},
+          {v:103.448276, msg:'That is the secondary current. The primary current is smaller by the turns ratio.'},
+          {v:25, msg:'That divides 12 kVA by the rated 480 V. The primary is actually at 464 V.'},
+          {v:41.66667, msg:'That uses the 20 kVA rating and 480 V. Use the load’s 12 kVA and the actual primary voltage.'}
+        ]}
+    ]},
+    { key:'d', nav:'(d)', small:'power', items:[
+      { label:M.v('P','1')+' =', unit:'W', units:['W','watts?'], value:9600, tol:0.006,
+        right:'<strong>Correct.</strong> The primary takes in 9.6 kW, the same as the load uses.',
+        wrong:[
+          {v:12000, msg:'That is the apparent power, in VA. Real power also needs the power factor.'},
+          {v:7200, msg:'That is the reactive power. Real power uses the cosine of the angle, not the sine.'},
+          {v:16000, msg:'That uses the 20 kVA rating. The load takes 12 kVA.'}
+        ]},
+      { label:M.v('Q','1')+' =', unit:'var', units:['vars?'], value:7200, tol:0.006,
+        right:'<strong>Correct.</strong> The primary takes in 7.2 kvar, all of it passed on to the inductive load.',
+        wrong:[
+          {v:9600, msg:'That is the real power. Reactive power uses the sine of the angle, not the cosine.'},
+          {v:-7200, msg:'Right size, wrong sign. The load is lagging, which means inductive, so it absorbs reactive power and Q is positive.'},
+          {v:12000, msg:'That is the apparent power, in VA. Reactive power is the imaginary part of the complex power.'}
+        ]}
+    ]}
+  ],
+  steps:[
+    { label:'Step 1 · Set-up', ask:'What can you write down straight from the ratings and the load data?',
+      goal:'Write down the turns ratio, a reference phasor and the load’s complex power',
+      hl:['pri','core','sec','loop2','v2','load'],
+      cap:'The turns ratio comes from the two voltage ratings. The load voltage is taken as the reference phasor.',
+      lines:[
+        { prompt:'Find the turns ratio from the voltage rating',
+          segs:[at,'= '+M.frac(M.v('n','1'),M.v('n','2')),'= '+M.tip('ratio',M.frac('480','120')),'= 4'],
+          why:'In an ideal transformer the voltage ratio equals the turns ratio, so the voltage rating gives the turns ratio directly. You never need the actual numbers of turns.' },
+        { prompt:'Choose a reference phasor',
+          segs:[V2b,'= '+M.tip('ref',M.ph('116','0')+M.u('V'))],
+          why:'Only differences in angle matter, so you are free to set one angle to zero. The load voltage is the natural choice, because the power factor is given relative to it.' },
+        { prompt:'Write the load’s complex power in terms of its voltage and current',
+          segs:[S2b,'= '+V2b+' '+M.tip('conj',I2s)],
+          why:'Complex power uses the conjugate of the current. That is what makes the real and reactive parts come out with the right signs.' },
+        { prompt:'Put the given values into polar form', cont:true,
+          segs:['= 12,000'+ANG+M.fn('cos')+'<sup>−1</sup>(0.8)','= '+M.tip('lag',M.ph('12,000','36.87')+M.u('VA'))] }
+      ]},
+    { label:'Step 2 · Part (a)', ask:'What are the load current and the load impedance?',
+      goal:'Find the load current and the load impedance',
+      hl:['sec','loop2','i2','v2','load'],
+      cap:'Part (a) only involves the 120 V side: the load, the voltage across it and the current through it.',
+      lines:[
+        { prompt:'Rearrange the complex power equation for the current',
+          segs:[I2b,'= '+M.tip('conjback','('+M.frac(S2b,V2b)+')<sup>∗</sup>')],
+          why:'Dividing the complex power by the voltage gives the conjugate of the current. Taking the conjugate again gives the current itself.' },
+        { prompt:'Substitute and evaluate', cont:true,
+          segs:['= ('+M.frac(M.ph('12,000','36.87'),M.ph('116','0'))+')<sup>∗</sup>','= '+M.tip('lagcur',RES('103.45','−36.87','A'))] },
+        { prompt:'Apply Ohm’s law to the load',
+          segs:[Z2,'= '+M.frac(V2b,I2b),'= '+M.frac(M.ph('116','0'),M.ph('103.45','−36.87'))] },
+        { prompt:'Evaluate', cont:true,
+          segs:['= '+M.tip('zind',RES('1.121','36.87','Ω'))] }
+      ]},
+    { label:'Step 3 · Part (b)', ask:'How large does the load look from the 480 V side?',
+      goal:'Refer the load impedance to the 480 V side',
+      hl:['zin','pri','core','sec','loop2','load'],
+      cap:'Looking into the 480 V terminals, the source sees the load impedance scaled up by the square of the turns ratio.',
+      lines:[
+        { prompt:'Write the rule for referring an impedance across the transformer',
+          segs:[Z2p,'= '+M.tip('a2',at2)+' '+Z2],
+          why:'Voltage goes up by the turns ratio and current comes down by the turns ratio, so their ratio, the impedance, goes up by the turns ratio squared. Its angle does not change.' },
+        { prompt:'Substitute and evaluate', cont:true,
+          segs:['= 16 × '+M.ph('1.121','36.87'),'= '+M.tip('zpr',RES('17.94','36.87','Ω'))] }
+      ]},
+    { label:'Step 4 · Part (c)', ask:'What voltage and current does the source supply?',
+      goal:'Find the primary voltage and current',
+      hl:['src','loop1','pri','v1','i1'],
+      cap:'The 480 V side: the voltage across the primary winding and the current drawn from the source.',
+      lines:[
+        { prompt:'Scale the load voltage by the turns ratio',
+          segs:[V1b,'= '+at+' '+V2b,'= 4 × '+M.ph('116','0'),'= '+M.tip('v1',RES('464','0','V'))],
+          why:'The 480 V winding has four times as many turns, so it has four times the voltage. Writing 480 V here is the most common slip in this problem.' },
+        { prompt:'Scale the load current by the turns ratio',
+          segs:[I1b,'= '+M.tip('idiv',M.frac(I2b,at)),'= '+M.frac(M.ph('103.45','−36.87'),'4'),'= '+RES('25.86','−36.87','A')],
+          why:'Power in equals power out. The voltage went up by a factor of four, so the current must come down by a factor of four.' }
+      ]},
+    { label:'Step 5 · Part (d)', ask:'How much real and reactive power does the primary take in?',
+      goal:'Find the real and reactive power supplied to the primary',
+      hl:['src','loop1','v1','i1','loop2','v2','i2','load'],
+      cap:'An ideal transformer has no losses and stores no energy, so the source supplies exactly the complex power the load takes.',
+      lines:[
+        { prompt:'Relate the primary’s complex power to the load’s',
+          segs:[S1b,'= '+M.tip('s1s2',S2b),'= '+M.ph('12,000','36.87')+M.u('VA')],
+          why:'This is the key property of an ideal transformer: complex power passes straight through, unchanged.' },
+        { prompt:'Convert to rectangular form', cont:true,
+          segs:['= '+M.tip('rect','9600 + <span class="var">j</span>7200')+M.u('VA')] },
+        { prompt:'Read off the real and reactive power',
+          segs:[M.v('P','1'),'= '+RES('9.6',null,'kW')+',',M.v('Q','1')+' = '+M.tip('qpos',RES('7.2',null,'kvar'))] }
+      ]},
+    { label:'Check', ask:'Can you confirm parts (b) to (d) using only the 480 V side?',
+      goal:'Check the results using only primary-side quantities',
+      hl:['src','loop1','v1','i1','zin'],
+      cap:'Everything measured at the 480 V terminals: the primary voltage, the primary current and the impedance the source sees.',
+      lines:[
+        { prompt:'Find the apparent power at the primary',
+          segs:[M.v('S','1'),'= '+M.v('V','1')+' '+M.v('I','1'),'= (464)(25.86)','≈ 12.0'+M.u('kVA')+TICK],
+          why:'This matches the 12 kVA the load takes, which confirms the voltage and current found in part (c).' },
+        { prompt:'Find the impedance the source sees',
+          segs:[M.v('Z','in'),'= '+M.frac(V1b,I1b),'= '+M.frac(M.ph('464','0'),M.ph('25.86','−36.87')),'≈ '+M.tip('zin',M.ph('17.94','36.87')+M.u('Ω'))+TICK],
+          why:'Dividing the primary voltage by the primary current gives the impedance seen from the 480 V side directly, without the turns ratio squared. It agrees with part (b).' }
+      ],
+      takeaway:'<strong>Use the operating values, not the nameplate.</strong> The 480/120 V rating only sets the turns ratio, and the 20 kVA rating plays no part in any answer. The load is at 116 V, so the primary is at 464 V, not 480 V. And watch the conjugate: for a lagging load the angle of the complex power is positive, but the angle of the current is negative.'
+    }
+  ],
+  tips:{
+    ratio:'The rated voltages are in the same ratio as the turns: 480 V on the n<sub>1</sub> side and 120 V on the n<sub>2</sub> side. So the turns ratio is 4, even though the transformer is not running at exactly its rated voltage.',
+    ref:'Taking the load voltage as the reference means giving it an angle of 0°. Every other angle in the problem is then measured from it.',
+    conj:'The asterisk means the complex conjugate: the same magnitude with the sign of the angle flipped. Complex power is the voltage times the conjugate of the current, not the current itself.',
+    lag:'cos<sup>−1</sup>(0.8) = 36.87°. The load is lagging, which means inductive, so the reactive power is positive and so is the angle of the complex power.',
+    conjback:'Dividing the complex power by the voltage gives the conjugate of the current. Conjugate it once more to get the current.',
+    lagcur:'12,000 ÷ 116 = 103.45, and 36.87° − 0° = 36.87°. The conjugate flips the sign of the angle, so the current is at −36.87°: it lags the voltage, as a lagging load should.',
+    zind:'116 ÷ 103.45 = 1.121, and 0° − (−36.87°) = +36.87°. A positive angle means the impedance is inductive: 0.897 Ω of resistance in series with 0.673 Ω of inductive reactance.',
+    a2:'The turns ratio squared: 4<sup>2</sup> = 16. Both the voltage and the current change by a factor of 4, in opposite directions, so the impedance changes by 16.',
+    zpr:'16 × 1.121 = 17.94 Ω. The angle stays at 36.87°. Referring an impedance through an ideal transformer changes its size, but it stays just as inductive.',
+    v1:'The primary is at 464 V, not the rated 480 V, because the load is at 116 V rather than the rated 120 V.',
+    idiv:'The turns ratio is a real number, so dividing by it divides the magnitude by 4 and leaves the angle as it is. The slide stops at the primary voltage; this line finishes part (c).',
+    s1s2:'An ideal transformer has no winding resistance, no leakage flux and no magnetising current, so it absorbs no real or reactive power of its own.',
+    rect:'12,000 × cos 36.87° = 9600 and 12,000 × sin 36.87° = 7200. The real part is the real power P, and the imaginary part is the reactive power Q.',
+    qpos:'Q is positive because the load is inductive: it absorbs reactive power, and the source has to supply it.',
+    zin:'464 ÷ 25.86 = 17.94, and 0° − (−36.87°) = 36.87°. Rounding 25.86 changes only digits beyond the ones shown.'
+  }
+}];
+
+// =====================================================================================
+// Circuit diagrams. Parts carry data-p names so a step can highlight them.
+// =====================================================================================
+const DIAGRAMS={
+  // Ideal single-phase transformer: source on the 480 V side (left), load on the 120 V side (right).
+  idealTransformer:function(svg){
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    svg.setAttribute('viewBox','0 0 560 270');
+    svg.setAttribute('aria-label','Ideal transformer with a voltage source on the 480 volt side and a load impedance on the 120 volt side');
+    const part=name=>el('g',{'data-p':name},svg);
+    const wire=(g,pts)=>el('polyline',{'class':'w',points:pts.map(p=>p.join(',')).join(' ')},g);
+    const pathW=(g,d,style)=>el('path',{'class':'w',d:d,style:style},g);
+    const dot=(g,x,y,r)=>el('circle',{'class':'f',cx:x,cy:y,r:r||3.5},g);
+    // text label: main symbol, optional subscript, optional prime, optional phasor bar over the main symbol
+    function label(g,x,y,main,sub,o){
+      o=o||{};
+      const t=el('text',{x:x,y:y},g);
+      if (o.cls) t.setAttribute('class',o.cls);
+      let css='';
+      if (o.size) css+='font-size:'+o.size+'px;';
+      if (o.anchor) css+='text-anchor:'+o.anchor+';';
+      if (css) t.setAttribute('style',css);
+      el('tspan',{},t).textContent=main;
+      if (sub){ const s=el('tspan',{'font-size':'0.7em',dy:'0.32em'},t); s.textContent=sub; }
+      if (o.prime){ const s=el('tspan',{'font-size':'0.8em',dy:'-0.75em','font-style':'normal'},t); s.textContent='′'; }
+      if (o.bar){                                   // bar over the main symbol (labels with a bar are start-anchored)
+        el('line',{x1:x+o.bar[0],y1:y-13.5,x2:x+o.bar[1],y2:y-13.5,'class':'barl'},g);
+      }
+      return t;
+    }
+    function flow(g,x1,x2,y){                        // horizontal current arrow
+      const d=x2>x1?1:-1;
+      el('line',{'class':'curw',x1:x1,y1:y,x2:x2-d*7,y2:y},g);
+      el('polygon',{'class':'cur',points:[[x2,y],[x2-d*11,y-4.6],[x2-d*11,y+4.6]].map(p=>p.join(',')).join(' ')},g);
+    }
+    const yT=60, yB=220, xs=62, xp=222, xc1=254, xc2=262, xq=294, xl=470, c0=90, c1=190;
+    // a winding: four half-turns between c0 and c1, bulging towards the core (dir +1 right, -1 left)
+    function coil(g,x,dir){
+      let d='M'+x+','+yT+' L'+x+','+c0;
+      const r=(c1-c0)/8;
+      for (let k=0;k<4;k++) d+=' A'+r+','+r+' 0 0 '+(dir>0?1:0)+' '+x+','+(c0+2*r*(k+1));
+      d+=' L'+x+','+yB;
+      pathW(g,d);
+    }
+
+    // source
+    const gs=part('src'), R=22, ys=(yT+yB)/2;
+    el('circle',{'class':'w src',cx:xs,cy:ys,r:R},gs);
+    let d='';
+    for (let i=0;i<=40;i++){ const t=-1+i/20; d+=(i?'L':'M')+(xs+11*t).toFixed(2)+','+(ys-6*Math.sin(Math.PI*t)).toFixed(2); }
+    el('path',{'class':'w',d:d,style:'stroke-width:1.9'},gs);
+
+    // primary loop wires and secondary loop wires
+    const g1=part('loop1'); wire(g1,[[xs,ys-R],[xs,yT],[xp,yT]]); wire(g1,[[xs,ys+R],[xs,yB],[xp,yB]]);
+    const g2=part('loop2'); wire(g2,[[xq,yT],[xl,yT]]); wire(g2,[[xq,yB],[xl,yB]]);
+
+    // windings, core and polarity dots
+    const gp=part('pri'); coil(gp,xp,1); dot(gp,xp-14,c0+2,4);
+    const gq=part('sec'); coil(gq,xq,-1); dot(gq,xq+14,c0+2,4);
+    const gc=part('core');
+    wire(gc,[[xc1,c0-12],[xc1,c1+12]]); wire(gc,[[xc2,c0-12],[xc2,c1+12]]);
+    label(gc,250,34,'n','1',{anchor:'end',size:20});
+    label(gc,258,32,':',null,{cls:'up',size:20});
+    label(gc,266,34,'n','2',{anchor:'start',size:20});
+
+    // load: resistor then inductor, top to bottom
+    const gl=part('load');
+    const pts=[[xl,yT],[xl,84]], amp=9, zt=84, zp=10;
+    for (let i=0;i<4;i++) pts.push([xl+(i%2===0?amp:-amp),zt+zp*(i+0.5)]);
+    pts.push([xl,zt+40]),pts.push([xl,132]); wire(gl,pts);
+    let dl='M'+xl+',132'; const rb=10;
+    for (let k=0;k<3;k++) dl+=' A'+rb+','+rb+' 0 0 1 '+xl+','+(132+2*rb*(k+1));
+    dl+=' L'+xl+','+yB; pathW(gl,dl);
+    label(gl,xl+22,142,'Z','2',{anchor:'start'});
+
+    // currents (maroon) on the top wires
+    const gi1=part('i1'); flow(gi1,110,152,yT); label(gi1,116,yT-22,'I','1',{cls:'cur',anchor:'start',bar:[1,9]});
+    const gi2=part('i2'); flow(gi2,340,382,yT); label(gi2,346,yT-22,'I','2',{cls:'cur',anchor:'start',bar:[1,9]});
+
+    // voltages, with polarity marks
+    function volts(name,x,sub){
+      const g=part(name);
+      label(g,x,yT+26,'+',null,{cls:'up',size:19});
+      label(g,x,yB-26,'−',null,{cls:'up',size:19});
+      label(g,x-10,ys,'V',sub,{anchor:'start',bar:[2,15]});
+    }
+    volts('v1',156,'1'); volts('v2',412,'2');
+
+    // what the source sees looking into the 480 V terminals (shown only when a step uses it)
+    const gz=part('zin');
+    el('rect',{x:190,y:20,width:356,height:218,rx:6,'class':'zinw'},gz);
+    label(gz,536,40,'Z','2',{cls:'zint',anchor:'end',prime:true});
+
+    // side captions (never dimmed)
+    const g0=el('g',{},svg);
+    el('text',{x:136,y:258,'class':'side'},g0).textContent='480 V side';
+    el('text',{x:382,y:258,'class':'side'},g0).textContent='120 V side';
+  }
+};
+
+// =====================================================================================
+// Page behaviour
+// =====================================================================================
+const svg=$('ckt'), stepsEl=$('steps'), pop=$('pop'), working=$('working');
+const CAN_HOVER=window.matchMedia('(hover:hover)').matches;
+let ex=EXAMPLES[0], order=[], revealed=new Set(), lastStep=-1, hoverStep=-1;
+
+function highlight(){
+  const i=hoverStep>=0?hoverStep:lastStep, cap=$('cktCap');
+  const on=i>=0?ex.steps[i].hl:null;
+  svg.classList.toggle('has-hl',!!on);
+  svg.querySelectorAll('[data-p]').forEach(g=>g.classList.toggle('on',!!on&&on.indexOf(g.getAttribute('data-p'))>=0));
+  cap.classList.toggle('idle',!on);
+  cap.textContent=on?ex.steps[i].label+': '+ex.steps[i].cap:(revealed.size?ex.idleCapOpen:ex.idleCap);
+}
+
+function build(){
+  $('exEyebrow').textContent=ex.eyebrow; $('exTitle').textContent=ex.title;
+  $('exQuestion').innerHTML=ex.question;
+  $('exGiven').innerHTML='<span class="lbl">Given</span>'+ex.given.map(g=>'<span class="math">'+g+'</span>').join('');
+  $('ansHint').textContent=ex.checkHint; buildChecks();
+  DIAGRAMS[ex.diagram](svg);
+  order=[]; stepsEl.innerHTML='';
+  ex.steps.forEach((st,si)=>{
+    const sec=document.createElement('section'); sec.className='step'; sec.dataset.step=si;
+    sec.innerHTML='<span class="step-n">'+st.label+'</span>';
+    const goal=document.createElement('div'); goal.className='item'; goal.dataset.id=si+'g'; sec.appendChild(goal); order.push(si+'g');
+    st.lines.forEach((ln,li)=>{
+      const d=document.createElement('div'); d.className='item'; d.dataset.id=si+'l'+li; sec.appendChild(d); order.push(si+'l'+li);
+    });
+    if (st.takeaway){ const t=document.createElement('div'); t.className='item'; t.dataset.id=si+'t'; sec.appendChild(t); }
+    if (CAN_HOVER){                                   // pointing at a step previews its part of the circuit (mouse only)
+      sec.addEventListener('mouseenter',()=>{ if (revealed.has(si+'g')){ hoverStep=si; highlight(); } });
+      sec.addEventListener('mouseleave',()=>{ hoverStep=-1; highlight(); });
+    }
+    sec.addEventListener('focusin',()=>{ if (revealed.has(si+'g')){ lastStep=si; highlight(); } });
+    sec.addEventListener('click',()=>{ if (revealed.has(si+'g')){ lastStep=si; highlight(); } });
+    stepsEl.appendChild(sec);
+  });
+  revealed=new Set(); lastStep=-1; hoverStep=-1;
+  render(); highlight();
+}
+
+function parse(id){ const m=/^(\d+)([glt])(\d*)$/.exec(id); return {s:+m[1],kind:m[2],l:m[3]===''?-1:+m[3]}; }
+function nextId(){ for (let i=0;i<order.length;i++) if (!revealed.has(order[i])) return order[i]; return null; }
+
+// Draw every item in its current state (hidden prompt, or revealed content).
+function render(fresh){
+  const nxt=nextId();
+  stepsEl.querySelectorAll('.item').forEach(node=>{
+    const id=node.dataset.id, p=parse(id), st=ex.steps[p.s], shown=revealed.has(id);
+    const goalShown=revealed.has(p.s+'g');
+    let html='';
+    if (p.kind==='g'){
+      html=shown?'<p class="goal">'+st.goal+'</p>'
+                :'<button type="button" class="reveal'+(id===nxt?' next':'')+'" data-reveal="'+id+'">'+st.ask+'</button>';
+    } else if (p.kind==='l'){
+      const ln=st.lines[p.l];
+      if (!goalShown) html='';
+      else if (shown) html='<div class="line'+(ln.cont?' cont':'')+'"><div class="math">'+(ln.cont?['']:[]).concat(ln.segs).map((s,i)=>'<span class="sg'+(i===0?' lhs':'')+'">'+s+'</span>').join('')+'</div>'+
+        (ln.why?'<button type="button" class="why" data-why="'+id+'" aria-label="Why this line?">?</button>':'')+'</div>';
+      else html='<div class="line"><button type="button" class="reveal'+(id===nxt?' next':'')+'" data-reveal="'+id+'">'+ln.prompt+'</button></div>';
+    } else {
+      const all=st.lines.every((_,li)=>revealed.has(p.s+'l'+li));
+      html=all?'<div class="takeaway">'+st.takeaway+'</div>':'';
+    }
+    if (node._html!==html){
+      node.innerHTML=html; node._html=html;
+      node.classList.toggle('shown',fresh===id||(p.kind==='t'&&html!==''&&fresh!==undefined));
+    }
+  });
+  const total=order.length, done=order.filter(id=>revealed.has(id)).length;
+  $('progress').textContent=done===0?'Nothing revealed yet':(done===total?'All of the working is shown':done+' of '+total+' revealed');
+  $('btnNext').disabled=(done===total); $('btnAll').disabled=(done===total); $('btnReset').disabled=(done===0);
+  $('btnNext').textContent=done===0?'Reveal the first step':'Reveal next line';
+}
+
+function reveal(id,scroll){
+  if (!id||revealed.has(id)) return;
+  const p=parse(id);
+  revealed.add(p.s+'g'); revealed.add(id);          // revealing a line always shows its step's goal too
+  lastStep=p.s; hoverStep=-1; hidePop();
+  render(id); highlight();
+  if (scroll){
+    const node=stepsEl.querySelector('.item[data-id="'+id+'"]');
+    const nxt=nextId(), nn=nxt?stepsEl.querySelector('.item[data-id="'+nxt+'"]'):null;
+    const target=(nn&&nn.innerHTML)?nn:node;       // keep the next prompt in view as well
+    const smooth=!window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (target&&target.scrollIntoView) target.scrollIntoView({block:'nearest',behavior:smooth?'smooth':'auto'});
+  }
+}
+
+stepsEl.addEventListener('click',e=>{
+  const r=e.target.closest('[data-reveal]');
+  if (r){ reveal(r.dataset.reveal,true); return; }
+  const t=e.target.closest('.tip'); if (t){ togglePop(t,ex.tips[t.dataset.tip],'Explanation'); e.stopPropagation(); return; }
+  const w=e.target.closest('.why'); if (w){ const p=parse(w.dataset.why); togglePop(w,ex.steps[p.s].lines[p.l].why,'Why this line?'); e.stopPropagation(); }
+});
+$('btnNext').addEventListener('click',()=>reveal(nextId(),true));
+$('btnAll').addEventListener('click',()=>{ order.forEach(id=>revealed.add(id)); lastStep=-1; hidePop(); render('all'); highlight(); });
+$('btnReset').addEventListener('click',()=>{ revealed=new Set(); lastStep=-1; hoverStep=-1; hidePop(); render(); highlight();
+  clearChecks(); window.scrollTo({top:0,behavior:'auto'}); });
+$('helpToggle').addEventListener('change',e=>{ working.classList.toggle('nohelp',!e.target.checked); hidePop(); });
+
+// ---------- explanations (pop-ups): hover or focus to peek, click or tap to pin ----------
+let popFor=null, pinned=false;
+function placePop(target){
+  const r=target.getBoundingClientRect(), pw=pop.offsetWidth, ph=pop.offsetHeight, vw=document.documentElement.clientWidth;
+  let left=r.left+r.width/2-pw/2; left=Math.max(8,Math.min(vw-pw-8,left));
+  const stick=document.querySelector('.panel.sticky'), sr=stick?stick.getBoundingClientRect():null;
+  const topLimit=(sr&&getComputedStyle(stick).position==='sticky'&&sr.top<=0)?sr.bottom:0;
+  let top=r.bottom+8;
+  if (top+ph>window.innerHeight-8 && r.top-8-ph>topLimit) top=r.top-8-ph;
+  pop.style.left=(left+window.scrollX)+'px'; pop.style.top=(top+window.scrollY)+'px';
+}
+function showPop(target,html,title,pin){
+  if (popFor&&popFor!==target) popFor.setAttribute('aria-expanded','false');
+  pop.innerHTML='<p class="eyebrow">'+title+'</p>'+html; pop.hidden=false; popFor=target; pinned=!!pin;
+  target.setAttribute('aria-expanded','true'); target.setAttribute('aria-describedby','pop');
+  placePop(target);
+}
+function hidePop(){
+  if (popFor){ popFor.setAttribute('aria-expanded','false'); popFor.removeAttribute('aria-describedby'); }
+  pop.hidden=true; popFor=null; pinned=false;
+}
+function togglePop(target,html,title){ if (popFor===target&&pinned) hidePop(); else showPop(target,html,title,true); }
+function helpTarget(e){ return e.target.closest?e.target.closest('.tip,.why'):null; }
+function helpContent(t){
+  if (t.classList.contains('tip')) return [ex.tips[t.dataset.tip],'Explanation'];
+  const p=parse(t.dataset.why); return [ex.steps[p.s].lines[p.l].why,'Why this line?'];
+}
+if (CAN_HOVER){
+  stepsEl.addEventListener('mouseover',e=>{ const t=helpTarget(e); if (t&&!(pinned&&popFor)){ const c=helpContent(t); showPop(t,c[0],c[1],false); } });
+  stepsEl.addEventListener('mouseout',e=>{ const t=helpTarget(e); if (t&&!pinned&&(!e.relatedTarget||!t.contains(e.relatedTarget))) hidePop(); });
+}
+stepsEl.addEventListener('focusin',e=>{ const t=helpTarget(e); if (t&&!pinned&&t.matches(':focus-visible')){ const c=helpContent(t); showPop(t,c[0],c[1],false); } });
+stepsEl.addEventListener('focusout',e=>{ if (helpTarget(e)&&!pinned) hidePop(); });
+document.addEventListener('click',e=>{ if (!pop.hidden&&!pop.contains(e.target)&&!helpTarget(e)) hidePop(); });
+document.addEventListener('keydown',e=>{ if (e.key==='Escape') hidePop(); });
+window.addEventListener('resize',()=>{ if (popFor) placePop(popFor); setStick(); });
+
+// ---------- answer check (one box per quantity, grouped by part) ----------
+// A plain button and an Enter key handler, not a form: a form submit is blocked outright when the
+// page is shown inside a sandboxed frame (in-app previews, some learning-management-system embeds).
+let part=0;
+function setFb(fb,cls,html){ fb.className='fb'+(cls?' '+cls:''); fb.innerHTML=html; }
+function checkAnswer(a,inp,fb){
+  const raw=inp.value.trim().replace(/,/g,'.').replace(/[−–]/g,'-');
+  // a number, an optional kilo prefix, and optionally the unit this box uses
+  const m=new RegExp('^(-?\\d*\\.?\\d+)\\s*(k?)\\s*(?:'+a.units.join('|')+')?$','i').exec(raw);
+  if (!m){ setFb(fb,'bad','Enter a number, for example 250 or 250.5.'); return; }
+  const num=parseFloat(m[1]), val=num*(m[2]?1000:1);
+  const near=(v,x,t)=>Math.abs(v-x)<=Math.abs(x)*t;
+  const slip=v=>{ for (let i=0;i<a.wrong.length;i++) if (near(v,a.wrong[i].v,0.006)) return a.wrong[i].msg; return null; };
+  if (near(val,a.value,a.tol)){ setFb(fb,'good',a.right); return; }
+  let msg=slip(val);
+  if (msg){ setFb(fb,'bad','<strong>Not quite.</strong> '+msg); return; }
+  // A bare number that is only right as kilo-units: say so instead of passing it silently.
+  if (!m[2] && Math.abs(a.value)>=1000){
+    const shown=m[1].replace('-','−');
+    if (near(num*1000,a.value,a.tol)){
+      setFb(fb,'warn','<strong>Right value, but check the units.</strong> '+shown+' is the answer in k'+a.unit+', and this box is in '+a.unit+
+        '. Enter it in '+a.unit+', or type the unit as well: '+shown+' k'+a.unit+'.'); return; }
+    msg=slip(num*1000);
+    if (msg){ setFb(fb,'bad','<strong>Not quite.</strong> (Reading your answer as '+shown+' k'+a.unit+'.) '+msg); return; }
+  }
+  setFb(fb,'bad',ex.other);
+}
+function buildChecks(){
+  const nav=$('partNav'); nav.innerHTML='';
+  ex.parts.forEach((p,i)=>{
+    const b=document.createElement('button'); b.type='button'; b.innerHTML=p.nav+'<small>'+p.small+'</small>';
+    b.setAttribute('aria-pressed',i===part?'true':'false');
+    b.addEventListener('click',()=>{ part=i; buildChecks(); });
+    nav.appendChild(b);
+  });
+  const box=$('checks'); box.innerHTML='';
+  ex.parts[part].items.forEach((a,j)=>{
+    const id='ans-'+ex.parts[part].key+j, wrap=document.createElement('div'); wrap.className='check-item';
+    wrap.innerHTML='<div class="check-row" role="group" aria-label="Check your answer">'+
+      '<label class="math" for="'+id+'">'+a.label+'</label>'+
+      '<input id="'+id+'" type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off" aria-describedby="'+id+'-fb" placeholder="answer">'+
+      '<span class="math unitc">'+M.u(a.unit)+'</span>'+
+      '<button type="button" class="btn">Check</button></div><div class="fb" id="'+id+'-fb" aria-live="polite"></div>';
+    const inp=wrap.querySelector('input'), fb=wrap.querySelector('.fb');
+    if (a._val!==undefined){ inp.value=a._val; if (a._fb) setFb(fb,a._fb[0],a._fb[1]); }
+    const run=()=>{ checkAnswer(a,inp,fb); a._val=inp.value; a._fb=[fb.className.replace(/^fb ?/,''),fb.innerHTML]; };
+    wrap.querySelector('button').addEventListener('click',run);
+    inp.addEventListener('keydown',e=>{ if (e.key==='Enter'){ e.preventDefault(); run(); } });
+    inp.addEventListener('input',()=>{ a._val=inp.value; });
+    box.appendChild(wrap);
+  });
+}
+function clearChecks(){ ex.parts.forEach(p=>p.items.forEach(a=>{ delete a._val; delete a._fb; })); buildChecks(); }
+
+// Height of the pinned circuit panel on a phone, so a newly revealed line is not scrolled underneath it.
+function setStick(){
+  const s=document.querySelector('.panel.sticky');
+  const on=s&&getComputedStyle(s).position==='sticky'&&getComputedStyle(s).top==='0px';
+  document.documentElement.style.setProperty('--stick',(on?s.offsetHeight+10:12)+'px');
+}
+
+// Example selector: only appears when the page holds more than one example.
+const nav=$('exNav');
+if (EXAMPLES.length>1){
+  nav.hidden=false;
+  EXAMPLES.forEach((e,i)=>{
+    const b=document.createElement('button'); b.type='button'; b.textContent=e.navLabel||e.title; b.setAttribute('aria-pressed',i===0?'true':'false');
+    b.addEventListener('click',()=>{ ex=EXAMPLES[i]; nav.querySelectorAll('button').forEach((x,j)=>x.setAttribute('aria-pressed',j===i?'true':'false'));
+      hidePop(); build(); setStick(); });
+    nav.appendChild(b);
+  });
+}
+build(); setStick();
+if (document.fonts&&document.fonts.ready) document.fonts.ready.then(setStick);
+})();
+
+</script>
+</body>
+</html>
