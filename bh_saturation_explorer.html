@@ -38,6 +38,15 @@
               color:var(--ink); background:transparent; border:1px solid var(--ink); border-radius:4px; cursor:pointer;
               transition:background 0.15s, color 0.15s; }
   .reset-btn:hover{ background:var(--ink); color:var(--paper); }
+  .preset-block{ margin-bottom:18px; padding-bottom:16px; border-bottom:1px solid var(--grid); }
+  .chips{ display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 8px; }
+  .chip{ font:600 12.5px "Helvetica Neue",Arial,sans-serif; color:var(--maroon); background:var(--paper);
+         border:1px solid var(--maroon); border-radius:999px; padding:5px 11px; cursor:pointer;
+         transition:background 0.15s, color 0.15s; }
+  .chip:hover{ background:#f3e6e9; }
+  .chip[aria-pressed="true"]{ background:var(--maroon); color:#fff; }
+  .preset-note{ font-size:12px; line-height:1.45; color:var(--muted); margin:0; min-height:34px; }
+  .preset-note b{ color:var(--ink); }
   .stats{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
   .stat-card{ background:var(--paper); border:1px solid var(--grid); border-radius:4px; padding:10px 12px; }
   .stat-label{ font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
@@ -75,6 +84,8 @@
     (&#8467;<sub>m</sub> = 150&nbsp;mm, A<sub>c</sub> = 4&nbsp;cm&sup2;). A real core has a sharper
     knee and traces a loop rather than a single line. The inductance shown is the local slope:
     what a small change in current would see at that operating point.
+    The material buttons load typical datasheet values for &mu;<sub>r</sub> and B<sub>sat</sub>;
+    a real core's permeability also changes with flux level, frequency and temperature.
   </div>
 
   <div class="grid">
@@ -113,16 +124,27 @@
         <div class="slider-caption"><span>50</span><span>300</span></div>
       </div>
 
+      <div class="preset-block">
+        <div class="slider-label-row"><span>Core material</span><span class="slider-value" id="val-mat"></span></div>
+        <div class="chips" role="group" aria-label="Typical core materials">
+          <button type="button" class="chip" data-preset="powder" aria-pressed="false">Iron powder</button>
+          <button type="button" class="chip" data-preset="ferrite" aria-pressed="false">Ferrite</button>
+          <button type="button" class="chip" data-preset="steel" aria-pressed="false">Silicon steel</button>
+          <button type="button" class="chip" data-preset="nano" aria-pressed="false">Nanocrystalline</button>
+        </div>
+        <p class="preset-note" id="preset-note"></p>
+      </div>
+
       <div class="slider-block">
         <div class="slider-label-row"><span>Core relative permeability, &mu;<sub>r</sub></span><span class="slider-value" id="val-mu"></span></div>
-        <input type="range" id="slider-mu" min="2.3" max="3.3" step="0.01" value="3" aria-label="Core relative permeability, log scale">
-        <div class="slider-caption"><span>200</span><span>2,000</span></div>
+        <input type="range" id="slider-mu" min="1.4" max="4.5" step="0.001" value="3" aria-label="Core relative permeability, log scale">
+        <div class="slider-caption"><span>25</span><span>32,000</span></div>
       </div>
 
       <div class="slider-block">
         <div class="slider-label-row"><span>Saturation flux density, B<sub>sat</sub></span><span class="slider-value" id="val-bsat"></span></div>
-        <input type="range" id="slider-bsat" min="0.8" max="2" step="0.05" value="1.5" aria-label="Saturation flux density in tesla">
-        <div class="slider-caption"><span>0.8 T</span><span>2.0 T</span></div>
+        <input type="range" id="slider-bsat" min="0.3" max="2" step="0.01" value="1.5" aria-label="Saturation flux density in tesla">
+        <div class="slider-caption"><span>0.3 T</span><span>2.0 T</span></div>
       </div>
 
       <button class="reset-btn" id="resetBtn">Reset to defaults</button>
@@ -188,12 +210,28 @@ function model(i, n, mu_r, Bsat){
   const L0 = n * n * AC * mu / L_CORE;
   return { i, n, mu_r, Bsat, H, mu, B, muDiff, L, L0, phi: B * AC, pctSat: 100 * B / Bsat, pctL: 100 * L / L0, Blin: mu * H };
 }
+// typical small-signal values from manufacturer datasheets (room temperature)
+const PRESETS = {
+  powder:  { name: 'Iron powder', mu_r: 75, Bsat: 1.85,
+             note: '<b>Iron powder</b> (e.g. Micrometals &minus;26): power inductors that carry DC. The insulated grains act like an air gap spread through the core, so &mu;<sub>r</sub> is low and it is hard to saturate.' },
+  ferrite: { name: 'MnZn ferrite', mu_r: 2200, Bsat: 0.49,
+             note: '<b>MnZn ferrite</b> (e.g. TDK N87): transformers and inductors in switch-mode supplies at tens to hundreds of kHz. Low losses, but low B<sub>sat</sub> (about 0.39&nbsp;T at 100&nbsp;&deg;C).' },
+  steel:   { name: 'Silicon steel', mu_r: 4000, Bsat: 1.9,
+             note: '<b>Silicon steel</b> (about 3% Si, laminated): 50&nbsp;Hz power transformers and motors. Highest B<sub>sat</sub>; &mu;<sub>r</sub> varies widely between grades, up to tens of thousands.' },
+  nano:    { name: 'Nanocrystalline', mu_r: 17000, Bsat: 1.23,
+             note: '<b>Nanocrystalline</b> (e.g. Finemet FT-3KM): common-mode chokes and high-performance transformers. Very high &mu;<sub>r</sub>, so a small current is enough to saturate it.' }
+};
+const CUSTOM_NOTE = 'Choose a material to load its typical &mu;<sub>r</sub> and B<sub>sat</sub>, or set your own with the sliders below.';
+let preset = null;   // key of the active material, or null when the sliders have been set by hand
+
 function readInputs(){
+  const p = preset ? PRESETS[preset] : null;
   return model(parseFloat(sl.i.value), parseFloat(sl.n.value),
-               roundSig(Math.pow(10, parseFloat(sl.mu.value)), 2), parseFloat(sl.bsat.value));
+               p ? p.mu_r : roundSig(Math.pow(10, parseFloat(sl.mu.value)), 2),
+               p ? p.Bsat : parseFloat(sl.bsat.value));
 }
 
-function fmtL(h){ return h >= 1 ? `${h.toFixed(2)} H` : h >= 1e-3 ? `${(h*1e3).toFixed(1)} mH` : `${(h*1e6).toFixed(0)} \u00b5H`; }
+function fmtL(h){ return h >= 1 ? `${h.toFixed(2)} H` : h >= 1e-3 ? `${(h*1e3).toFixed(1)} mH` : h >= 1e-6 ? `${(h*1e6).toFixed(0)} \u00b5H` : `< 1 \u00b5H`; }
 function fmtPhi(wb){ return Math.abs(wb) >= 1e-3 ? `${(wb*1e3).toFixed(2)} mWb` : `${(wb*1e6).toFixed(0)} \u00b5Wb`; }
 
 // ---------- SVG helpers ----------
@@ -258,8 +296,8 @@ function drawBH(s){
   g.appendChild(el('line', {x1:X(0), y1:Y(0), x2:X(H_MAX), y2:Y(s.mu * H_MAX), stroke:FOCUS, 'stroke-width':2}));
   // the B-H curve
   let d = '';
-  for (let k = 0; k <= 160; k++){
-    const H = H_MAX * k / 160;
+  for (let k = 0; k <= 600; k++){
+    const H = H_MAX * k / 600;
     d += (k ? 'L' : 'M') + X(H).toFixed(1) + ',' + Y(s.Bsat * Math.tanh(s.mu * H / s.Bsat)).toFixed(1) + ' ';
   }
   g.appendChild(el('path', {d, fill:'none', stroke:MAROON, 'stroke-width':3}));
@@ -297,8 +335,8 @@ function drawL(s){
   });
   svg.appendChild(txt({x:LP.l + pw, y:LP.Hh - 2, fill:MUTED, 'font-size':12, 'text-anchor':'end'}, 'i (A)'));
   let d = '';
-  for (let k = 0; k <= 120; k++){
-    const i = I_MAX * k / 120;
+  for (let k = 0; k <= 500; k++){
+    const i = I_MAX * k / 500;
     d += (k ? 'L' : 'M') + X(i).toFixed(1) + ',' + Y(model(i, s.n, s.mu_r, s.Bsat).pctL).toFixed(1) + ' ';
   }
   svg.appendChild(el('path', {d, fill:'none', stroke:MAROON, 'stroke-width':3}));
@@ -307,10 +345,27 @@ function drawL(s){
   const ox = X(s.i), oy = Y(s.pctL);
   svg.appendChild(el('line', {x1:ox, y1:oy, x2:ox, y2:LP.t + ph, stroke:INK, 'stroke-width':1, 'stroke-dasharray':'2,3'}));
   svg.appendChild(el('circle', {cx:ox, cy:oy, r:6, fill:INK, stroke:'#fff', 'stroke-width':2}));
-  // readout placed where the curve is not: bottom-left while L is high, top-right once it has fallen
-  const high = s.pctL > 50;
-  svg.appendChild(txt({x: high ? LP.l + 10 : LP.l + pw - 6, y: high ? LP.t + ph - 10 : LP.t + 14, fill:MAROON, 'font-size':13,
-                       'font-weight':700, 'text-anchor': high ? 'start' : 'end'}, `L is ${s.pctL.toFixed(0)}% of its unsaturated value`));
+  // readout placed in the first corner where neither the curve nor the operating point passes through it
+  const label = `L is ${s.pctL.toFixed(0)}% of its unsaturated value`;
+  const tw = label.length * 13 * 0.56, pad = 5;
+  const corners = [
+    {x: LP.l + pw - 6, y: LP.t + 14, anchor: 'end'},        // top right
+    {x: LP.l + 10, y: LP.t + ph - 10, anchor: 'start'},     // bottom left
+    {x: LP.l + pw - 6, y: LP.t + ph - 10, anchor: 'end'},   // bottom right
+    {x: LP.l + 10, y: LP.t + 14, anchor: 'start'}           // top left
+  ];
+  const clear = c => {
+    const x0 = c.anchor === 'end' ? c.x - tw : c.x, x1 = x0 + tw, yTop = c.y - 13 - pad, yBot = c.y + 3 + pad;
+    if (ox > x0 - 8 && ox < x1 + 8 && oy > yTop - 8 && oy < yBot + 8) return false;
+    for (let k = 0; k <= 80; k++){
+      const xp = x0 + (x1 - x0) * k / 80, yp = Y(model((xp - LP.l) / pw * I_MAX, s.n, s.mu_r, s.Bsat).pctL);
+      if (yp > yTop && yp < yBot) return false;
+    }
+    return true;
+  };
+  const spot = corners.find(clear) || corners[0];
+  svg.appendChild(txt({x: spot.x, y: spot.y, fill:MAROON, 'font-size':13, 'font-weight':700, 'text-anchor': spot.anchor,
+                       stroke:'#fff', 'stroke-width':4, 'stroke-linejoin':'round', 'paint-order':'stroke'}, label));
 }
 
 // ---------- core and winding ----------
@@ -359,6 +414,9 @@ function render(){
   $('val-n').textContent = `${s.n}`;
   $('val-mu').textContent = s.mu_r.toLocaleString('en-AU');
   $('val-bsat').textContent = `${s.Bsat.toFixed(2)} T`;
+  $('val-mat').textContent = preset ? PRESETS[preset].name : 'Custom';
+  $('preset-note').innerHTML = preset ? PRESETS[preset].note : CUSTOM_NOTE;
+  chips.forEach(c => c.setAttribute('aria-pressed', String(c.dataset.preset === preset)));
 
   $('stat-H').textContent = `${s.H.toFixed(0)} A/m`;
   $('stat-B').textContent = `${s.B.toFixed(2)} T`;
@@ -370,8 +428,18 @@ function render(){
   drawBH(s); drawL(s); drawCore(s);
 }
 
-Object.values(sl).forEach(x => x.addEventListener('input', render));
+const chips = Array.from(document.querySelectorAll('.chip'));
+chips.forEach(c => c.addEventListener('click', () => {
+  preset = c.dataset.preset;
+  const p = PRESETS[preset];
+  sl.mu.value = Math.log10(p.mu_r); sl.bsat.value = p.Bsat;   // move the sliders to match
+  render();
+}));
+sl.i.addEventListener('input', render);
+sl.n.addEventListener('input', render);
+[sl.mu, sl.bsat].forEach(x => x.addEventListener('input', () => { preset = null; render(); }));
 $('resetBtn').addEventListener('click', () => {
+  preset = null;
   sl.i.value = DEFAULTS.i; sl.n.value = DEFAULTS.n; sl.mu.value = DEFAULTS.mu_log; sl.bsat.value = DEFAULTS.bsat;
   render();
 });
