@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transformer Action: Flux, Turns and Power — ELEC2005</title>
+<style>
+:root{
+  --ink:#1a1512; --paper:#faf7f2; --panel:#ffffff; --maroon:#7a1730;
+  --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a; --mustard:#c98a2c;
+  --serif:"Iowan Old Style","Georgia",serif;
+  --sans:"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+body{margin:0;background:#e6e6e4;color:var(--ink);font-family:var(--sans);}
+.wrap{max-width:960px;margin:0 auto;padding:24px 20px 36px;}
+header{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:6px 16px;
+  border-bottom:1px solid var(--grid);padding-bottom:12px;margin-bottom:14px;}
+.eyebrow{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin:0 0 4px;}
+h1{font-family:var(--serif);font-size:26px;letter-spacing:-0.01em;line-height:1.15;margin:0;font-weight:700;}
+.tag{font-size:12px;color:var(--muted);white-space:nowrap;}
+.intro{font-size:14px;line-height:1.55;margin:0 0 12px;max-width:820px;}
+.callout{background:#fbe9c6;border:1px solid #e0be6f;color:#5c4a12;border-radius:4px;padding:9px 12px;font-size:12.5px;line-height:1.45;margin:0 0 16px;}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start;}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0;}
+.panel{background:var(--panel);border:1px solid var(--grid);border-radius:4px;padding:14px 16px;min-width:0;}
+.panel-label{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 8px;}
+.sym{text-transform:none;letter-spacing:0;}
+svg{display:block;width:100%;height:auto;}
+svg text{font-family:var(--sans);user-select:none;-webkit-user-select:none;}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:11.5px;color:var(--muted);margin-top:8px;min-height:1.4em;}
+.legend > span{display:inline-flex;align-items:center;gap:6px;}
+.legend i{display:inline-block;width:22px;height:0;border-top:3px solid;}
+
+.chapter-n{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin:0 0 4px;}
+.story h2{font-family:var(--serif);font-size:20px;letter-spacing:-0.01em;line-height:1.2;margin:0 0 8px;}
+.story-text{font-family:var(--serif);font-size:15.5px;line-height:1.55;margin:0;min-height:10.5em;}
+.story-text b{color:var(--maroon);}
+.dots{display:flex;gap:6px;margin:14px 0 10px;}
+.dots button{flex:1;height:30px;border:1px solid var(--grid);border-radius:4px;background:var(--paper);color:var(--muted);
+  font:700 12px var(--sans);cursor:pointer;padding:0;}
+.dots button.done{background:#f3e6e9;color:var(--maroon);border-color:#e3c9cf;}
+.dots button[aria-current="step"]{background:var(--maroon);color:#fff;border-color:var(--maroon);}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;}
+.btn{flex:1 1 0;min-width:80px;padding:9px 10px;font:700 13px var(--sans);border-radius:4px;border:1px solid var(--ink);
+  background:transparent;color:var(--ink);cursor:pointer;line-height:1.2;}
+.btn.primary{background:var(--ink);color:var(--paper);flex:1.6 1 0;}
+@media (hover:hover){ .btn:hover{background:var(--ink);color:var(--paper);} .btn.primary:hover{background:var(--maroon);border-color:var(--maroon);} }
+.btn:disabled{opacity:0.35;cursor:default;pointer-events:none;}
+.btn.reset{display:block;width:100%;margin-top:12px;}
+button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
+.switch{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);margin-top:10px;cursor:pointer;}
+.switch input{accent-color:var(--maroon);width:15px;height:15px;margin:0;}
+
+.slider-block{margin-bottom:12px;}
+.slider-label-row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:4px;gap:8px;}
+.slider-value{font-weight:700;color:var(--maroon);font-variant-numeric:tabular-nums;white-space:nowrap;}
+input[type=range]{width:100%;accent-color:var(--maroon);margin:2px 0;}
+.slider-caption{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);}
+.seg{display:flex;border:1px solid var(--grid);border-radius:4px;overflow:hidden;}
+.seg button{flex:1;padding:8px 6px;font:700 12px var(--sans);background:var(--paper);color:var(--muted);cursor:pointer;border:none;border-left:1px solid var(--grid);}
+.seg button:first-child{border-left:none;}
+.seg button[aria-pressed="true"]{background:var(--maroon);color:#fff;}
+.ctl-label{font-size:13px;margin:0 0 5px;}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
+.stat-card{background:var(--paper);border:1px solid var(--grid);border-radius:4px;padding:9px 11px;}
+.stat-label{font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+.stat-value{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--maroon);white-space:nowrap;}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:2px;min-height:13px;}
+footer{text-align:center;color:var(--muted);font-size:11.5px;margin-top:26px;}
+
+@media (max-width:800px){
+  .wrap{padding:16px 12px 28px;}
+  h1{font-size:22px;}
+  .grid{grid-template-columns:minmax(0,1fr);gap:12px;}
+  .col{display:contents;}
+  .p-scene{order:1;} .p-wave{order:2;} .p-story{order:3;} .p-explore{order:4;}
+  .story-text{min-height:0;font-size:15px;}
+  .legend{font-size:11px;}
+}
+@media (pointer:coarse){ input[type=range]{height:30px;} .btn,.seg button,.dots button{min-height:40px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">Transformers &middot; Animated explainer</p>
+      <h1>Transformer Action: Flux, Turns and Power</h1>
+    </div>
+    <div class="tag">ELEC2005 &middot; Week 10</div>
+  </header>
+
+  <p class="intro">Two windings on one core, with no wire joining them, and yet power gets from one to the other.
+  Watch the flux swing round the core, see each turn of wire pick up the same voltage, and find out why the primary
+  current rises when you connect a load.</p>
+
+  <div class="callout"><b>Slowed right down, with very few turns.</b> The AC here takes 4 seconds per cycle; on the mains it
+  repeats 200 times faster. A real winding has hundreds of turns, not a handful. The transformer is ideal apart from a
+  small magnetising current, and values are peaks: 12 V on the primary and a 2 Ω load.</div>
+
+  <div class="grid">
+    <div class="col">
+      <div class="panel p-scene">
+        <p class="panel-label">The transformer<span id="sceneCh"></span></p>
+        <svg id="scene" viewBox="0 0 560 290" role="img" aria-label="A transformer core with a primary winding fed from an AC source and a secondary winding connected to a load through a switch"></svg>
+        <div class="legend">
+          <span><i style="border-color:#7a1730"></i><span>flux in the core (speed = size)</span></span>
+          <span><i style="border-color:#c98a2c;border-top-width:5px"></i><span>turn glows with its induced voltage</span></span>
+        </div>
+      </div>
+      <div class="panel p-wave">
+        <p class="panel-label">Over time <span id="waveNote" class="sym" style="font-weight:400"></span></p>
+        <svg id="wave" viewBox="0 0 460 170" role="img" aria-label="Waveforms over the last two cycles"></svg>
+        <div class="legend" id="waveLegend"></div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="panel story p-story" aria-live="polite">
+        <p class="chapter-n" id="chN"></p>
+        <h2 id="chTitle"></h2>
+        <p class="story-text" id="chText"></p>
+        <div class="dots" id="dots" role="group" aria-label="Chapters"></div>
+        <div class="btnrow">
+          <button type="button" class="btn" id="btnBack">&#9664; Back</button>
+          <button type="button" class="btn primary" id="btnPlay">Play</button>
+          <button type="button" class="btn" id="btnNext">Next &#9654;</button>
+        </div>
+        <label class="switch"><input type="checkbox" id="autoNext"> Carry on to the next chapter automatically</label>
+      </div>
+
+      <div class="panel p-explore">
+        <p class="panel-label">Take control</p>
+        <div class="slider-block">
+          <div class="slider-label-row"><span>Secondary turns, <i>n</i><sub>2</sub> (primary has <i>n</i><sub>1</sub> = 6)</span><span class="slider-value" id="valN2"></span></div>
+          <input type="range" id="sliderN2" min="1" max="12" step="1" value="3" aria-label="Number of secondary turns">
+          <div class="slider-caption"><span>1</span><span>6 (1:1)</span><span>12</span></div>
+        </div>
+        <p class="ctl-label">Load switch</p>
+        <div class="seg" id="loadSeg" role="group" aria-label="Load switch">
+          <button type="button" data-load="0" aria-pressed="true">Open</button>
+          <button type="button" data-load="1" aria-pressed="false">Closed (2 &Omega; load)</button>
+        </div>
+        <button type="button" class="btn reset" id="btnReset">Reset to defaults</button>
+        <div class="stats">
+          <div class="stat-card"><div class="stat-label">Volts per turn</div><div class="stat-value" id="stTurn"></div><div class="stat-sub">same for every turn</div></div>
+          <div class="stat-card"><div class="stat-label">Secondary, <span class="sym">v<sub>2</sub></span></div><div class="stat-value" id="stV2"></div><div class="stat-sub" id="stV2sub"></div></div>
+          <div class="stat-card"><div class="stat-label">Currents, <span class="sym">i<sub>1</sub> / i<sub>2</sub></span></div><div class="stat-value" id="stI"></div><div class="stat-sub" id="stIsub"></div></div>
+          <div class="stat-card"><div class="stat-label">Power in / out</div><div class="stat-value" id="stP"></div><div class="stat-sub">average</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>ELEC2005 &middot; Week 10 &middot; for concept exploration, not assessment</footer>
+</div>
+
+<script>
+(function(){
+'use strict';
+// =====================================================================================
+// Physics: ideal transformer plus a small magnetising current. Peak values.
+//   v1 = V1 sin(wt);  v1 = n1 dPhi/dt  =>  Phi = -(V1 / (n1 w)) cos(wt)
+//   volts per turn e = dPhi/dt = v1 / n1;  v2 = n2 e;  i2 = v2 / R (switch closed)
+//   i1 = (n2 / n1) i2 + i_m,  with i_m in phase with the flux (lags v1 by 90 degrees)
+// =====================================================================================
+const V1 = 12, N1 = 6, R = 2, IM = 0.3, T = 4, W = 2 * Math.PI / T;
+const smooth = t => t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
+function sig(t, n2, load){
+  const s = Math.sin(W * t), c = Math.cos(W * t);
+  const v1 = V1 * s, phi = -c, e = V1 / N1 * s, v2 = n2 * e;      // phi in units of its peak
+  const i2 = load * v2 / R, im = -IM * c, i1 = (n2 / N1) * i2 + im;
+  return { v1, phi, e, v2, i2, i1, im, p1: v1 * i1, p2: v2 * i2 };
+}
+
+// =====================================================================================
+// Story
+// =====================================================================================
+const CH = [
+  { title: 'AC makes the flux swing', sec: 0, n2: 3, load: 0, plot: 'flux',
+    text: 'Connect an AC source to the primary winding. Its current sets up flux round the core, and as the voltage alternates, the flux swings back and forth with it. Look at the timing: the flux is at its peak when the voltage passes through zero. The flux is a quarter of a cycle behind the voltage, because <b>v<sub>1</sub> = n<sub>1</sub> dΦ/dt</b>.' },
+  { title: 'One turn feels the change', sec: 1, n2: 1, load: 0, plot: 'turn',
+    text: 'Wrap a single turn of wire round the other side of the core. The changing flux through it induces a voltage in it: <b>e = dΦ/dt</b> (Faraday’s law). The turn glows brightest when the flux is changing fastest, which is when the flux passes through zero, not when it is at its peak. Every turn of the primary has exactly the same voltage.' },
+  { title: 'More turns, more volts', sec: 1, n2: 3, load: 0, plot: 'volts', grow: true,
+    text: 'Add turns. The same flux passes through every one of them, so every turn gets the same voltage, and turns in series add up like cells in a battery: <b>v<sub>2</sub> = n<sub>2</sub> × (volts per turn)</b>. The primary works the same way, so <b>v<sub>1</sub> / v<sub>2</sub> = n<sub>1</sub> / n<sub>2</sub></b>: the turns ratio.' },
+  { title: 'Connect a load', sec: 1, n2: 3, load: 1, plot: 'currents',
+    text: 'Close the switch. Current <b>i<sub>2</sub></b> flows in the secondary, and its ampere-turns <b>n<sub>2</sub>i<sub>2</sub></b> try to drive flux the other way round the core. The primary instantly draws extra current so that its own extra ampere-turns cancel them. The flux in the core does not change: it is still set by the primary voltage.' },
+  { title: 'Power flows across', sec: 1, n2: 3, load: 1, plot: 'power',
+    text: 'Power goes in at the primary and comes out at the secondary, carried across by the changing flux, with no wire joining the two. In an ideal transformer nothing is lost: <b>v<sub>1</sub>i<sub>1</sub> = v<sub>2</sub>i<sub>2</sub></b>. Step the voltage down and the current steps up by the same ratio.' }
+];
+const EXPLORE = { title: 'Your turn', text: 'Change the number of secondary turns and open or close the load switch. Try 6 turns for a 1:1 transformer, then 12 to step the voltage up. Watch the currents too: with the load connected, the side with fewer turns always carries more current.' };
+
+let t = 0, ch = 0, mode = 'story', playing = false, chT = 0;
+let secP = 0, n2 = 3, n2Shown = 3, loadP = 0, plot = 'flux';
+let hist = [];
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function startChapter(k, autoplay){
+  mode = 'story'; ch = k; chT = 0;
+  const c = CH[k], prev = k > 0 ? CH[k - 1] : null;
+  secP = prev ? prev.sec : 0; loadP = prev ? prev.load : 0;
+  n2 = c.grow ? 1 : c.n2; n2Shown = n2;
+  if (!autoplay){ secP = c.sec; loadP = c.load; n2 = c.n2; n2Shown = n2; }
+  plot = c.plot; hist = [];
+  playing = !!autoplay;
+  $('sliderN2').value = n2; syncLoadSeg();
+  buildWindings(); renderStory();
+}
+function tickStory(dt){
+  if (mode !== 'story' || !playing) return;
+  const c = CH[ch];
+  chT += dt;
+  const k = REDUCED ? 1 : Math.min(1, chT / 1.4);
+  secP = secP + (c.sec - secP) * (REDUCED ? 1 : Math.min(1, dt * 3));
+  if (Math.abs(secP - c.sec) < 0.01) secP = c.sec;
+  if (c.grow){                                         // add a turn every 1.6 s
+    const want = Math.min(c.n2, 1 + Math.floor(chT / 1.6));
+    if (want !== n2){ n2 = want; $('sliderN2').value = n2; buildWindings(); }
+  }
+  if (c.load > loadP) loadP = Math.min(c.load, loadP + (REDUCED ? 1 : dt / 0.8));
+  if (k >= 1 && chT > (c.grow ? 1.6 * c.n2 + 2 : 4) && playing){
+    playing = false; renderStory();
+    if ($('autoNext').checked && ch < CH.length - 1) setTimeout(() => { if (mode === 'story' && !playing) startChapter(ch + 1, true); }, 1500);
+  }
+}
+
+// =====================================================================================
+// Drawing
+// =====================================================================================
+const NS = 'http://www.w3.org/2000/svg';
+const $ = id => document.getElementById(id);
+function el(tag, attrs, parent, text){
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function txt(parent, attrs, parts){
+  const t = el('text', attrs, parent), fs = parseFloat(attrs['font-size'] || 12);
+  let shifted = false;
+  (Array.isArray(parts) ? parts : [parts]).forEach(p => {
+    const isSub = typeof p === 'object', a = {};
+    if (isSub){ a['font-size'] = (fs * 0.72).toFixed(1); a.dy = (fs * 0.28).toFixed(1); }
+    else if (shifted) a.dy = (-fs * 0.28).toFixed(1);
+    el('tspan', a, t, isSub ? p.sub : p); shifted = isSub;
+  });
+  return t;
+}
+const INK = '#1a1512', MAROON = '#7a1730', FOCUS = '#1c5f7a', MUSTARD = '#c98a2c', MUTED = '#6b6156', GRID = '#e4ddd2';
+function mix(a, b, f){
+  const pa = [1, 3, 5].map(k => parseInt(a.substr(k, 2), 16)), pb = [1, 3, 5].map(k => parseInt(b.substr(k, 2), 16));
+  return '#' + pa.map((v, k) => Math.round(v + (pb[k] - v) * f).toString(16).padStart(2, '0')).join('');
+}
+// core geometry (px)
+const C = { ox0: 150, ox1: 410, oy0: 40, oy1: 250, ix0: 190, ix1: 370, iy0: 80, iy1: 210 }, LW = 40;
+const WY0 = 94, WY1 = 196;                        // windings occupy this height on each limb
+const scene = $('scene');
+let gBack, gFront, gSec, gSecFront, priStrands = [], secStrands = [], streaks = [], flowP, flowS, switchArm, mmf1, mmf2, mmfLab1, mmfLab2, labN2, gLoad, gV2;
+
+function buildScene(){
+  scene.innerHTML = '';
+  const defs = el('defs', {}, scene);
+  const pat = el('pattern', {id: 'hatch', width: 8, height: 8, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)'}, defs);
+  el('rect', {width: 8, height: 8, fill: '#e3ddd3'}, pat); el('line', {x1: 0, y1: 0, x2: 0, y2: 8, stroke: '#d3cbbf', 'stroke-width': 3}, pat);
+  gBack = el('g', {}, scene);                    // back halves of the turns, behind the core
+  el('path', {d: `M${C.ox0},${C.oy0} H${C.ox1} V${C.oy1} H${C.ox0} Z M${C.ix0},${C.iy0} V${C.iy1} H${C.ix1} V${C.iy0} Z`,
+    fill: 'url(#hatch)', 'fill-rule': 'evenodd', stroke: INK, 'stroke-width': 1.8}, scene);
+  const gStreak = el('g', {}, scene);
+  for (let k = 0; k < 90; k++){ const s = {el: el('line', {stroke: MAROON, 'stroke-width': 2.6, 'stroke-linecap': 'round', opacity: 0}, gStreak)}; spawnStreak(s, true); streaks.push(s); }
+  // primary circuit: source, leads
+  const gP = el('g', {}, scene);
+  const pPath = `M${C.ox0 - 4},${WY0} H58 V127 M58,163 V268 H${C.ox0 + LW + 4} V${WY1 + 6}`;
+  el('path', {d: pPath, stroke: INK, 'stroke-width': 2.4, fill: 'none', 'stroke-linejoin': 'round'}, gP);
+  flowP = el('path', {d: pPath, stroke: '#fff', 'stroke-width': 2.0, fill: 'none', 'stroke-linecap': 'round', 'stroke-dasharray': '0.1 14'}, gP);
+  el('circle', {cx: 58, cy: 145, r: 18, fill: '#fff', stroke: INK, 'stroke-width': 2.2}, gP);
+  let d = ''; for (let i = 0; i <= 30; i++){ const u = -1 + i / 15; d += (i ? 'L' : 'M') + (58 + 10 * u).toFixed(1) + ',' + (145 - 6 * Math.sin(Math.PI * u)).toFixed(1); }
+  el('path', {d, stroke: INK, 'stroke-width': 1.8, fill: 'none'}, gP);
+  txt(gP, {x: 30, y: 112, 'font-size': 14, 'font-weight': 700, fill: INK}, '+');
+  txt(gP, {x: 14, y: 151, 'font-size': 17, 'font-weight': 700, fill: FOCUS, 'font-style': 'italic'}, ['v', {sub: '1'}]);
+  txt(gP, {x: 31, y: 185, 'font-size': 14, 'font-weight': 700, fill: INK}, '−');
+  txt(gP, {x: 170, y: 30, 'font-size': 15, 'font-weight': 700, fill: INK, 'text-anchor': 'middle'}, ['n', {sub: '1'}, ' = 6']);
+  el('circle', {cx: C.ox0 - 11, cy: WY0 - 8, r: 3.6, fill: INK}, gP);           // polarity dot
+  gFront = el('g', {}, scene);                   // front halves of the primary turns
+  // secondary (fades in): load, switch, leads
+  gSec = el('g', {}, scene);
+  const sx = C.ox1 + 4, sPath = `M${sx},${WY0} H470 M494,${WY0} H510 V120 M510,170 V268 H${C.ox1 - LW - 4} V${WY1 + 6}`;
+  el('path', {d: sPath, stroke: INK, 'stroke-width': 2.4, fill: 'none', 'stroke-linejoin': 'round'}, gSec);
+  flowS = el('path', {d: `M${sx},${WY0} H470 L494,${WY0} H510 V120 M510,170 V268 H${C.ox1 - LW - 4} V${WY1 + 6}`, stroke: '#fff', 'stroke-width': 2.0, fill: 'none', 'stroke-linecap': 'round', 'stroke-dasharray': '0.1 14'}, gSec);
+  el('circle', {cx: 470, cy: WY0, r: 3, fill: INK}, gSec); el('circle', {cx: 494, cy: WY0, r: 3, fill: INK}, gSec);
+  switchArm = el('line', {x1: 470, y1: WY0, x2: 492, y2: WY0 - 14, stroke: INK, 'stroke-width': 2.6, 'stroke-linecap': 'round'}, gSec);
+  gLoad = el('g', {}, gSec);
+  let z = `M510,120`; for (let i = 0; i < 6; i++) z += ` L${i % 2 ? 501 : 519},${124 + i * 8}`; z += ' L510,170';
+  el('path', {d: z, stroke: INK, 'stroke-width': 2.2, fill: 'none', 'stroke-linejoin': 'round'}, gLoad);
+  txt(gLoad, {x: 524, y: 150, 'font-size': 14, fill: MUTED}, '2 Ω');
+  gV2 = el('g', {}, gSec);
+  txt(gV2, {x: 446, y: 125, 'font-size': 14, 'font-weight': 700, fill: INK}, '+');
+  txt(gV2, {x: 436, y: 151, 'font-size': 17, 'font-weight': 700, fill: MUSTARD, 'font-style': 'italic'}, ['v', {sub: '2'}]);
+  txt(gV2, {x: 447, y: 185, 'font-size': 14, 'font-weight': 700, fill: INK}, '−');
+  labN2 = txt(gSec, {x: 390, y: 30, 'font-size': 15, 'font-weight': 700, fill: INK, 'text-anchor': 'middle'}, ['n', {sub: '2'}, ' = 3']);
+  el('circle', {cx: C.ox1 + 11, cy: WY0 - 8, r: 3.6, fill: INK}, gSec);
+  gSecFront = el('g', {}, scene);
+  // ampere-turn tug of war in the window (shown once a load is connected)
+  const gM = el('g', {}, scene);
+  mmf1 = el('path', {fill: FOCUS}, gM); mmf2 = el('path', {fill: MUSTARD}, gM);
+  mmfLab1 = txt(gM, {x: 230, y: 128, 'font-size': 12.5, 'font-weight': 700, fill: FOCUS, 'text-anchor': 'middle'}, ['n', {sub: '1'}, 'i', {sub: '1'}, '′']);
+  mmfLab2 = txt(gM, {x: 330, y: 128, 'font-size': 12.5, 'font-weight': 700, fill: MUSTARD, 'text-anchor': 'middle'}, ['n', {sub: '2'}, 'i', {sub: '2'}]);
+  mmfLab1.parentNode.appendChild(el('text', {x: 280, y: 190, 'font-size': 11.5, fill: MUTED, 'text-anchor': 'middle', id: 'mmfNote'}, undefined, 'ampere-turns cancel'));
+}
+// turns: front strand across the limb, back strand (behind the core) to the next turn
+function strands(xa, xb, n, g, gb){
+  const out = [], sp = n > 1 ? (WY1 - WY0) / (n - 1) : 0;
+  for (let k = 0; k < n; k++){
+    const y = n > 1 ? WY0 + k * sp : (WY0 + WY1) / 2 - 3;
+    out.push(el('line', {x1: xa, y1: y, x2: xb, y2: y + 6, stroke: INK, 'stroke-width': 2.8, 'stroke-linecap': 'round'}, g));
+    if (k < n - 1) el('line', {x1: xb, y1: y + 6, x2: xa, y2: y + sp, stroke: '#9b928a', 'stroke-width': 2.2, 'stroke-linecap': 'round'}, gb);
+  }
+  return out;
+}
+function buildWindings(){
+  gBack.innerHTML = ''; gFront.innerHTML = ''; gSecFront.innerHTML = '';
+  priStrands = strands(C.ox0 - 4, C.ox0 + LW + 4, N1, gFront, gBack);
+  const gbS = el('g', {}, gBack);
+  secStrands = strands(C.ox1 + 4, C.ox1 - LW - 4, n2, gSecFront, gbS);
+  gbS.setAttribute('opacity', secP); gSecFront.setAttribute('opacity', secP);
+  gBack._sec = gbS;
+  if (n2 === 1){                                   // a single turn sits mid-limb: join its ends to the leads
+    const ym = (WY0 + WY1) / 2 - 3;
+    el('line', {x1: C.ox1 + 4, y1: WY0, x2: C.ox1 + 4, y2: ym, stroke: INK, 'stroke-width': 2.4}, gSecFront);
+    el('line', {x1: C.ox1 - LW - 4, y1: ym + 6, x2: C.ox1 - LW - 4, y2: WY1 + 6, stroke: INK, 'stroke-width': 2.4}, gSecFront);
+  }
+  // with one turn the leads still meet its two ends
+  const tSpan = labN2.querySelectorAll('tspan'); tSpan[tSpan.length - 1].textContent = ' = ' + n2;
+}
+
+// flux streaks: circulate round the core, along paths parallel to its edges (arcs round the window corners)
+function inCoreBand(x, y){ return x >= C.ox0 && x <= C.ox1 && y >= C.oy0 && y <= C.oy1 && !(x > C.ix0 && x < C.ix1 && y > C.iy0 && y < C.iy1); }
+function offPath(x, y){
+  const qx = x < 280 ? C.ix0 - x : x - C.ix1, qy = y < 145 ? C.iy0 - y : y - C.iy1;
+  return (qx > 0 && qy > 0) ? Math.hypot(qx, qy) : Math.max(qx, qy);
+}
+// clockwise on screen for positive flux: up the left limb (through the primary), right along the top, down the right limb
+function coreDir(x, y){
+  const left = x < 280, top = y < 145;
+  const cx = left ? C.ix0 : C.ix1, cy = top ? C.iy0 : C.iy1;
+  const qx = left ? cx - x : x - cx, qy = top ? cy - y : y - cy;
+  if (qx > 0 && qy > 0){ const rx = x - cx, ry = y - cy, m = Math.hypot(rx, ry) || 1; return [-ry / m, rx / m]; }   // clockwise arc (screen)
+  if (qx > 0) return [0, left ? -1 : 1];
+  return [top ? 1 : -1, 0];
+}
+function spawnStreak(s, initial){
+  for (let i = 0; i < 30; i++){
+    s.x = C.ox0 + Math.random() * (C.ox1 - C.ox0); s.y = C.oy0 + Math.random() * (C.oy1 - C.oy0);
+    const o = offPath(s.x, s.y);
+    if (inCoreBand(s.x, s.y) && o >= 8 && o <= LW - 3) break;
+  }
+  s.age = initial ? Math.random() * 3 : 0; s.life = 2 + Math.random() * 2; s.frozen = false;
+}
+
+// waveform panel
+const wave = $('wave');
+const WP = { l: 30, r: 10, t: 10, b: 20, W: 460, H: 170 };
+let gWave;
+function buildWave(){
+  wave.innerHTML = '';
+  const pw = WP.W - WP.l - WP.r, ph = WP.H - WP.t - WP.b, y0 = WP.t + ph / 2;
+  el('line', {x1: WP.l, y1: y0, x2: WP.l + pw, y2: y0, stroke: INK, 'stroke-width': 1.2}, wave);
+  el('line', {x1: WP.l, y1: WP.t, x2: WP.l, y2: WP.t + ph, stroke: INK, 'stroke-width': 1.2}, wave);
+  [0.5, 1].forEach(f => [1, -1].forEach(s => el('line', {x1: WP.l, y1: y0 - s * f * ph / 2 * 0.92, x2: WP.l + pw, y2: y0 - s * f * ph / 2 * 0.92, stroke: GRID, 'stroke-width': 1}, wave)));
+  txt(wave, {x: WP.l + pw, y: WP.H - 4, 'font-size': 11, fill: MUTED, 'text-anchor': 'end'}, 'time →  (last two cycles)');
+  gWave = el('g', {}, wave);
+}
+const TRACES = {
+  flux:     [['v1', FOCUS, 'v₁', 26], ['phi', MAROON, 'flux Φ (scaled)', 1]],
+  turn:     [['v1', FOCUS, 'v₁', 26], ['phi', MAROON, 'flux Φ (scaled)', 1], ['e', MUSTARD, 'volts in one turn', 26, true]],
+  volts:    [['v1', FOCUS, 'v₁', 26], ['v2', MUSTARD, 'v₂', 26], ['phi', MAROON, 'flux Φ (scaled)', 1]],
+  currents: [['i1', FOCUS, 'i₁', 'auto'], ['i2', MUSTARD, 'i₂', 'auto'], ['phi', MAROON, 'flux Φ (scaled)', 1]],
+  power:    [['p1', FOCUS, 'power in, v₁i₁', 'autoP'], ['p2', MUSTARD, 'power out, v₂i₂', 'autoP', true]]
+};
+const NOTES = { flux: '· voltage to scale (±26 V)', turn: '· voltages to scale (±26 V)', volts: '· voltages to scale (±26 V)', currents: '· currents to scale', power: '· power to scale' };
+function drawWave(){
+  gWave.innerHTML = '';
+  const pw = WP.W - WP.l - WP.r, ph = WP.H - WP.t - WP.b, y0 = WP.t + ph / 2, span = 2 * T;
+  const tr = TRACES[plot];
+  const i2pk = n2 * (V1 / N1) / R * loadP, i1pk = (n2 / N1) * i2pk + IM;           // fixed scales for this setting
+  const Ipk = Math.max(0.6, i1pk, i2pk) * 1.15, Ppk = Math.max(1, (n2 * V1 / N1) * i2pk) * 1.15;
+  tr.forEach(([key, col, , sc, dash]) => {
+    const scale = sc === 'auto' ? Ipk : sc === 'autoP' ? Ppk : sc;
+    let d = '';
+    hist.forEach((h, k) => {
+      const x = WP.l + pw - (t - h.t) / span * pw;
+      if (x < WP.l) return;
+      const y = y0 - Math.max(-1.05, Math.min(1.05, h[key] / scale)) * ph / 2 * 0.92;
+      d += (d ? 'L' : 'M') + x.toFixed(1) + ',' + y.toFixed(1);
+    });
+    if (d) el('path', {d, fill: 'none', stroke: col, 'stroke-width': key === 'phi' ? 2.6 : 2.3, 'stroke-dasharray': dash ? '6,4' : 'none', 'stroke-linejoin': 'round'}, gWave);
+  });
+  el('line', {x1: WP.l + pw, y1: WP.t, x2: WP.l + pw, y2: WP.t + ph, stroke: MUTED, 'stroke-width': 1, 'stroke-dasharray': '2,3'}, gWave);
+}
+function renderLegend(){
+  $('waveLegend').innerHTML = TRACES[plot].map(([, col, lab, , dash]) =>
+    `<span><i style="border-color:${col};${dash ? 'border-top-style:dashed' : ''}"></i><span>${lab}</span></span>`).join('');
+  $('waveNote').textContent = NOTES[plot];
+}
+
+let offP = 0, offS = 0;
+function updateScene(dt){
+  const s = sig(t, n2, loadP), emax = V1 / N1, ef = Math.abs(s.e) / emax;
+  // turns glow with the voltage induced in each of them (the same for every turn)
+  const glow = mix(INK, MUSTARD, Math.min(1, ef * 1.05)), wd = (2.6 + 3.2 * ef).toFixed(2);
+  priStrands.forEach(l => { l.setAttribute('stroke', glow); l.setAttribute('stroke-width', wd); });
+  secStrands.forEach(l => { l.setAttribute('stroke', glow); l.setAttribute('stroke-width', wd); });
+  gSec.setAttribute('opacity', secP); gSecFront.setAttribute('opacity', secP); if (gBack._sec) gBack._sec.setAttribute('opacity', secP);
+  // flux streaks: speed and brightness follow the size of the flux; direction follows its sign
+  const ph = s.phi, sp = 70 * Math.abs(ph) * (REDUCED ? 0 : 1);
+  streaks.forEach(st => {
+    st.age += dt;
+    const [dx, dy] = coreDir(st.x, st.y), sg = Math.sign(ph) || 1;
+    if (!st.frozen){
+      const nx = st.x + sg * dx * sp * dt, ny = st.y + sg * dy * sp * dt;
+      if (!inCoreBand(nx, ny)){ st.frozen = true; st.life = Math.min(st.life, st.age + 0.3); } else { st.x = nx; st.y = ny; }
+    }
+    if (st.age > st.life) spawnStreak(st, false);
+    const L = 4 + 10 * Math.abs(ph), fade = Math.min(1, st.age / 0.4, (st.life - st.age) / 0.3);
+    st.el.setAttribute('x1', (st.x - sg * dx * L).toFixed(1)); st.el.setAttribute('y1', (st.y - sg * dy * L).toFixed(1));
+    st.el.setAttribute('x2', st.x.toFixed(1)); st.el.setAttribute('y2', st.y.toFixed(1));
+    st.el.setAttribute('opacity', Math.max(0, fade * (0.15 + 0.85 * Math.abs(ph))).toFixed(2));
+  });
+  // current flow in the leads (white dots), speed follows each current
+  offP -= 26 * s.i1 * dt; offS -= 26 * s.i2 * dt;
+  flowP.setAttribute('stroke-dashoffset', offP.toFixed(1)); flowS.setAttribute('stroke-dashoffset', offS.toFixed(1));
+  flowP.setAttribute('opacity', 1); flowS.setAttribute('opacity', loadP > 0.5 ? 1 : 0);
+  // switch arm, and the ampere-turn tug of war
+  switchArm.setAttribute('x2', 492); switchArm.setAttribute('y2', (WY0 - 14 * (1 - smooth(loadP))).toFixed(1));
+  const mm = (n2 * s.i2) / (n2 * n2 * (V1 / N1) / R + 1e-9);                   // n2 i2 as a fraction of its peak, -1..1
+  const show = loadP > 0.95 && secP > 0.95, L1 = 46 * Math.abs(mm), sgm = Math.sign(mm) || 1;
+  const arrow = (x0, len, dir) => { if (len < 3) return ''; const x1 = x0 + dir * (len - 9), x2 = x0 + dir * len;
+    return `M${x0},${145 - 4} L${x1},${145 - 4} L${x1},${145 - 9} L${x2},145 L${x1},${145 + 9} L${x1},${145 + 4} L${x0},${145 + 4} Z`; };
+  // primary's extra ampere-turns push one way, the secondary's push back: equal, opposite, meeting in the middle
+  mmf1.setAttribute('d', show ? arrow(280 - L1 * sgm, L1, sgm) : '');
+  mmf2.setAttribute('d', show ? arrow(280 + L1 * sgm, L1, -sgm) : '');
+  [mmfLab1, mmfLab2, $('mmfNote')].forEach(e => e.setAttribute('opacity', show ? 1 : 0));
+  gLoad.setAttribute('opacity', 1);
+}
+function updateStats(){
+  syncLoadSeg();
+  const e = V1 / N1, v2 = n2 * e, i2 = loadP > 0.5 ? v2 / R : 0, i1 = (n2 / N1) * i2;
+  $('stTurn').textContent = e.toFixed(1) + ' V';
+  $('stV2').textContent = v2.toFixed(1) + ' V';
+  $('stV2sub').textContent = `${n2} turn${n2 > 1 ? 's' : ''} × ${e.toFixed(1)} V`;
+  $('stI').textContent = i2 ? `${i1.toFixed(2)} / ${i2.toFixed(2)} A` : '— / 0 A';
+  $('stIsub').textContent = i2 ? 'load part of i₁ (plus a little magnetising)' : 'only a small magnetising current';
+  $('stP').textContent = i2 ? `${(v2 * i2 / 2).toFixed(1)} W / ${(v2 * i2 / 2).toFixed(1)} W` : '0 W';
+  $('valN2').textContent = n2 + (n2 === N1 ? ' (1:1)' : n2 < N1 ? ' (step down)' : ' (step up)');
+}
+
+// ----- story panel and controls -----
+function renderStory(){
+  const exploring = mode === 'explore', c = exploring ? EXPLORE : CH[ch];
+  $('chN').textContent = exploring ? 'Explore' : `Chapter ${ch + 1} of ${CH.length}`;
+  $('chTitle').textContent = c.title; $('chText').innerHTML = c.text;
+  $('sceneCh').textContent = exploring ? ' · exploring' : ` · chapter ${ch + 1}: ${c.title}`;
+  $('dots').querySelectorAll('button').forEach((b, k) => {
+    b.classList.toggle('done', k < ch);
+    if (k === ch && !exploring) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+  });
+  $('btnPlay').textContent = exploring ? 'Back to the story' : playing ? 'Pause' : 'Play chapter';
+  $('btnBack').disabled = ch === 0 && !exploring; $('btnNext').disabled = ch === CH.length - 1 && !exploring;
+  $('btnNext').classList.toggle('primary', !exploring && !playing && ch < CH.length - 1 && chT > 0);
+  renderLegend();
+}
+function showScene(){
+  if (window.matchMedia('(max-width:800px)').matches){
+    const r = document.querySelector('.p-scene').getBoundingClientRect();
+    if (r.top < 0 || r.top > 80) document.querySelector('.p-scene').scrollIntoView({block: 'start', behavior: REDUCED ? 'auto' : 'smooth'});
+  }
+}
+function syncLoadSeg(){ $('loadSeg').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String((+b.dataset.load) === (loadP > 0.5 ? 1 : 0)))); }
+CH.forEach((c, k) => {
+  const b = document.createElement('button'); b.type = 'button'; b.textContent = k + 1; b.title = c.title;
+  b.setAttribute('aria-label', 'Chapter ' + (k + 1) + ': ' + c.title);
+  b.addEventListener('click', () => { startChapter(k, true); showScene(); });
+  $('dots').appendChild(b);
+});
+$('btnBack').addEventListener('click', () => { startChapter(Math.max(0, mode === 'explore' ? ch : ch - 1), true); showScene(); });
+$('btnNext').addEventListener('click', () => { startChapter(Math.min(CH.length - 1, mode === 'explore' ? ch : ch + 1), true); showScene(); });
+$('btnPlay').addEventListener('click', () => {
+  if (mode === 'explore' || (!playing && chT > 0)){ startChapter(ch, true); showScene(); return; }
+  playing = !playing; renderStory(); if (playing) showScene();
+});
+function enterExplore(){
+  if (mode === 'explore') return;
+  mode = 'explore'; playing = false; secP = 1;
+  if (plot === 'flux' || plot === 'turn') plot = 'volts';
+  renderStory();
+}
+$('sliderN2').addEventListener('input', e => { enterExplore(); n2 = parseInt(e.target.value, 10); buildWindings(); });
+$('loadSeg').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+  enterExplore(); loadP = +b.dataset.load; syncLoadSeg();
+  if (loadP && plot === 'volts') { plot = 'currents'; renderLegend(); }
+  if (!loadP && (plot === 'currents' || plot === 'power')) { plot = 'volts'; renderLegend(); }
+}));
+$('btnReset').addEventListener('click', () => { $('autoNext').checked = false; startChapter(0, false); });
+
+buildScene(); buildWave(); startChapter(0, false);
+let last = null;
+function frame(ts){
+  const dt = last === null ? 0 : Math.min(0.05, (ts - last) / 1000); last = ts;
+  t += dt;
+  tickStory(dt);
+  const s = sig(t, n2, loadP); s.t = t; hist.push(s);
+  while (hist.length && t - hist[0].t > 2 * T + 0.1) hist.shift();
+  updateScene(dt); drawWave(); updateStats();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+window.__tx = { sig, startChapter, get n2(){ return n2; }, get loadP(){ return loadP; }, get secP(){ return secP; }, coreDir, inCoreBand, offPath, get t(){ return t; } };
+})();
+</script>
+</body>
+</html>
