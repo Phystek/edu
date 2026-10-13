@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>From Current to Flux: Wire, Coil and Core — ELEC2005</title>
+<style>
+:root{
+  --ink:#1a1512; --paper:#faf7f2; --panel:#ffffff; --maroon:#7a1730;
+  --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a; --mustard:#c98a2c;
+  --serif:"Iowan Old Style","Georgia",serif;
+  --sans:"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+body{margin:0;background:#e6e6e4;color:var(--ink);font-family:var(--sans);}
+.wrap{max-width:960px;margin:0 auto;padding:24px 20px 36px;}
+header{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:6px 16px;
+  border-bottom:1px solid var(--grid);padding-bottom:12px;margin-bottom:14px;}
+.eyebrow{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin:0 0 4px;}
+h1{font-family:var(--serif);font-size:26px;letter-spacing:-0.01em;line-height:1.15;margin:0;font-weight:700;}
+.tag{font-size:12px;color:var(--muted);white-space:nowrap;}
+.intro{font-size:14px;line-height:1.55;margin:0 0 12px;max-width:820px;}
+.callout{background:#fbe9c6;border:1px solid #e0be6f;color:#5c4a12;border-radius:4px;padding:9px 12px;font-size:12.5px;line-height:1.45;margin:0 0 16px;}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start;}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0;}
+.panel{background:var(--panel);border:1px solid var(--grid);border-radius:4px;padding:14px 16px;min-width:0;}
+.panel-label{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 8px;}
+.sym{text-transform:none;letter-spacing:0;}
+svg{display:block;width:100%;height:auto;}
+svg text{font-family:var(--sans);user-select:none;-webkit-user-select:none;}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:11.5px;color:var(--muted);margin-top:8px;}
+.legend > span{display:inline-flex;align-items:center;gap:6px;}
+.legend svg{width:auto;display:inline-block;}
+
+.chapter-n{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin:0 0 4px;}
+.story h2{font-family:var(--serif);font-size:20px;letter-spacing:-0.01em;line-height:1.2;margin:0 0 8px;}
+.story-text{font-family:var(--serif);font-size:15.5px;line-height:1.55;margin:0;min-height:9.5em;}
+.story-text b{color:var(--maroon);}
+.dots{display:flex;gap:6px;margin:14px 0 10px;}
+.dots button{flex:1;height:30px;border:1px solid var(--grid);border-radius:4px;background:var(--paper);color:var(--muted);
+  font:700 12px var(--sans);cursor:pointer;padding:0;}
+.dots button.done{background:#f3e6e9;color:var(--maroon);border-color:#e3c9cf;}
+.dots button[aria-current="step"]{background:var(--maroon);color:#fff;border-color:var(--maroon);}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;}
+.btn{flex:1 1 0;min-width:80px;padding:9px 10px;font:700 13px var(--sans);border-radius:4px;border:1px solid var(--ink);
+  background:transparent;color:var(--ink);cursor:pointer;line-height:1.2;}
+.btn.primary{background:var(--ink);color:var(--paper);flex:1.6 1 0;}
+@media (hover:hover){ .btn:hover{background:var(--ink);color:var(--paper);} .btn.primary:hover{background:var(--maroon);border-color:var(--maroon);} }
+.btn:disabled{opacity:0.35;cursor:default;pointer-events:none;}
+.btn.reset{display:block;width:100%;margin-top:12px;}
+button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
+.switch{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);margin-top:10px;cursor:pointer;}
+.switch input{accent-color:var(--maroon);width:15px;height:15px;margin:0;}
+
+.slider-block{margin-bottom:6px;}
+.slider-label-row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:4px;gap:8px;}
+.slider-value{font-weight:700;color:var(--maroon);font-variant-numeric:tabular-nums;white-space:nowrap;}
+input[type=range]{width:100%;accent-color:var(--maroon);margin:2px 0;}
+.slider-caption{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
+.stat-card{background:var(--paper);border:1px solid var(--grid);border-radius:4px;padding:9px 11px;}
+.stat-label{font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+.stat-value{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--maroon);}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:2px;min-height:13px;}
+footer{text-align:center;color:var(--muted);font-size:11.5px;margin-top:26px;}
+
+@media (max-width:800px){
+  .wrap{padding:16px 12px 28px;}
+  h1{font-size:22px;}
+  .grid{grid-template-columns:minmax(0,1fr);gap:12px;}
+  .col{display:contents;}
+  .p-scene{order:1;} .p-story{order:2;} .p-explore{order:3;}
+  .story-text{min-height:0;font-size:15px;}
+  .legend{font-size:11px;}
+}
+@media (pointer:coarse){ input[type=range]{height:30px;} .btn,.dots button{min-height:40px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">Magnetic fields &middot; Animated explainer</p>
+      <h1>From Current to Flux: Wire, Coil and Core</h1>
+    </div>
+    <div class="tag">ELEC2005 &middot; Week 10</div>
+  </header>
+
+  <p class="intro">Every magnetic device starts with a current. Follow one wire as it becomes a loop, then a coil,
+  then a coil on an iron core. The compass needles show the direction of the field intensity H, and the flowing dots show
+  where the flux goes: the longer and faster they are, the stronger the flux density B.</p>
+
+  <div class="callout"><b>Seen end-on, and partly drawn by hand.</b> We look along the wires, which are long and straight
+  into the screen, so the needle directions are calculated exactly for that case. The needles also feel a weak background
+  field so that they point up, like a compass pointing north, when no current flows. The iron is drawn schematically: the
+  rod uses an effective permeability of 40 and the closed core a relative permeability of 1000.</div>
+
+  <div class="grid">
+    <div class="col">
+      <div class="panel p-scene">
+        <p class="panel-label">Looking along the wire<span id="sceneCh"></span></p>
+        <svg id="scene" viewBox="0 0 520 340" role="img" aria-label="Cross-section of wires, compass needles and flowing dots showing the magnetic field"></svg>
+        <div class="legend">
+          <span><svg viewBox="0 0 16 16" width="16" height="16"><circle cx="8" cy="8" r="6.5" fill="#fff" stroke="#1a1512" stroke-width="1.6"/><circle cx="8" cy="8" r="1.8" fill="#1a1512"/></svg><span>current out of the screen</span></span>
+          <span><svg viewBox="0 0 16 16" width="16" height="16"><circle cx="8" cy="8" r="6.5" fill="#fff" stroke="#1a1512" stroke-width="1.6"/><path d="M4.5 4.5L11.5 11.5M11.5 4.5L4.5 11.5" stroke="#1a1512" stroke-width="1.6"/></svg><span>current into the screen</span></span>
+          <span><svg viewBox="0 0 26 10" width="26" height="10"><path d="M2 5H13" stroke="#b9b0a5" stroke-width="2.2" stroke-linecap="round"/><path d="M13 5H24" stroke="#c98a2c" stroke-width="2.6" stroke-linecap="round"/><path d="M24 5l-4-3v6z" fill="#c98a2c"/></svg><span>compass needle (points along H)</span></span>
+          <span><svg viewBox="0 0 26 10" width="26" height="10"><path d="M2 5H8" stroke="#7a1730" stroke-width="2.4" stroke-linecap="round" opacity="0.6"/><path d="M12 5H24" stroke="#7a1730" stroke-width="2.4" stroke-linecap="round"/></svg><span>flux (longer, faster = stronger B)</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="panel story p-story" aria-live="polite">
+        <p class="chapter-n" id="chN"></p>
+        <h2 id="chTitle"></h2>
+        <p class="story-text" id="chText"></p>
+        <div class="dots" id="dots" role="group" aria-label="Chapters"></div>
+        <div class="btnrow">
+          <button type="button" class="btn" id="btnBack">&#9664; Back</button>
+          <button type="button" class="btn primary" id="btnPlay">Play</button>
+          <button type="button" class="btn" id="btnNext">Next &#9654;</button>
+        </div>
+        <label class="switch"><input type="checkbox" id="autoNext"> Carry on to the next chapter automatically</label>
+      </div>
+
+      <div class="panel p-explore">
+        <p class="panel-label">Take control of the current</p>
+        <div class="slider-block">
+          <div class="slider-label-row"><span>Current, <i>i</i></span><span class="slider-value" id="valI"></span></div>
+          <input type="range" id="sliderI" min="-2" max="2" step="0.05" value="0" aria-label="Current in amperes">
+          <div class="slider-caption"><span>&minus;2 A (reversed)</span><span>0</span><span>+2 A</span></div>
+        </div>
+        <button type="button" class="btn reset" id="btnReset">Reset to defaults</button>
+        <div class="stats">
+          <div class="stat-card"><div class="stat-label">Flux density at <span class="sym">+</span></div><div class="stat-value" id="statB"></div><div class="stat-sub" id="statBsub"></div></div>
+          <div class="stat-card"><div class="stat-label">Compared with one wire</div><div class="stat-value" id="statX"></div><div class="stat-sub">same current, same spot</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>ELEC2005 &middot; Week 10 &middot; for concept exploration, not assessment</footer>
+</div>
+
+<script>
+(function(){
+'use strict';
+// =====================================================================================
+// Physics. Units: lengths in cm on screen, current in A.
+// Long straight wires into the screen: each gives H = I / (2 pi r), circling it anticlockwise
+// for current out of the screen. Fields from all wires add.
+// =====================================================================================
+const MU0 = 4e-7 * Math.PI, MU_ROD = 40, MU_CORE = 1000, NT = 8;
+const H_BG = 0.35;                                   // weak background field (A/m) so idle needles point up
+const CORE = { ox0: -6.0, ox1: 6.0, oy0: -0.8, oy1: 4.0, ix0: -4.4, ix1: 4.4, iy0: 0.8, iy1: 2.4 };
+const ROD = { x0: -4.4, x1: 4.4, y0: -0.8, y1: 0.8 };
+const LOOP_LEN = 2 * ((5.2 * 2) + 3.2) / 100;        // mean path round the closed core, m
+const smooth = t => t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
+
+// wires: 2*NT of them. Wire 0 is "the" wire; wire 1 is the other side of the loop; the rest join for the coil.
+const LAYOUTS = {
+  wire: k => k === 0 ? [0, 0, 1] : null,
+  loop: k => k === 0 ? [-0.5, 1.2, 1] : k === 1 ? [-0.5, -1.2, 1] : null,
+  coil: k => { const j = k >> 1, top = (k % 2) === 0; let col = [3, 0, 1, 2, 4, 5, 6, 7][j]; return [-3.5 + col, top ? 1.2 : -1.2, 1]; }
+};
+const wires = [];
+for (let k = 0; k < 2 * NT; k++){
+  const c = LAYOUTS.coil(k);
+  wires.push({ x: c[0], y: c[1], w: 0, sign: (k % 2) === 0 ? 1 : -1, fx: 0, fy: 0, fw: 0, tx: c[0], ty: c[1], tw: 0 });
+}
+function layoutTargets(name){
+  wires.forEach((wr, k) => {
+    const t = LAYOUTS[name](k);
+    if (t){ wr.tx = t[0]; wr.ty = t[1]; wr.tw = 1; }
+    else { const c = LAYOUTS.coil(k); wr.tx = c[0]; wr.ty = c[1]; wr.tw = 0; }
+  });
+  if (name === 'wire'){ wires[0].sign = 1; } else { wires.forEach((wr, k) => { wr.sign = (k % 2) === 0 ? 1 : -1; }); }
+}
+// field intensity from the wires at (x, y) cm, in A/m
+function Hwires(x, y, i){
+  let hx = 0, hy = 0;
+  for (const wr of wires){
+    if (wr.w <= 0) continue;
+    const dx = (x - wr.x) / 100, dy = (y - wr.y) / 100, r2 = dx * dx + dy * dy;
+    if (r2 < 1e-8) continue;
+    const I = wr.w * wr.sign * i, f = I / (2 * Math.PI * r2);
+    hx += -dy * f; hy += dx * f;
+  }
+  return [hx, hy];
+}
+// iron: the rod slides in (rodP 0..1) and the closed core fades in (coreP 0..1)
+let rodP = 0, coreP = 0;
+const rodShift = () => -13 * (1 - smooth(rodP));
+const inRod = (x, y) => rodP > 0 && x >= ROD.x0 + rodShift() && x <= ROD.x1 + rodShift() && y >= ROD.y0 && y <= ROD.y1;
+const inCore = (x, y) => coreP > 0 && x >= CORE.ox0 && x <= CORE.ox1 && y >= CORE.oy0 && y <= CORE.oy1 && !(x > CORE.ix0 && x < CORE.ix1 && y > CORE.iy0 && y < CORE.iy1);
+// direction round the closed core: paths parallel to the core's own edges. Along each limb the flux runs
+// straight; at each corner it turns on a circular arc centred on the window's inside corner, so it turns
+// smoothly and every path stays in the iron. For i > 0 it runs right along the bottom limb (inside the coil),
+// up the right side, left along the top and down the left side.
+const CORNER_R = 1.6;                                // core limb width: the largest arc that stays in the iron
+function coreDir(x, y){
+  const cx = Math.sign(x) * CORE.ix1, cy = y > 1.6 ? CORE.iy1 : CORE.iy0;    // nearest inside corner of the window
+  const qx = Math.abs(x) - CORE.ix1, qy = y > 1.6 ? y - CORE.iy1 : CORE.iy0 - y;
+  if (qx > 0 && qy > 0){ const rx = x - cx, ry = y - cy, m = Math.hypot(rx, ry) || 1; return [-ry / m, rx / m]; }
+  if (qx > 0) return [0, x > 0 ? 1 : -1];             // a side limb
+  return [y < 1.6 ? 1 : -1, 0];                        // the bottom or top limb
+}
+// true where the flux paths run (excludes the outer corners beyond the largest arc)
+// and keeps a little way off the window's inside edge, so no path has to turn a corner too tightly
+const onPath = (x, y) => { const qx = Math.abs(x) - CORE.ix1, qy = y > 1.6 ? y - CORE.iy1 : CORE.iy0 - y;
+  const off = (qx > 0 && qy > 0) ? Math.hypot(qx, qy) : Math.max(qx, qy);
+  return off >= 0.2 && off <= CORNER_R - 0.05; };
+// flux density B (tesla) and its direction at a point, as drawn
+function Bfield(x, y, i){
+  const [hx, hy] = Hwires(x, y, i), hm = Math.hypot(hx, hy);
+  if (coreP > 0 && inCore(x, y)){
+    const Bc = MU0 * MU_CORE * nTurns() * Math.abs(i) / LOOP_LEN, d = coreDir(x, y), s = Math.sign(i) || 1;
+    const air = MU0 * hm, B = Math.exp(Math.log(Math.max(air, 1e-9)) * (1 - coreP) + Math.log(Math.max(Bc, 1e-9)) * coreP);
+    return { B, dx: s * d[0], dy: s * d[1] };
+  }
+  if (inRod(x, y)){
+    const g = 1 + (MU_ROD - 1) * smooth(rodP) * (1 - coreP);
+    return { B: MU0 * hm * g, dx: hm ? hx / hm : 0, dy: hm ? hy / hm : 0 };
+  }
+  const leak = 1 - 0.85 * coreP;                     // with the core closed, little flux is left in the air
+  return { B: MU0 * hm * leak, dx: hm ? hx / hm : 0, dy: hm ? hy / hm : 0 };
+}
+const nTurns = () => wires.reduce((s, wr, k) => s + ((k % 2) === 0 ? wr.w : 0), 0);
+
+// =====================================================================================
+// Story
+// =====================================================================================
+const CH = [
+  { title: 'A current makes a field', layout: 'wire', iron: 'none', mark: [2, 0],
+    steps: [['i', 0, 0.8], ['i', 2, 2.6]],
+    text: 'With no current, every compass needle points north. Switch on a current in the wire, coming out of the screen, and the needles swing round to circle it. The field intensity <b>H</b> forms rings round the wire, and it weakens with distance: <b>H = i / 2πr</b>. Point your right thumb along the current and your fingers curl the way H goes.' },
+  { title: 'Reverse the current', layout: 'wire', iron: 'none', mark: [2, 0],
+    steps: [['i', -2, 3.5]],
+    text: 'Reverse the current, so it now goes into the screen, and the rings reverse too. Watch the needles pass back through north as the current passes through zero, then swing right round. The field follows the current: no current, no field; double the current, double the field.' },
+  { title: 'Bend the wire into a loop', layout: 'loop', iron: 'none', mark: [0, 0],
+    steps: [['i', 2, 1.4], ['morph', 2.4]],
+    text: 'Now bend the wire into a loop. We see it edge-on: the current comes out of the screen at the top and goes back in at the bottom. In the middle of the loop, the fields from the two sides point the same way and <b>add up</b>, so the field there is stronger than near a single wire.' },
+  { title: 'Wind a coil', layout: 'coil', iron: 'none', mark: [0, 0],
+    steps: [['morph', 3]],
+    text: 'Wind more turns side by side. Inside the coil the fields of all the turns add up to a strong, nearly uniform field along its axis, while outside they mostly cancel. Each turn adds its share: <b>H = ni / ℓ</b>. The flux runs through the middle and returns round the outside.' },
+  { title: 'Slide in an iron rod', layout: 'coil', iron: 'rod', mark: [0, 0],
+    steps: [['rod', 2.6]],
+    text: 'Slide an iron rod into the coil. The same current now drives far more flux through the middle, because the domains in the iron line up with H and add their own field. But the flux still has to get back round through the <b>air</b> outside, and that limits the gain.' },
+  { title: 'Close the path with iron', layout: 'coil', iron: 'core', mark: [0, 0],
+    steps: [['core', 2.6]],
+    text: 'Give the flux an iron path all the way round and it no longer has to cross any air. The flux density in the core rises to <b>hundreds of times</b> that of the air-cored coil, and almost all of the flux stays inside the iron. This closed loop is a <b>magnetic circuit</b>: the starting point for reluctance and for transformers.' }
+];
+const EXPLORE = { title: 'Your turn', text: 'You are in control of the current. Pick any chapter to set up the wire, loop, coil or core, then drag the current and watch the needles and the flux respond. Try zero, then a small current, then reversing it.' };
+
+let ch = 0, mode = 'story', playing = false, stepIdx = 0, stepT = 0, stepFrom = 0, holdT = 0;
+let cur = 0, morphP = 1, mark = [2, 0];
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function applyMorph(p){
+  const e = smooth(p);
+  wires.forEach(wr => { wr.x = wr.fx + (wr.tx - wr.fx) * e; wr.y = wr.fy + (wr.ty - wr.fy) * e; wr.w = wr.fw + (wr.tw - wr.fw) * e; });
+}
+function beginMorph(){ wires.forEach(wr => { wr.fx = wr.x; wr.fy = wr.y; wr.fw = wr.w; }); morphP = 0; }
+// set up the state at the END of chapter k, instantly
+function endState(k){
+  const c = CH[k];
+  layoutTargets(c.layout); wires.forEach(wr => { wr.x = wr.tx; wr.y = wr.ty; wr.w = wr.tw; wr.fx = wr.x; wr.fy = wr.y; wr.fw = wr.w; });
+  morphP = 1;
+  let iEnd = 0;                                       // the current left by the last chapter that set one
+  for (let j = 0; j <= k; j++) CH[j].steps.forEach(s => { if (s[0] === 'i') iEnd = s[1]; });
+  cur = iEnd;
+  rodP = (c.iron === 'rod' || c.iron === 'core') ? 1 : 0; coreP = c.iron === 'core' ? 1 : 0;
+}
+function startChapter(k, autoplay){
+  mode = 'story'; ch = k;
+  cur = 0;
+  if (k > 0) endState(k - 1); else { layoutTargets('wire'); wires.forEach(wr => { wr.x = wr.tx; wr.y = wr.ty; wr.w = wr.tw; }); rodP = 0; coreP = 0; cur = 0; }
+  const c = CH[k];
+  if (k === 0) cur = 0;
+  layoutTargets(c.layout); beginMorph();
+  if (!c.steps.some(s => s[0] === 'morph')){ wires.forEach(wr => { wr.x = wr.tx; wr.y = wr.ty; wr.w = wr.tw; }); morphP = 1; }
+  if (c.iron === 'rod'){ rodP = 0; coreP = 0; } else if (c.iron === 'core'){ rodP = 1; coreP = 0; }
+  mark = c.mark;
+  stepIdx = 0; stepT = 0; stepFrom = cur; holdT = 0;
+  playing = !!autoplay;
+  $('sliderI').value = cur;
+  renderStory();
+}
+function tick(dt){
+  if (mode !== 'story' || !playing) return;
+  const c = CH[ch];
+  if (stepIdx < c.steps.length){
+    const s = c.steps[stepIdx], dur = s[0] === 'i' ? s[2] : s[1];
+    stepT += REDUCED ? 1e9 : dt;
+    const t = Math.min(1, stepT / dur), e = 0.5 - 0.5 * Math.cos(Math.PI * t);
+    if (s[0] === 'i') cur = stepFrom + (s[1] - stepFrom) * e;
+    else if (s[0] === 'morph'){ morphP = t; applyMorph(t); }
+    else if (s[0] === 'rod') rodP = t;
+    else if (s[0] === 'core') coreP = t;
+    $('sliderI').value = cur;
+    if (t >= 1){ stepIdx++; stepT = 0; stepFrom = cur; }
+  } else {
+    holdT += dt;
+    if (holdT > 0.6 && playing){
+      playing = false; renderStory();
+      if ($('autoNext').checked && ch < CH.length - 1) setTimeout(() => { if (mode === 'story' && !playing && stepIdx >= CH[ch].steps.length) startChapter(ch + 1, true); }, 2200);
+    }
+  }
+}
+
+// =====================================================================================
+// Drawing
+// =====================================================================================
+const NS = 'http://www.w3.org/2000/svg';
+const $ = id => document.getElementById(id);
+function el(tag, attrs, parent, text){
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+const INK = '#1a1512', MAROON = '#7a1730', MUSTARD = '#c98a2c', MUTED = '#6b6156', GRID = '#e4ddd2';
+const SC = 40, VX = 6.5, VY = 4.25;                       // 40 px per cm
+const PX = x => (x + VX) * SC, PY = y => (VY - y) * SC;
+const scene = $('scene');
+let gIron, rodEl, coreEl, gTurns, gNeedles, gDots, gWires, markEl, needles = [], dots = [], wireEls = [];
+
+function build(){
+  scene.innerHTML = '';
+  el('rect', {x: 0, y: 0, width: 520, height: 340, fill: '#fdfcfa'}, scene);
+  gIron = el('g', {}, scene);
+  const defs = el('defs', {}, scene);
+  const pat = el('pattern', {id: 'hatch', width: 8, height: 8, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)'}, defs);
+  el('rect', {width: 8, height: 8, fill: '#e3ddd3'}, pat); el('line', {x1: 0, y1: 0, x2: 0, y2: 8, stroke: '#d3cbbf', 'stroke-width': 3}, pat);
+  coreEl = el('path', {d: `M${PX(CORE.ox0)},${PY(CORE.oy0)} H${PX(CORE.ox1)} V${PY(CORE.oy1)} H${PX(CORE.ox0)} Z M${PX(CORE.ix0)},${PY(CORE.iy0)} V${PY(CORE.iy1)} H${PX(CORE.ix1)} V${PY(CORE.iy0)} Z`,
+    fill: 'url(#hatch)', 'fill-rule': 'evenodd', stroke: INK, 'stroke-width': 1.8, opacity: 0}, gIron);
+  rodEl = el('rect', {y: PY(ROD.y1), width: (ROD.x1 - ROD.x0) * SC, height: (ROD.y1 - ROD.y0) * SC, fill: 'url(#hatch)', stroke: INK, 'stroke-width': 1.8}, gIron);
+  gNeedles = el('g', {}, scene);
+  for (let gx = -6.0; gx <= 6.01; gx += 0.75) for (let gy = -3.75; gy <= 3.76; gy += 0.75){
+    const g = el('g', {}, gNeedles);
+    el('line', {x1: -8, y1: 0, x2: 0, y2: 0, stroke: '#b9b0a5', 'stroke-width': 2.2, 'stroke-linecap': 'round'}, g);
+    el('line', {x1: 0, y1: 0, x2: 7, y2: 0, stroke: MUSTARD, 'stroke-width': 2.6, 'stroke-linecap': 'round'}, g);
+    el('path', {d: 'M10,0 L5.5,-3.2 L5.5,3.2 Z', fill: MUSTARD}, g);
+    el('circle', {r: 1.6, fill: INK}, g);
+    needles.push({x: gx, y: gy, a: Math.PI / 2, v: 0, el: g});
+  }
+  gDots = el('g', {}, scene);
+  for (let k = 0; k < 260; k++){ const d = {el: el('line', {stroke: MAROON, 'stroke-width': 2.6, 'stroke-linecap': 'round', opacity: 0}, gDots)}; spawn(d, true); dots.push(d); }
+  gTurns = el('g', {}, scene);
+  gWires = el('g', {}, scene);
+  wires.forEach(() => {
+    const g = el('g', {}, gWires);
+    el('circle', {r: 9, fill: '#fff', stroke: INK, 'stroke-width': 2}, g);
+    const dot = el('circle', {r: 2.6, fill: INK}, g);
+    const cross = el('path', {d: 'M-4.6,-4.6L4.6,4.6M4.6,-4.6L-4.6,4.6', stroke: INK, 'stroke-width': 2}, g);
+    wireEls.push({g, dot, cross});
+  });
+  markEl = el('g', {}, scene);
+  el('circle', {r: 7, fill: 'none', stroke: INK, 'stroke-width': 1.6}, markEl);
+  el('path', {d: 'M-10,0H10M0,-10V10', stroke: INK, 'stroke-width': 1.6}, markEl);
+}
+function rnd(a, b){ return a + Math.random() * (b - a); }
+function spawn(d, initial){
+  // more dots start inside iron, so the flux looks denser there
+  const inIron = (coreP > 0.2 && Math.random() < 0.45 * coreP) || (rodP > 0.5 && coreP < 0.2 && Math.random() < 0.3);
+  for (let tries = 0; tries < 20; tries++){
+    if (inIron && coreP > 0.2){ d.x = rnd(CORE.ox0, CORE.ox1); d.y = rnd(CORE.oy0, CORE.oy1); if (!inCore(d.x, d.y) || !onPath(d.x, d.y)) continue; }
+    else if (inIron){ d.x = rnd(ROD.x0, ROD.x1); d.y = rnd(ROD.y0, ROD.y1); }
+    else { d.x = rnd(-VX, VX); d.y = rnd(-VY, VY); if (coreP > 0.2 && inCore(d.x, d.y) && !onPath(d.x, d.y)) continue; }
+    if (wires.every(wr => wr.w < 0.5 || Math.hypot(d.x - wr.x, d.y - wr.y) > 0.35)) break;
+  }
+  d.age = initial ? rnd(0, 3) : 0; d.life = rnd(2.2, 4); d.iron = inCore(d.x, d.y); d.frozen = false;
+}
+function speedFor(B){ return Math.max(0, Math.min(2.4, 0.42 * Math.log10(B / 1e-6))); }   // cm/s, grows with log B
+
+let t0 = 0;
+function update(dt){
+  // needles: a lightly damped swing towards H (plus the weak background field)
+  needles.forEach(n => {
+    const [hx, hy] = Hwires(n.x, n.y, cur);
+    const target = Math.atan2(hy + H_BG, hx);
+    let d = target - n.a; d = Math.atan2(Math.sin(d), Math.cos(d));
+    if (REDUCED){ n.a = target; n.v = 0; }
+    else { n.v += (40 * d - 8 * n.v) * dt; n.a += n.v * dt; }
+    const hidden = inCore(n.x, n.y) || inRod(n.x, n.y) || wires.some(wr => wr.w > 0.3 && Math.hypot(n.x - wr.x, n.y - wr.y) < 0.5);
+    const hm = Math.hypot(hx, hy);
+    const alpha = hidden ? 0 : Math.max(0.25, Math.min(1, 0.45 + 0.3 * Math.log10(Math.max(hm, 1e-6) / 2)));
+    n.el.setAttribute('transform', `translate(${PX(n.x).toFixed(1)},${PY(n.y).toFixed(1)}) rotate(${(-n.a * 180 / Math.PI).toFixed(1)})`);
+    n.el.setAttribute('opacity', alpha.toFixed(2));
+  });
+  // flux dots drift along B, faster where B is stronger
+  dots.forEach(d => {
+    d.age += dt;
+    const f = Bfield(d.x, d.y, cur), sp = speedFor(f.B) * (REDUCED || d.frozen ? 0 : 1);
+    const nx = d.x + f.dx * sp * dt, ny = d.y + f.dy * sp * dt;
+    // a streak never crosses the iron's surface: if its next step would, it stops there and fades out
+    if (!d.frozen && coreP > 0.5 && inCore(nx, ny) !== d.iron){ d.frozen = true; d.life = Math.min(d.life, d.age + 0.35); }
+    else if (!d.frozen){ d.x = nx; d.y = ny; }
+    const nearWire = wires.some(wr => wr.w > 0.5 && Math.hypot(d.x - wr.x, d.y - wr.y) < 0.3);
+    if (d.age > d.life || Math.abs(d.x) > VX || Math.abs(d.y) > VY || nearWire) spawn(d, false);
+    const fade = Math.min(1, d.age / 0.4, (d.life - d.age) / 0.4);
+    const vis = f.B > 2e-7 && Math.abs(cur) > 0.02 ? fade * Math.min(1, 0.35 + 0.18 * Math.log10(f.B / 1e-6)) : 0;
+    const L = 0.1 + 0.2 * speedFor(f.B);                // streak length (cm) grows with B, so direction shows even when paused
+    d.el.setAttribute('x1', PX(d.x - f.dx * L).toFixed(1)); d.el.setAttribute('y1', PY(d.y - f.dy * L).toFixed(1));
+    d.el.setAttribute('x2', PX(d.x).toFixed(1)); d.el.setAttribute('y2', PY(d.y).toFixed(1));
+    d.el.setAttribute('opacity', Math.max(0, vis).toFixed(2));
+  });
+  // wires, the edge-on turns, and the iron
+  wires.forEach((wr, k) => {
+    const e = wireEls[k], I = wr.sign * cur;
+    e.g.setAttribute('transform', `translate(${PX(wr.x).toFixed(1)},${PY(wr.y).toFixed(1)})`);
+    e.g.setAttribute('opacity', wr.w.toFixed(2));
+    e.dot.setAttribute('opacity', I > 0.02 ? 1 : 0); e.cross.setAttribute('opacity', I < -0.02 ? 1 : 0);
+  });
+  gTurns.innerHTML = '';
+  for (let k = 0; k + 1 < wires.length; k += 2){
+    const a = wires[k], b = wires[k + 1], w = Math.min(a.w, b.w);
+    if (w > 0.02) el('line', {x1: PX(a.x), y1: PY(a.y), x2: PX(b.x + 0.25), y2: PY(b.y), stroke: '#8f867c', 'stroke-width': 1.6, 'stroke-dasharray': '4,3', opacity: (0.75 * w).toFixed(2)}, gTurns);
+  }
+  rodEl.setAttribute('x', PX(ROD.x0 + rodShift())); rodEl.setAttribute('opacity', rodP > 0 ? (1 - coreP).toFixed(2) : 0);
+  coreEl.setAttribute('opacity', coreP.toFixed(2));
+  markEl.setAttribute('transform', `translate(${PX(mark[0])},${PY(mark[1])})`);
+}
+function fmtB(b){
+  const a = Math.abs(b);
+  return a >= 0.1 ? a.toFixed(2) + ' T' : a >= 1e-3 ? (a * 1e3).toFixed(1) + ' mT' : a >= 1e-6 ? (a * 1e6).toFixed(a >= 1e-4 ? 0 : 1) + ' µT' : '0 µT';
+}
+function updateStats(){
+  const f = Bfield(mark[0], mark[1], cur);
+  const one = MU0 * Math.abs(cur) / (2 * Math.PI * 0.02);   // one wire, 2 cm away
+  $('statB').textContent = fmtB(f.B);
+  $('statBsub').textContent = inCore(mark[0], mark[1]) ? 'inside the iron' : inRod(mark[0], mark[1]) ? 'inside the iron rod' : 'in air';
+  $('statX').textContent = Math.abs(cur) < 0.02 ? '—' : '×' + Math.round(f.B / one).toLocaleString('en-AU');
+  $('valI').textContent = (cur < -0.001 ? '−' : cur > 0.001 ? '+' : '') + Math.abs(cur).toFixed(2) + ' A';
+}
+
+// ----- story panel -----
+function renderStory(){
+  const exploring = mode === 'explore', c = exploring ? EXPLORE : CH[ch];
+  $('chN').textContent = exploring ? 'Explore' : `Chapter ${ch + 1} of ${CH.length}`;
+  $('chTitle').textContent = c.title; $('chText').innerHTML = c.text;
+  $('sceneCh').textContent = exploring ? ' · exploring' : ` · chapter ${ch + 1}: ${c.title}`;
+  $('dots').querySelectorAll('button').forEach((b, k) => {
+    b.classList.toggle('done', k < ch);
+    if (k === ch) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+  });
+  const finished = !exploring && stepIdx >= CH[ch].steps.length;
+  $('btnPlay').textContent = exploring ? 'Back to the story' : playing ? 'Pause' : finished ? 'Replay' : 'Play';
+  $('btnBack').disabled = ch === 0; $('btnNext').disabled = ch === CH.length - 1;
+  $('btnNext').classList.toggle('primary', finished && !playing && ch < CH.length - 1);
+}
+function showScene(){
+  if (window.matchMedia('(max-width:800px)').matches){
+    const r = document.querySelector('.p-scene').getBoundingClientRect();
+    if (r.top < 0 || r.top > 80) document.querySelector('.p-scene').scrollIntoView({block: 'start', behavior: REDUCED ? 'auto' : 'smooth'});
+  }
+}
+CH.forEach((c, k) => {
+  const b = document.createElement('button'); b.type = 'button'; b.textContent = k + 1; b.title = c.title;
+  b.setAttribute('aria-label', 'Chapter ' + (k + 1) + ': ' + c.title);
+  b.addEventListener('click', () => { startChapter(k, true); showScene(); });
+  $('dots').appendChild(b);
+});
+$('btnBack').addEventListener('click', () => { startChapter(Math.max(0, ch - 1), true); showScene(); });
+$('btnNext').addEventListener('click', () => { startChapter(Math.min(CH.length - 1, ch + 1), true); showScene(); });
+$('btnPlay').addEventListener('click', () => {
+  if (mode === 'explore'){ startChapter(ch, true); showScene(); return; }
+  if (stepIdx >= CH[ch].steps.length){ startChapter(ch, true); showScene(); return; }
+  playing = !playing; renderStory(); if (playing) showScene();
+});
+$('sliderI').addEventListener('input', e => {
+  if (mode !== 'explore'){
+    // finish the current chapter's set-up instantly, then hand the current over to the slider
+    const c = CH[ch];
+    if (stepIdx < c.steps.length){ layoutTargets(c.layout); wires.forEach(wr => { wr.x = wr.tx; wr.y = wr.ty; wr.w = wr.tw; }); morphP = 1;
+      rodP = (c.iron !== 'none') ? 1 : 0; coreP = c.iron === 'core' ? 1 : 0; stepIdx = c.steps.length; }
+    mode = 'explore'; playing = false; renderStory();
+  }
+  cur = parseFloat(e.target.value);
+});
+$('btnReset').addEventListener('click', () => { $('autoNext').checked = false; startChapter(0, false); });
+
+build(); startChapter(0, false);
+let last = null;
+function frame(t){
+  const dt = last === null ? 0 : Math.min(0.05, (t - last) / 1000); last = t;
+  tick(dt); update(dt); updateStats();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+window.__ctf = { onPath, Hwires, Bfield, startChapter, endState, wires, get cur(){ return cur; }, set cur(v){ cur = v; }, get rodP(){ return rodP; }, get coreP(){ return coreP; }, CH, inCore, inRod, layoutTargets };
+})();
+</script>
+</body>
+</html>
