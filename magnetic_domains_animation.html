@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inside the Core: Magnetic Domains and the B–H Loop — ELEC2005</title>
+<style>
+:root{
+  --ink:#1a1512; --paper:#faf7f2; --panel:#ffffff; --maroon:#7a1730;
+  --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a; --mustard:#c98a2c;
+  --serif:"Iowan Old Style","Georgia",serif;
+  --sans:"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+body{margin:0;background:#e6e6e4;color:var(--ink);font-family:var(--sans);}
+.wrap{max-width:960px;margin:0 auto;padding:24px 20px 36px;}
+header{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:6px 16px;
+  border-bottom:1px solid var(--grid);padding-bottom:12px;margin-bottom:14px;}
+.eyebrow{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin:0 0 4px;}
+h1{font-family:var(--serif);font-size:26px;letter-spacing:-0.01em;line-height:1.15;margin:0;font-weight:700;}
+.tag{font-size:12px;color:var(--muted);white-space:nowrap;}
+.intro{font-size:14px;line-height:1.55;margin:0 0 12px;max-width:820px;}
+.callout{background:#fbe9c6;border:1px solid #e0be6f;color:#5c4a12;border-radius:4px;padding:9px 12px;font-size:12.5px;line-height:1.45;margin:0 0 16px;}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start;}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0;}
+.panel{background:var(--panel);border:1px solid var(--grid);border-radius:4px;padding:14px 16px;min-width:0;}
+.panel-label{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 8px;}
+.sym{text-transform:none;letter-spacing:0;}
+svg{display:block;width:100%;height:auto;}
+svg text{font-family:var(--sans);user-select:none;-webkit-user-select:none;}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:11.5px;color:var(--muted);margin-top:8px;}
+.legend > span{display:inline-flex;align-items:center;gap:6px;}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:2px;border:1px solid var(--grid);}
+.legend i.line{width:22px;height:0;border:none;border-top:3px solid;}
+
+/* story */
+.chapter-n{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin:0 0 4px;}
+.story h2{font-family:var(--serif);font-size:20px;letter-spacing:-0.01em;line-height:1.2;margin:0 0 8px;}
+.story-text{font-family:var(--serif);font-size:15.5px;line-height:1.55;margin:0;min-height:9.5em;}
+.story-text b{color:var(--maroon);}
+.dots{display:flex;gap:6px;margin:14px 0 10px;}
+.dots button{flex:1;height:30px;border:1px solid var(--grid);border-radius:4px;background:var(--paper);color:var(--muted);
+  font:700 12px var(--sans);cursor:pointer;padding:0;}
+.dots button.done{background:#f3e6e9;color:var(--maroon);border-color:#e3c9cf;}
+.dots button[aria-current="step"]{background:var(--maroon);color:#fff;border-color:var(--maroon);}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;}
+.btn{flex:1 1 0;min-width:80px;padding:9px 10px;font:700 13px var(--sans);border-radius:4px;border:1px solid var(--ink);
+  background:transparent;color:var(--ink);cursor:pointer;line-height:1.2;}
+.btn.primary{background:var(--ink);color:var(--paper);flex:1.6 1 0;}
+@media (hover:hover){ .btn:hover{background:var(--ink);color:var(--paper);} .btn.primary:hover{background:var(--maroon);border-color:var(--maroon);} }
+.btn:disabled{opacity:0.35;cursor:default;pointer-events:none;}
+.btn.reset{display:block;width:100%;margin-top:12px;}
+button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
+.switch{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);margin-top:10px;cursor:pointer;}
+.switch input{accent-color:var(--maroon);width:15px;height:15px;margin:0;}
+
+/* explore */
+.slider-block{margin-bottom:14px;}
+.slider-label-row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:4px;gap:8px;}
+.slider-value{font-weight:700;color:var(--maroon);font-variant-numeric:tabular-nums;white-space:nowrap;}
+input[type=range]{width:100%;accent-color:var(--maroon);margin:2px 0;}
+.slider-caption{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);}
+.seg{display:flex;border:1px solid var(--grid);border-radius:4px;overflow:hidden;}
+.seg button{flex:1;padding:7px 6px;font:700 12px var(--sans);line-height:1.2;background:var(--paper);color:var(--muted);cursor:pointer;border:none;border-left:1px solid var(--grid);}
+.seg button:first-child{border-left:none;}
+.seg button small{display:block;font-weight:400;font-size:10.5px;margin-top:1px;}
+.seg button[aria-pressed="true"]{background:var(--maroon);color:#fff;}
+.ctl-label{font-size:13px;margin:0 0 5px;}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
+.stat-card{background:var(--paper);border:1px solid var(--grid);border-radius:4px;padding:9px 11px;}
+.stat-label{font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+.stat-value{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--maroon);}
+footer{text-align:center;color:var(--muted);font-size:11.5px;margin-top:26px;}
+
+@media (max-width:800px){
+  .wrap{padding:16px 12px 28px;}
+  h1{font-size:22px;}
+  .grid{grid-template-columns:minmax(0,1fr);gap:12px;}
+  .col{display:contents;}
+  .p-core{order:1;} .p-plot{order:2;} .p-story{order:3;} .p-explore{order:4;}
+  .legend{font-size:11px;}
+  .story-text{min-height:0;font-size:15px;}
+}
+@media (pointer:coarse){ input[type=range]{height:30px;} .btn,.seg button,.dots button{min-height:40px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">Magnetic materials &middot; Animated explainer</p>
+      <h1>Inside the Core: Magnetic Domains and the B&ndash;H Loop</h1>
+    </div>
+    <div class="tag">ELEC2005 &middot; Week 10</div>
+  </header>
+
+  <p class="intro">Why does iron carry so much more flux than air, why does it stop at a limit, and why does a core get warm
+  on AC? The answers are all inside the material. Step through the six short chapters to watch the domains respond to the
+  coil current while the B&ndash;H curve draws itself. Then take control of the field yourself.</p>
+
+  <div class="callout"><b>A cartoon, not a micrograph.</b> Each grain is drawn as a single domain that flips as a whole, and the
+  field axis has no units. In real iron the domains are far smaller and grow by moving their walls, and a transformer
+  steel's loop is much narrower than the one drawn here. The shapes and the order of events are right; the sizes are exaggerated.</div>
+
+  <div class="grid">
+    <div class="col">
+      <div class="panel p-core">
+        <p class="panel-label">The core, seen from the side<span id="coreCh"></span></p>
+        <svg id="coreSvg" viewBox="0 0 520 250" role="img" aria-label="An iron core inside a coil, divided into domains, each with an arrow showing its direction of magnetisation"></svg>
+        <div class="legend">
+          <span><i style="background:#c98a9a"></i><span>domain pointing right</span></span>
+          <span><i style="background:#8fb4c4"></i><span>domain pointing left</span></span>
+          <span><i class="line" style="border-color:#c98a2c"></i><span>H, set by the coil</span></span>
+          <span><i class="line" style="border-color:#7a1730"></i><span>B, the result</span></span>
+        </div>
+      </div>
+      <div class="panel p-plot">
+        <p class="panel-label"><span class="sym">B&ndash;H</span> curve, drawn as it happens</p>
+        <svg id="bhSvg" viewBox="0 0 460 300" role="img" aria-label="B against H, traced as the field changes"></svg>
+        <div class="legend">
+          <span><i class="line" style="border-color:#7a1730"></i><span>path traced so far</span></span>
+          <span><i class="line" style="border-color:#c98a2c;border-top-style:dashed"></i><span>slope now = permeability</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="panel story p-story" aria-live="polite">
+        <p class="chapter-n" id="chN"></p>
+        <h2 id="chTitle"></h2>
+        <p class="story-text" id="chText"></p>
+        <div class="dots" id="dots" role="group" aria-label="Chapters"></div>
+        <div class="btnrow">
+          <button type="button" class="btn" id="btnBack">&#9664; Back</button>
+          <button type="button" class="btn primary" id="btnPlay">Play</button>
+          <button type="button" class="btn" id="btnNext">Next &#9654;</button>
+        </div>
+        <label class="switch"><input type="checkbox" id="autoNext"> Carry on to the next chapter automatically</label>
+      </div>
+
+      <div class="panel p-explore">
+        <p class="panel-label">Take control</p>
+        <div class="slider-block">
+          <div class="slider-label-row"><span>Field intensity, <span class="sym">H</span> (set by the coil current)</span><span class="slider-value" id="valH"></span></div>
+          <input type="range" id="sliderH" min="-1" max="1" step="0.01" value="0" aria-label="Field intensity H, from full negative to full positive">
+          <div class="slider-caption"><span>full current, reversed</span><span>0</span><span>full current</span></div>
+        </div>
+        <p class="ctl-label">Core material</p>
+        <div class="seg" id="matSeg" role="group" aria-label="Core material">
+          <button type="button" data-mat="soft" aria-pressed="true">Soft<small>transformer core</small></button>
+          <button type="button" data-mat="hard" aria-pressed="false">Hard<small>permanent magnet</small></button>
+        </div>
+        <div class="btnrow" style="margin-top:12px">
+          <button type="button" class="btn" id="btnDemag">Demagnetise</button>
+          <button type="button" class="btn" id="btnClear">Clear the trace</button>
+        </div>
+        <button type="button" class="btn reset" id="btnReset">Reset to defaults</button>
+        <div class="stats">
+          <div class="stat-card"><div class="stat-label">Flux density, <span class="sym">B</span></div><div class="stat-value" id="statB"></div></div>
+          <div class="stat-card"><div class="stat-label">Domains pointing right</div><div class="stat-value" id="statDom"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>ELEC2005 &middot; Week 10 &middot; for concept exploration, not assessment</footer>
+</div>
+
+<script>
+(function(){
+'use strict';
+// =====================================================================================
+// Model: a cartoon ferromagnet. Each grain is one domain with an easy axis at angle theta.
+// Its magnetisation points along the easy axis, one way or the other (state +1 or -1).
+//  * Wall motion (irreversible): a domain turns over to +1 as H rises through its switching field,
+//    and back to -1 as H falls through minus its switching field. That gives remanence and coercivity.
+//    The turn-over is spread over a small range of H (SW), so the result depends only on the
+//    history of H, never on how fast the animation runs.
+//  * Rotation (reversible): at strong fields, domains already on H's side twist from their
+//    easy axis towards H. That gives the slow final approach to saturation.
+//  * B = BS x (average of cos(angle)) + a small linear term (the field in the gaps, like air).
+// =====================================================================================
+const BS = 1.45, BLIN = 0.04, SW = 0.14;
+const MATS = {
+  soft: { hc: u => 0.06 + 0.40 * Math.pow(u, 1.2) },   // switching fields spread over 0.06 .. 0.46
+  hard: { hc: u => 0.36 + 0.44 * u }                  // 0.36 .. 0.80: a much wider loop
+};
+const TAU = 2 * Math.PI;
+function rng(seed){ return function(){ seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const wrap = a => { a = (a + Math.PI) % TAU; if (a < 0) a += TAU; return a - Math.PI; };
+
+// ----- geometry of the core and its grains (Voronoi cells from a jittered grid) -----
+const CORE = { x0: 60, y0: 86, x1: 460, y1: 194 };
+function clipHalf(poly, a, b, c){            // keep the part of poly with a*x + b*y <= c
+  const out = [];
+  for (let i = 0; i < poly.length; i++){
+    const P = poly[i], Q = poly[(i + 1) % poly.length];
+    const fp = a * P[0] + b * P[1] - c, fq = a * Q[0] + b * Q[1] - c;
+    if (fp <= 0) out.push(P);
+    if ((fp < 0 && fq > 0) || (fp > 0 && fq < 0)){ const t = fp / (fp - fq); out.push([P[0] + t * (Q[0] - P[0]), P[1] + t * (Q[1] - P[1])]); }
+  }
+  return out;
+}
+function makeGrains(){
+  const R = rng(20261013), cols = 11, rows = 5, seeds = [];
+  const w = (CORE.x1 - CORE.x0) / cols, h = (CORE.y1 - CORE.y0) / rows;
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++)
+    seeds.push([CORE.x0 + (c + 0.18 + 0.64 * R()) * w, CORE.y0 + (r + 0.18 + 0.64 * R()) * h]);
+  return seeds.map((s, i) => {
+    let poly = [[CORE.x0, CORE.y0], [CORE.x1, CORE.y0], [CORE.x1, CORE.y1], [CORE.x0, CORE.y1]];
+    seeds.forEach((t, j) => { if (j !== i) poly = clipHalf(poly, t[0] - s[0], t[1] - s[1], (t[0]*t[0] + t[1]*t[1] - s[0]*s[0] - s[1]*s[1]) / 2); });
+    let A = 0, cx = 0, cy = 0;                 // area-weighted centroid, for the arrow
+    for (let k = 0; k < poly.length; k++){ const p = poly[k], q = poly[(k + 1) % poly.length], cr = p[0] * q[1] - q[0] * p[1]; A += cr; cx += (p[0] + q[0]) * cr; cy += (p[1] + q[1]) * cr; }
+    A /= 2; cx /= 6 * A; cy /= 6 * A;
+    return { poly, cx, cy, theta: (R() * 2 - 1) * 55 * Math.PI / 180, u: R(), shift: 0.03 * (2 * R() - 1), s: 1, psi: 0 };
+  });
+}
+const grains = makeGrains();
+// Spread the switching fields evenly (by rank) rather than at random, so no range of H has a clump
+// or a gap of flips. Together with the gradual turn-over (SW), that keeps the B-H curve smooth.
+grains.slice().sort((a, b) => a.u - b.u).forEach((g, k, arr) => { g.u = (k + 0.5) / arr.length; g.shift = 0; });
+const N = grains.length;
+let mat = 'soft';
+function setMaterial(m){ mat = m; grains.forEach(g => { g.hc = MATS[m].hc(g.u); }); }
+
+// The demagnetised state: sorted by how far each easy axis leans, alternate the directions so they cancel.
+function demagnetise(){
+  grains.slice().sort((a, b) => Math.cos(a.theta) - Math.cos(b.theta)).forEach((g, k) => { g.s = (k % 2) ? 1 : -1; });
+  grains.forEach(g => { g.psi = target(g, 0); });
+}
+// direction this grain's magnetisation should point at field H (radians, 0 = along the core to the right)
+// the two directions this grain can settle in at field H, each twisted towards H at strong fields
+function ends(g, H){
+  const r = 0.97 * smooth(0.45, 1.0, Math.abs(H));      // reversible rotation towards H
+  const up = g.theta, dn = wrap(g.theta + Math.PI);
+  if (H > 0) return [up + r * wrap(0 - up), dn];
+  if (H < 0) return [up, wrap(dn + r * wrap(Math.PI - dn))];
+  return [up, dn];
+}
+// direction this grain points at field H (radians, 0 = along the core to the right); s runs from -1 to +1
+function target(g, H){
+  const [pu, pd] = ends(g, H);
+  let d = wrap(pd - pu); if (d <= -Math.PI + 1e-9) d = Math.PI;
+  return wrap(pu + (1 - g.s) / 2 * d);
+}
+// its contribution to B: a blend of the two settled directions, so it changes smoothly and in one direction
+function contrib(g, H){ const [pu, pd] = ends(g, H); return (1 + g.s) / 2 * Math.cos(pu) + (1 - g.s) / 2 * Math.cos(pd); }
+const ramp = (H, c) => Math.max(-1, Math.min(1, 2 * (H - c) / SW));
+function switchAt(H){
+  grains.forEach(g => {
+    const lo = ramp(H, g.hc + g.shift), hi = ramp(H, -g.hc + g.shift);   // lo <= hi always
+    g.s = Math.min(hi, Math.max(lo, g.s));
+  });
+}
+// move each drawn arrow towards its target; instant=true snaps
+function relax(H){ grains.forEach(g => { g.psi = target(g, H); }); }
+function fluxB(H){ let s = 0; grains.forEach(g => { s += contrib(g, H); }); return BS * s / N + BLIN * H; }
+function fracRight(){ return grains.filter(g => Math.cos(g.psi) > 0).length / N; }
+
+// =====================================================================================
+// Story: each chapter moves H along a scripted path
+// =====================================================================================
+const CH = [
+  { title: 'Unmagnetised iron', path: [[0, 1.2]], demag: true,
+    text: 'Iron is made of tiny regions called <b>domains</b>. Inside each one, the atoms’ magnetic moments all point the same way, so each domain is a small magnet. With no current in the coil, the domains point every which way and cancel out. Overall, <b>B = 0</b>.' },
+  { title: 'Switch on a current', path: [[0.5, 4.5]],
+    text: 'Current in the coil sets up a field intensity <b>H = ni/ℓ</b> along the core. Domains pointing against H flip over to join it, and every flip adds to B, so B climbs steeply. The steepness, ΔB/ΔH, is the <b>permeability μ</b>. It is thousands of times larger than in air because the domains do most of the work.' },
+  { title: 'Saturation', path: [[1, 3.5]],
+    text: 'Once nearly every domain has flipped, there is nothing left to line up. The last ones twist a little towards H, then B can only creep up as it would in air. The curve flattens at the <b>saturation flux density B<sub>sat</sub></b>, and the permeability, and with it the inductance, collapses.' },
+  { title: 'Switch the current off', path: [[0, 3]],
+    text: 'Bring the current back to zero. The domains relax back to their easy directions, but they do not flip back. B stays well above zero: this is the <b>remanence B<sub>r</sub></b>. It is how a permanent magnet keeps its magnetism with no current at all.' },
+  { title: 'Reverse the current', path: [[-1, 6]],
+    text: 'To undo the magnetisation you have to push the other way. B only gets back to zero once H reaches the <b>coercivity, −H<sub>c</sub></b>. Push further and the core saturates in the opposite direction.' },
+  { title: 'AC: round the loop', ac: true,
+    text: 'On AC the domains are flipped back and forth every cycle, and the operating point runs round the <b>hysteresis loop</b>. Each flip turns a little energy into heat, and the <b>area inside the loop</b> is the energy lost per cycle. So transformer cores use soft materials with a narrow loop. Try the hard material below to compare.' }
+];
+const EXPLORE = { title: 'Your turn', text: 'You are in control. Drag the H slider and watch the domains. Try coming back only part of the way from saturation before reversing, and you will trace a smaller loop inside the big one. <b>Demagnetise</b> starts again from scratch.' };
+const AC_PERIOD = 6;
+
+let H = 0, B = 0, ch = 0, mode = 'story', playing = false, segIdx = 0, segT = 0, segFrom = 0, acT = 0, holdT = 0;
+let trace = [], marks = {}, slope = null;
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// replay chapters 0..k-1 instantly, so jumping to chapter k starts from the right state
+function stateBefore(k){
+  demagnetise(); H = 0; trace = []; marks = {};
+  for (let c = 1; c < k; c++){
+    CH[c].path.forEach(([to]) => { const from = H, n = 200; for (let i = 1; i <= n; i++){ const h = from + (to - from) * i / n; stepTo(h, 0, true); } });
+  }
+  B = fluxB(H);
+}
+// advance the model to field h over time dt and record the trace and the landmarks
+function stepTo(h, dt, instant){
+  const Hprev = H, Bprev = B;
+  H = h; switchAt(H); relax(H); B = fluxB(H);
+  const lp = trace[trace.length - 1];
+  if (!lp || Math.abs(lp[0] - H) > 1e-4 || Math.abs(lp[1] - B) > 1e-4) trace.push([H, B]);
+  if (trace.length > 2400) trace.splice(0, trace.length - 2400);
+  if (marks.Bs && ((Hprev > 0 && H <= 0) || (Hprev < 0 && H >= 0)) && Math.abs(B) > 0.15) marks['Br' + (B > 0 ? '+' : '-')] = [0, B];
+  if (marks.Bs && ((Bprev > 0 && B <= 0) || (Bprev < 0 && B >= 0)) && Math.abs(H) > 0.02){
+    const t = Bprev / (Bprev - B), hz = Hprev + t * (H - Hprev); marks['Hc' + (hz > 0 ? '+' : '-')] = [hz, 0]; }
+  if (B > 1.3 || B < -1.3) marks['Bs'] = 1;
+  if (Math.abs(H - Hprev) > 1e-4){
+    const s = (B - Bprev) / (H - Hprev);
+    if (isFinite(s)) slope = slope === null ? s : slope + 0.25 * (s - slope);
+  }
+}
+
+function showVisuals(){                         // on a phone, bring the core and plot into view when a chapter starts
+  if (window.matchMedia('(max-width:800px)').matches){
+    const r = document.querySelector('.p-core').getBoundingClientRect();
+    if (r.top < 0 || r.top > 80) document.querySelector('.p-core').scrollIntoView({block: 'start', behavior: REDUCED ? 'auto' : 'smooth'});
+  }
+}
+function startChapter(k, autoplay){
+  mode = 'story'; ch = k; stateBefore(k);
+  segIdx = 0; segT = 0; segFrom = H; acT = 0; holdT = 0; slope = null;
+  if (CH[k].ac) acT = 0;
+  playing = !!autoplay;
+  $('sliderH').value = H.toFixed(2);
+  renderStory(); draw();
+}
+function tick(dt){
+  if (mode !== 'story' || !playing) return;
+  const c = CH[ch];
+  if (c.ac && REDUCED){                       // reduced motion: draw one full loop at once, then stop
+    for (let k = 1; k <= 400; k++) stepTo(-Math.cos(TAU * k / 400), 0, true);
+    playing = false; renderStory(); return;
+  }
+  if (c.ac){
+    acT += dt;
+    stepTo(-Math.cos(TAU * acT / AC_PERIOD), dt, REDUCED);
+    return;
+  }
+  if (segIdx < c.path.length){
+    const [to, dur] = c.path[segIdx];
+    segT += REDUCED ? 1e9 : dt;
+    const t = Math.min(1, segT / dur), e = 0.5 - 0.5 * Math.cos(Math.PI * t);
+    stepTo(segFrom + (to - segFrom) * e, dt, REDUCED);
+    if (t >= 1){ segIdx++; segT = 0; segFrom = H; }
+  } else {
+    holdT += dt;
+    if (holdT > 0.8 && playing){
+      playing = false; renderStory();
+      if ($('autoNext').checked && ch < CH.length - 1) setTimeout(() => { if (mode === 'story' && !playing && segIdx >= CH[ch].path.length) startChapter(ch + 1, true); }, 1400);
+    }
+  }
+}
+
+// =====================================================================================
+// Drawing
+// =====================================================================================
+const NS = 'http://www.w3.org/2000/svg';
+const $ = id => document.getElementById(id);
+function el(tag, attrs, parent, text){
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function txt(parent, attrs, parts){             // text with tspan subscripts: parts = ['B', {sub:'r'}]
+  const t = el('text', attrs, parent), fs = parseFloat(attrs['font-size'] || 12);
+  let shifted = false;
+  (Array.isArray(parts) ? parts : [parts]).forEach(p => {
+    const isSub = typeof p === 'object', a = {};
+    if (isSub){ a['font-size'] = (fs * 0.72).toFixed(1); a.dy = (fs * 0.28).toFixed(1); }
+    else if (shifted) a.dy = (-fs * 0.28).toFixed(1);
+    el('tspan', a, t, isSub ? p.sub : p); shifted = isSub;
+  });
+  return t;
+}
+const INK = '#1a1512', MAROON = '#7a1730', FOCUS = '#1c5f7a', MUSTARD = '#c98a2c', MUTED = '#6b6156', GRID = '#e4ddd2', PAPER = '#faf7f2';
+function mix(a, b, f){
+  const pa = [1, 3, 5].map(k => parseInt(a.substr(k, 2), 16)), pb = [1, 3, 5].map(k => parseInt(b.substr(k, 2), 16));
+  return '#' + pa.map((v, k) => Math.round(v + (pb[k] - v) * f).toString(16).padStart(2, '0')).join('');
+}
+
+// ----- core scene (built once, updated each frame) -----
+const core = $('coreSvg');
+const TURNS = [100, 155, 210, 265, 320, 375, 430], SL = 6, TY0 = 76, TY1 = 204;
+let cellEls = [], arrowEls = [], hArrow, bArrow, hLab, bLab, flowEls = [];
+function buildCore(){
+  core.innerHTML = '';
+  // back halves of the turns (behind the core): bottom of one turn up to the top of the next
+  const back = el('g', {}, core);
+  let dBack = '';
+  for (let k = 0; k < TURNS.length - 1; k++) dBack += `M${TURNS[k] + SL},${TY1} L${TURNS[k + 1] - SL},${TY0} `;
+  el('path', {d: dBack, stroke: '#9b928a', 'stroke-width': 2.4, fill: 'none', 'stroke-linecap': 'round'}, back);
+  // the grains
+  const gCells = el('g', {}, core);
+  grains.forEach(g => {
+    cellEls.push(el('polygon', {points: g.poly.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' '), stroke: '#fff', 'stroke-width': 1.3, 'stroke-linejoin': 'round'}, gCells));
+  });
+  el('rect', {x: CORE.x0, y: CORE.y0, width: CORE.x1 - CORE.x0, height: CORE.y1 - CORE.y0, fill: 'none', stroke: INK, 'stroke-width': 2}, core);
+  const gArr = el('g', {}, core);
+  grains.forEach(g => {
+    const a = el('g', {}, gArr);
+    el('line', {x1: -8, y1: 0, x2: 4.5, y2: 0, stroke: INK, 'stroke-width': 2.1, 'stroke-linecap': 'round'}, a);
+    el('polygon', {points: '9.5,0 2.5,-4.2 2.5,4.2', fill: INK}, a);
+    arrowEls.push(a);
+  });
+  // front halves of the turns, the leads and the source
+  const front = el('g', {}, core);
+  let dFront = '';
+  TURNS.forEach(x => { dFront += `M${x - SL},${TY0} L${x + SL},${TY1} `; });
+  const last = TURNS[TURNS.length - 1];
+  const dLeads = `M30,126 L30,${TY0} L${TURNS[0] - SL},${TY0} M${last + SL},${TY1} L${last + SL},236 L30,236 L30,154`;
+  [dFront, dLeads].forEach(d => el('path', {d, stroke: INK, 'stroke-width': 2.6, fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round'}, front));
+  // moving charges: white dots running along the wire (speed and direction follow the current)
+  [dBack, dFront, dLeads].forEach((d, k) => flowEls.push(el('path', {d, stroke: k === 0 ? '#e6e2dc' : '#fff', 'stroke-width': 2.2, fill: 'none',
+    'stroke-linecap': 'round', 'stroke-dasharray': '0.1 11', opacity: 0}, k === 0 ? back : front)));
+  el('circle', {cx: 30, cy: 140, r: 14, fill: '#fff', stroke: INK, 'stroke-width': 2.2}, front);
+  txt(front, {x: 30, y: 145, 'font-size': 14, 'font-weight': 700, 'text-anchor': 'middle', fill: INK, 'font-style': 'italic'}, 'i');
+  // H and B arrows above the core
+  const gA = el('g', {}, core);
+  el('line', {x1: 260, y1: 16, x2: 260, y2: 64, stroke: GRID, 'stroke-width': 1}, gA);
+  hArrow = el('path', {fill: MUSTARD}, gA); bArrow = el('path', {fill: MAROON}, gA);
+  hLab = txt(gA, {'font-size': 13, 'font-weight': 700, fill: MUSTARD}, 'H');
+  bLab = txt(gA, {'font-size': 13, 'font-weight': 700, fill: MAROON}, 'B');
+}
+function arrowPath(x0, y, len, th){            // a horizontal block arrow of signed length len
+  const s = Math.sign(len) || 1, L = Math.abs(len);
+  if (L < 1) return '';
+  const head = Math.min(12, L), x1 = x0 + s * (L - head), x2 = x0 + s * L;
+  return `M${x0},${y - th / 2} L${x1},${y - th / 2} L${x1},${y - th / 2 - 4} L${x2},${y} L${x1},${y + th / 2 + 4} L${x1},${y + th / 2} L${x0},${y + th / 2} Z`;
+}
+let flowOffset = 0;
+function updateCore(dt){
+  grains.forEach((g, k) => {
+    const c = Math.cos(g.psi);
+    const fill = c >= 0 ? mix(PAPER, '#b75b72', 0.15 + 0.6 * c) : mix(PAPER, '#4f8aa3', 0.15 + 0.6 * -c);
+    cellEls[k].setAttribute('fill', fill);
+    arrowEls[k].setAttribute('transform', `translate(${g.cx.toFixed(1)},${g.cy.toFixed(1)}) rotate(${(-g.psi * 180 / Math.PI).toFixed(1)})`);
+  });
+  const hl = 170 * H, bl = 170 * B / 1.5;
+  hArrow.setAttribute('d', arrowPath(260, 26, hl, 7)); bArrow.setAttribute('d', arrowPath(260, 54, bl, 7));
+  const place = (lab, len, y) => { const x = Math.abs(len) < 1 ? 268 : 260 + len + Math.sign(len) * 8;
+    lab.setAttribute('x', x.toFixed(1)); lab.setAttribute('y', y + 4.5); lab.setAttribute('text-anchor', len < 0 ? 'end' : 'start'); };
+  place(hLab, hl, 26); place(bLab, bl, 54);
+  // current flow: positive H means current runs down the front of each turn
+  flowOffset -= 60 * H * dt * 2.2;
+  flowEls.forEach(f => { f.setAttribute('stroke-dashoffset', flowOffset.toFixed(2)); f.setAttribute('opacity', Math.abs(H) > 0.01 ? 1 : 0); });
+}
+
+// ----- B-H plot (fixed frame) -----
+const plot = $('bhSvg');
+const P = { l: 36, r: 16, t: 14, b: 28, W: 460, Hh: 300, HM: 1.12, BM: 1.75 };
+const pw = P.W - P.l - P.r, ph = P.Hh - P.t - P.b;
+const X = h => P.l + (h + P.HM) / (2 * P.HM) * pw, Y = b => P.t + (P.BM - b) / (2 * P.BM) * ph;
+let gDyn;
+function buildPlot(){
+  plot.innerHTML = '';
+  const defs = el('defs', {}, plot), cp = el('clipPath', {id: 'pclip'}, defs);
+  el('rect', {x: P.l, y: P.t, width: pw, height: ph}, cp);
+  [-1.5, -1, -0.5, 0.5, 1, 1.5].forEach(b => {
+    el('line', {x1: P.l, y1: Y(b), x2: P.l + pw, y2: Y(b), stroke: GRID, 'stroke-width': 1}, plot);
+    txt(plot, {x: P.l - 5, y: Y(b) + 4, 'font-size': 11, fill: MUTED, 'text-anchor': 'end'}, (b < 0 ? '−' : '') + Math.abs(b).toFixed(1));
+  });
+  el('line', {x1: P.l, y1: Y(0), x2: P.l + pw, y2: Y(0), stroke: INK, 'stroke-width': 1.4}, plot);
+  el('line', {x1: X(0), y1: P.t, x2: X(0), y2: P.t + ph, stroke: INK, 'stroke-width': 1.4}, plot);
+  txt(plot, {x: P.l + pw, y: Y(0) + 18, 'font-size': 12, fill: MUTED, 'text-anchor': 'end'}, 'H →');
+  txt(plot, {x: P.l + 2, y: Y(0) + 18, 'font-size': 12, fill: MUTED}, '← −H');
+  txt(plot, {x: P.l - 5, y: Y(0) + 4, 'font-size': 11, fill: MUTED, 'text-anchor': 'end'}, '0');
+  txt(plot, {x: X(0) + 8, y: P.t + 10, 'font-size': 12, fill: MUTED}, 'B (T)');
+  gDyn = el('g', {}, plot);
+}
+function drawPlot(){
+  gDyn.innerHTML = '';
+  if (marks.Bs){
+    [1, -1].forEach(s => el('line', {x1: P.l, y1: Y(s * BS), x2: P.l + pw, y2: Y(s * BS), stroke: MUTED, 'stroke-width': 1.2, 'stroke-dasharray': '5,4'}, gDyn));
+    txt(gDyn, {x: P.l + 6, y: Y(BS) - 7, 'font-size': 12.5, 'font-weight': 700, fill: MUTED}, ['B', {sub: 'sat'}]);
+  }
+  if (trace.length > 1){
+    const pts = trace.map(p => X(p[0]).toFixed(1) + ',' + Y(p[1]).toFixed(1)).join(' ');
+    el('polyline', {points: pts, fill: 'none', stroke: MAROON, 'stroke-width': 2.6, 'stroke-linejoin': 'round', 'clip-path': 'url(#pclip)'}, gDyn);
+  }
+  // landmarks found along the way
+  ['Br+', 'Br-'].forEach(k => { if (marks[k]){ const m = marks[k], up = m[1] > 0;
+    el('circle', {cx: X(0), cy: Y(m[1]), r: 4.5, fill: '#fff', stroke: MAROON, 'stroke-width': 2}, gDyn);
+    txt(gDyn, {x: X(0) + (up ? -9 : 9), y: Y(m[1]) + (up ? -8 : 16), 'font-size': 13, 'font-weight': 700, fill: MAROON, 'text-anchor': up ? 'end' : 'start'}, [up ? 'B' : '−B', {sub: 'r'}]); } });
+  ['Hc+', 'Hc-'].forEach(k => { if (marks[k]){ const m = marks[k], pos = m[0] > 0;
+    el('circle', {cx: X(m[0]), cy: Y(0), r: 4.5, fill: '#fff', stroke: MAROON, 'stroke-width': 2}, gDyn);
+    txt(gDyn, {x: X(m[0]) + (pos ? 6 : -6), y: Y(0) + (pos ? 18 : -9), 'font-size': 13, 'font-weight': 700, fill: MAROON, 'text-anchor': pos ? 'start' : 'end'}, [pos ? 'H' : '−H', {sub: 'c'}]); } });
+  // local slope (permeability), drawn at a fixed length through the operating point
+  const moving = (mode === 'story' && playing) || dragging;
+  if (moving && slope !== null){
+    const sx = slope * (ph / (2 * P.BM)) / (pw / (2 * P.HM)), n = Math.hypot(1, sx), L = 40;
+    const ox = X(H), oy = Y(B);
+    el('line', {x1: ox - L / n, y1: oy + sx * L / n, x2: ox + L / n, y2: oy - sx * L / n, stroke: MUSTARD, 'stroke-width': 2.4, 'stroke-dasharray': '5,3', 'clip-path': 'url(#pclip)'}, gDyn);
+  }
+  el('circle', {cx: X(H), cy: Y(B), r: 6, fill: INK, stroke: '#fff', 'stroke-width': 2}, gDyn);
+}
+
+function draw(dt){
+  updateCore(dt || 0); drawPlot();
+  $('valH').textContent = (H >= 0 ? '+' : '−') + Math.abs(H * 100).toFixed(0) + '%';
+  $('statB').textContent = (B < 0 ? '−' : '') + Math.abs(B).toFixed(2) + ' T';
+  $('statDom').textContent = Math.round(100 * fracRight()) + '%';
+}
+
+// ----- story panel -----
+function renderStory(){
+  const exploring = mode === 'explore', c = exploring ? EXPLORE : CH[ch];
+  $('chN').textContent = exploring ? 'Explore' : `Chapter ${ch + 1} of ${CH.length}`;
+  $('chTitle').textContent = c.title; $('chText').innerHTML = c.text;
+  $('coreCh').textContent = exploring ? ' · exploring' : ` · chapter ${ch + 1}: ${c.title}`;
+  $('dots').querySelectorAll('button').forEach((b, k) => {
+    b.classList.toggle('done', !exploring && k < ch);
+    if (!exploring && k === ch) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+  });
+  const finished = !exploring && !CH[ch].ac && segIdx >= CH[ch].path.length;
+  $('btnPlay').textContent = exploring ? 'Back to the story' : playing ? 'Pause' : finished ? 'Replay' : 'Play';
+  $('btnBack').disabled = exploring || ch === 0; $('btnNext').disabled = exploring || ch === CH.length - 1;
+  $('btnNext').classList.toggle('primary', finished && !playing && ch < CH.length - 1);
+}
+CH.forEach((c, k) => {
+  const b = document.createElement('button'); b.type = 'button'; b.textContent = k + 1; b.title = c.title;
+  b.setAttribute('aria-label', 'Chapter ' + (k + 1) + ': ' + c.title);
+  b.addEventListener('click', () => { startChapter(k, true); showVisuals(); });
+  $('dots').appendChild(b);
+});
+$('btnBack').addEventListener('click', () => { startChapter(Math.max(0, ch - 1), true); showVisuals(); });
+$('btnNext').addEventListener('click', () => { startChapter(Math.min(CH.length - 1, ch + 1), true); showVisuals(); });
+$('btnPlay').addEventListener('click', () => {
+  if (mode === 'explore'){ startChapter(0, false); return; }
+  const c = CH[ch];
+  if (!c.ac && segIdx >= c.path.length){ startChapter(ch, true); showVisuals(); return; }
+  playing = !playing; renderStory(); if (playing) showVisuals();
+});
+
+// ----- explore controls -----
+let dragging = false;
+function enterExplore(){ if (mode !== 'explore'){ mode = 'explore'; playing = false; slope = null; renderStory(); } }
+$('sliderH').addEventListener('input', e => { enterExplore(); dragging = true; stepTo(parseFloat(e.target.value), 1 / 60, REDUCED); });
+$('sliderH').addEventListener('change', () => { dragging = false; });
+['pointerup', 'touchend', 'keyup'].forEach(ev => $('sliderH').addEventListener(ev, () => { dragging = false; }));
+$('matSeg').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+  $('matSeg').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  setMaterial(b.dataset.mat);
+  if (mode === 'story') startChapter(ch, playing || CH[ch].ac); else { demagnetise(); H = 0; $('sliderH').value = 0; trace = []; marks = {}; B = fluxB(0); }
+}));
+$('btnDemag').addEventListener('click', () => { enterExplore(); demagnetise(); H = 0; $('sliderH').value = 0; trace = [[0, 0]]; marks = {}; B = fluxB(0); slope = null; });
+$('btnClear').addEventListener('click', () => { trace = [[H, B]]; marks = {}; });
+$('btnReset').addEventListener('click', () => {
+  $('matSeg').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.mat === 'soft')));
+  setMaterial('soft'); $('autoNext').checked = false; startChapter(0, false);
+});
+
+// ----- go -----
+setMaterial('soft'); buildCore(); buildPlot(); startChapter(0, false);
+let last = null;
+function frame(t){
+  const dt = last === null ? 0 : Math.min(0.05, (t - last) / 1000); last = t;
+  tick(dt); draw(dt);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+// expose the model for automated checks
+window.__dom = { grains, stepTo, demagnetise, setMaterial, fluxB, get H(){ return H; }, get B(){ return B; }, get marks(){ return marks; }, startChapter, CH };
+})();
+</script>
+</body>
+</html>
