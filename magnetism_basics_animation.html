@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Magnetism from Scratch: Right-Hand Rule, Flux and Flux Density — ELEC2005</title>
+<style>
+:root{
+  --ink:#1a1512; --paper:#faf7f2; --panel:#ffffff; --maroon:#7a1730;
+  --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a; --mustard:#c98a2c;
+  --serif:"Iowan Old Style","Georgia",serif;
+  --sans:"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+body{margin:0;background:#e6e6e4;color:var(--ink);font-family:var(--sans);}
+.wrap{max-width:960px;margin:0 auto;padding:24px 20px 36px;}
+header{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:6px 16px;
+  border-bottom:1px solid var(--grid);padding-bottom:12px;margin-bottom:14px;}
+.eyebrow{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin:0 0 4px;}
+h1{font-family:var(--serif);font-size:26px;letter-spacing:-0.01em;line-height:1.15;margin:0;font-weight:700;}
+.tag{font-size:12px;color:var(--muted);white-space:nowrap;}
+.intro{font-size:14px;line-height:1.55;margin:0 0 12px;max-width:820px;}
+.callout{background:#fbe9c6;border:1px solid #e0be6f;color:#5c4a12;border-radius:4px;padding:9px 12px;font-size:12.5px;line-height:1.45;margin:0 0 16px;}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start;}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0;}
+.panel{background:var(--panel);border:1px solid var(--grid);border-radius:4px;padding:14px 16px;min-width:0;}
+.panel-label{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 8px;}
+.sym{text-transform:none;letter-spacing:0;}
+svg{display:block;width:100%;height:auto;}
+svg text{font-family:var(--sans);user-select:none;-webkit-user-select:none;}
+#scene text{paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round;}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:11.5px;color:var(--muted);margin-top:8px;}
+.legend > span{display:inline-flex;align-items:center;gap:6px;}
+.legend i{display:inline-block;width:22px;height:0;border-top:3px solid;}
+
+.chapter-n{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin:0 0 4px;}
+.story h2{font-family:var(--serif);font-size:20px;letter-spacing:-0.01em;line-height:1.2;margin:0 0 8px;}
+.story-text{font-family:var(--serif);font-size:15.5px;line-height:1.55;margin:0;min-height:10em;}
+.story-text b{color:var(--maroon);}
+.story-text .cur{color:#96640f;}
+.dots{display:flex;gap:6px;margin:14px 0 10px;}
+.dots button{flex:1;height:30px;border:1px solid var(--grid);border-radius:4px;background:var(--paper);color:var(--muted);
+  font:700 12px var(--sans);cursor:pointer;padding:0;}
+.dots button.done{background:#f3e6e9;color:var(--maroon);border-color:#e3c9cf;}
+.dots button[aria-current="step"]{background:var(--maroon);color:#fff;border-color:var(--maroon);}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;}
+.btn{flex:1 1 0;min-width:80px;padding:9px 10px;font:700 13px var(--sans);border-radius:4px;border:1px solid var(--ink);
+  background:transparent;color:var(--ink);cursor:pointer;line-height:1.2;}
+.btn.primary{background:var(--ink);color:var(--paper);flex:1.6 1 0;}
+@media (hover:hover){ .btn:hover{background:var(--ink);color:var(--paper);} .btn.primary:hover{background:var(--maroon);border-color:var(--maroon);} }
+.btn:disabled{opacity:0.35;cursor:default;pointer-events:none;}
+.btn.reset{display:block;width:100%;margin-top:12px;}
+button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
+.switch{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);margin-top:10px;cursor:pointer;}
+.switch input{accent-color:var(--maroon);width:15px;height:15px;margin:0;}
+
+.ctl{display:none;}
+.ctl.on{display:block;}
+.slider-block{margin-bottom:12px;}
+.slider-label-row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:4px;gap:8px;}
+.slider-value{font-weight:700;color:var(--maroon);font-variant-numeric:tabular-nums;white-space:nowrap;}
+input[type=range]{width:100%;accent-color:var(--maroon);margin:2px 0;}
+.slider-caption{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);}
+.seg{display:flex;border:1px solid var(--grid);border-radius:4px;overflow:hidden;margin-bottom:12px;}
+.seg button{flex:1;padding:8px 6px;font:700 12px var(--sans);background:var(--paper);color:var(--muted);cursor:pointer;border:none;border-left:1px solid var(--grid);}
+.seg button:first-child{border-left:none;}
+.seg button[aria-pressed="true"]{background:var(--maroon);color:#fff;}
+.ctl-label{font-size:13px;margin:0 0 5px;}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;}
+.stat-card{background:var(--paper);border:1px solid var(--grid);border-radius:4px;padding:9px 11px;}
+.stat-label{font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+.stat-value{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--maroon);white-space:nowrap;}
+.stat-value.warn{color:#a3372c;}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:2px;min-height:13px;}
+.hint{font-size:12.5px;line-height:1.45;color:var(--muted);margin:0 0 10px;}
+footer{text-align:center;color:var(--muted);font-size:11.5px;margin-top:26px;}
+
+@media (max-width:800px){
+  .wrap{padding:16px 12px 28px;}
+  h1{font-size:22px;}
+  .grid{grid-template-columns:minmax(0,1fr);gap:12px;}
+  .col{display:contents;}
+  .p-scene{order:1;} .p-story{order:2;} .p-explore{order:3;}
+  .story-text{min-height:0;font-size:15px;}
+}
+@media (pointer:coarse){ input[type=range]{height:30px;} .btn,.seg button,.dots button{min-height:40px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">Magnetic fields &middot; Animated explainer</p>
+      <h1>Magnetism from Scratch: Right-Hand Rule, Flux and Flux Density</h1>
+    </div>
+    <div class="tag">ELEC2005 &middot; Week 10</div>
+  </header>
+
+  <p class="intro">Start here if magnetic fields are new to you. Five short chapters: which way a field goes round a
+  wire and through a coil, what the dots and crosses in circuit diagrams mean, and what we mean by flux and flux density.
+  Each chapter has something to try in the panel on the right.</p>
+
+  <div class="grid">
+    <div class="col">
+      <div class="panel p-scene">
+        <p class="panel-label"><span id="sceneCh"></span></p>
+        <svg id="scene" viewBox="0 0 520 360" role="img" aria-label="Animated magnetic field picture for the current chapter"></svg>
+        <div class="legend">
+          <span><i style="border-color:#c98a2c"></i><span>current</span></span>
+          <span><i style="border-color:#7a1730"></i><span>magnetic field</span></span>
+          <span id="legExtra"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="panel story p-story" aria-live="polite">
+        <p class="chapter-n" id="chN"></p>
+        <h2 id="chTitle"></h2>
+        <p class="story-text" id="chText"></p>
+        <div class="dots" id="dots" role="group" aria-label="Chapters"></div>
+        <div class="btnrow">
+          <button type="button" class="btn" id="btnBack">&#9664; Back</button>
+          <button type="button" class="btn primary" id="btnPlay">Play</button>
+          <button type="button" class="btn" id="btnNext">Next &#9654;</button>
+        </div>
+        <label class="switch"><input type="checkbox" id="autoNext"> Carry on to the next chapter automatically</label>
+      </div>
+
+      <div class="panel p-explore">
+        <p class="panel-label">Try it</p>
+        <!-- chapters 1 and 2: the wire -->
+        <div class="ctl" data-ch="0 1">
+          <p class="ctl-label">Current direction</p>
+          <div class="seg" id="segWire" role="group" aria-label="Current direction in the wire">
+            <button type="button" data-v="1" aria-pressed="true">Up the wire</button>
+            <button type="button" data-v="-1" aria-pressed="false">Down the wire</button>
+          </div>
+          <div class="slider-block">
+            <div class="slider-label-row"><span>Viewing angle</span><span class="slider-value" id="valView"></span></div>
+            <input type="range" id="sliderView" min="10" max="90" step="1" value="18" aria-label="Viewing angle">
+            <div class="slider-caption"><span>from the side</span><span>looking down the wire</span></div>
+          </div>
+        </div>
+        <!-- chapter 3: the coil -->
+        <div class="ctl" data-ch="2">
+          <p class="ctl-label">Current direction round the turns</p>
+          <div class="seg" id="segCoil" role="group" aria-label="Current direction in the coil">
+            <button type="button" data-v="1" aria-pressed="true">One way</button>
+            <button type="button" data-v="-1" aria-pressed="false">The other way</button>
+          </div>
+          <p class="hint">Reverse the current and the north and south ends swap over. Check it with your right hand.</p>
+        </div>
+        <!-- chapter 4: flux through a hoop -->
+        <div class="ctl" data-ch="3">
+          <div class="slider-block">
+            <div class="slider-label-row"><span>Flux density, <i>B</i></span><span class="slider-value" id="valB"></span></div>
+            <input type="range" id="sliderB" min="0.2" max="1" step="0.05" value="0.6" aria-label="Flux density in tesla">
+            <div class="slider-caption"><span>0.2 T (lines far apart)</span><span>1 T (crowded)</span></div>
+          </div>
+          <div class="slider-block">
+            <div class="slider-label-row"><span>Hoop radius</span><span class="slider-value" id="valR"></span></div>
+            <input type="range" id="sliderR" min="1" max="3.5" step="0.1" value="2.5" aria-label="Hoop radius in centimetres">
+            <div class="slider-caption"><span>1 cm</span><span>3.5 cm</span></div>
+          </div>
+          <div class="slider-block">
+            <div class="slider-label-row"><span>Tilt, <i>θ</i></span><span class="slider-value" id="valTh"></span></div>
+            <input type="range" id="sliderTh" min="0" max="90" step="1" value="0" aria-label="Tilt of the hoop in degrees">
+            <div class="slider-caption"><span>0° (facing the field)</span><span>90° (edge-on)</span></div>
+          </div>
+          <div class="stats">
+            <div class="stat-card"><div class="stat-label">Lines through the hoop</div><div class="stat-value" id="stLines"></div><div class="stat-sub">each line ≈ 0.02 mWb, so a rough count</div></div>
+            <div class="stat-card"><div class="stat-label">Flux, <span class="sym">Φ = BA cos θ</span></div><div class="stat-value" id="stPhi"></div><div class="stat-sub" id="stPhiSub"></div></div>
+          </div>
+        </div>
+        <!-- chapter 5: flux density -->
+        <div class="ctl" data-ch="4">
+          <div class="slider-block">
+            <div class="slider-label-row"><span>Narrow end, as a fraction of the wide end</span><span class="slider-value" id="valK"></span></div>
+            <input type="range" id="sliderK" min="0.25" max="1" step="0.05" value="1" aria-label="Area of the narrow end as a fraction of the wide end">
+            <div class="slider-caption"><span>¼ of the area</span><span>the same</span></div>
+          </div>
+          <div class="stats">
+            <div class="stat-card"><div class="stat-label">Wide end</div><div class="stat-value" id="stB1"></div><div class="stat-sub" id="stB1sub"></div></div>
+            <div class="stat-card"><div class="stat-label">Narrow end</div><div class="stat-value" id="stB2"></div><div class="stat-sub" id="stB2sub"></div></div>
+          </div>
+        </div>
+        <button type="button" class="btn reset" id="btnReset">Reset to defaults</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>ELEC2005 &middot; Week 10 &middot; for concept exploration, not assessment</footer>
+</div>
+
+<script>
+(function(){
+'use strict';
+const NS = 'http://www.w3.org/2000/svg';
+const $ = id => document.getElementById(id);
+function el(tag, attrs, parent, text){
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function txt(parent, attrs, parts){
+  const t = el('text', attrs, parent), fs = parseFloat(attrs['font-size'] || 12);
+  let shifted = false;
+  (Array.isArray(parts) ? parts : [parts]).forEach(p => {
+    const isSub = typeof p === 'object', a = {};
+    if (isSub){ a['font-size'] = (fs * 0.72).toFixed(1); a.dy = (fs * 0.28).toFixed(1); }
+    else if (shifted) a.dy = (-fs * 0.28).toFixed(1);
+    el('tspan', a, t, isSub ? p.sub : p); shifted = isSub;
+  });
+  return t;
+}
+const INK = '#1a1512', MAROON = '#7a1730', MUSTARD = '#c98a2c', MUTED = '#6b6156', GRID = '#e4ddd2', COPPER = '#b8753a', FOCUS = '#1c5f7a';
+const TAU = 2 * Math.PI, D2R = Math.PI / 180;
+const smooth = t => t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const scene = $('scene');
+
+// ---- a small 3D camera: yaw about the vertical axis, then pitch down; orthographic ----
+const cam = { yaw: 0, pitch: 0, s: 60, cx: 260, cy: 180 };
+function P(x, y, z){
+  const cy = Math.cos(cam.yaw), sy = Math.sin(cam.yaw), cp = Math.cos(cam.pitch), sp = Math.sin(cam.pitch);
+  const X = x * cy + z * sy, Z1 = -x * sy + z * cy;
+  const Y = y * cp - Z1 * sp, D = y * sp + Z1 * cp;          // D: towards the viewer
+  return [cam.cx + cam.s * X, cam.cy - cam.s * Y, D];
+}
+const pts = arr => arr.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+function arrowHead(g, a, b, col, size){             // head at b, pointing from a to b (screen points)
+  const dx = b[0] - a[0], dy = b[1] - a[1], m = Math.hypot(dx, dy) || 1, ux = dx / m, uy = dy / m, s = size || 9;
+  el('polygon', {points: `${b[0]},${b[1]} ${b[0] - ux * s - uy * s * 0.55},${b[1] - uy * s + ux * s * 0.55} ${b[0] - ux * s + uy * s * 0.55},${b[1] - uy * s - ux * s * 0.55}`, fill: col}, g);
+}
+
+// =====================================================================================
+// Chapters
+// =====================================================================================
+const CH = [
+  { title: 'A current makes a magnetic field', label: 'A straight wire',
+    text: 'Any electric current is surrounded by a magnetic field. Round a straight wire, the field runs in <b>circles</b>. To find which way, use your <b>right hand</b>: point your thumb along the <span class="cur">current</span>, and your fingers curl the way the <b>field</b> goes. The field is strongest close to the wire and gets weaker further out.' },
+  { title: 'Dots and crosses', label: 'Looking down the wire',
+    text: 'Circuit diagrams often look straight along a wire. Think of the current as a dart. Coming towards you, you see its point: a <b>dot ⊙</b>. Going away from you, you see its tail feathers: a <b>cross ⊗</b>. Current out of the screen (⊙) gives an anticlockwise field; into the screen (⊗), clockwise. Your right thumb still tells you which.' },
+  { title: 'The right-hand rule for a coil', label: 'A coil',
+    text: 'Wind the wire into a coil and the circles from every turn add up to a field straight through the middle. For a coil, curl your fingers the way the <span class="cur">current</span> goes round the turns: your thumb points along the <b>field</b> inside, towards the coil’s <b>north</b> end. Outside, the field loops back round to the south end.' },
+  { title: 'Flux: how much field passes through', label: 'Field lines through a hoop',
+    text: 'Draw the field as lines, each carrying the same amount. The <b>flux Φ</b> through a loop counts the lines that pass through it. A bigger loop or a stronger field catches more; tilt the loop and fewer get through, and edge-on none do. <b>Φ = BA cos θ</b>, measured in <b>webers (Wb)</b>.' },
+  { title: 'Flux density: how crowded the lines are', label: 'The same flux, squeezed',
+    text: '<b>Flux density B</b> is flux per unit area: <b>B = Φ / A</b>, in <b>teslas</b> (1 T = 1 Wb/m²). Squeeze the same flux into a narrower piece of iron and the lines crowd together: the flux is unchanged but the flux density goes up. That is why the thinnest part of a core is the first to saturate.' }
+];
+
+let ch = 0, playing = false, chT = 0, clock = 0;
+const S = { wireDir: 1, view: 18, coilDir: 1, B: 0.6, R: 2.5, th: 0, k: 1, ringsIn: 1, coilIn: 1 };
+const DEF = { wireDir: 1, view: 18, coilDir: 1, B: 0.6, R: 2.5, th: 0, k: 1 };
+
+// ---- chapter 1 and 2: straight wire ----
+function drawWire(g){
+  const I = S.wireDir, endOn = smooth((S.view - 62) / 22);       // 0 side view .. 1 looking straight down
+  cam.yaw = -28 * D2R; cam.pitch = S.view * D2R; cam.s = 62; cam.cx = 260 - (ch === 1 ? 44 * endOn : 0); cam.cy = 186;
+  const levels = [-1.5, 0, 1.5], radii = [0.75, 1.45, 2.15];
+  const back = el('g', {}, g), mid = el('g', {}, g), front = el('g', {}, g);
+  // field rings (in horizontal planes), split into the halves behind and in front of the wire
+  levels.forEach((yl, li) => radii.forEach((r, ri) => {
+    const show = endOn > 0.5 ? (li === 1) : true;               // looking down the wire, the three levels overlap
+    if (!show) return;
+    const alpha = S.ringsIn * (1 - 0.25 * ri) * (endOn > 0.5 ? 1 : 0.9);
+    const N = 72, ring = [];
+    for (let k = 0; k <= N; k++){ const t = TAU * k / N; ring.push(P(r * Math.cos(t), yl, r * Math.sin(t))); }
+    for (let k = 0; k < N; k++){
+      const a = ring[k], b = ring[k + 1], D = (a[2] + b[2]) / 2;
+      el('line', {x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: MAROON, 'stroke-width': 2.2 - 0.4 * ri, 'stroke-linecap': 'round', opacity: alpha.toFixed(2)}, D < 0 ? back : front);
+    }
+    // arrows travelling round each ring; the inner rings go faster (stronger field)
+    const w = -I * 0.9 / r;                                       // thumb up: anticlockwise seen from above
+    for (let m = 0; m < 3; m++){
+      const t = w * clock + m * TAU / 3 + li;
+      const a = P(r * Math.cos(t - 0.12 * Math.sign(w)), yl, r * Math.sin(t - 0.12 * Math.sign(w))), b = P(r * Math.cos(t), yl, r * Math.sin(t));
+      const gg = el('g', {opacity: alpha.toFixed(2)}, (a[2] + b[2]) / 2 < 0 ? back : front);
+      arrowHead(gg, a, b, MAROON, 10 - 1.5 * ri);
+    }
+  }));
+  // the wire, with current dots moving along it
+  const w0 = P(0, -2.9, 0), w1 = P(0, 2.9, 0);
+  if (endOn < 0.95){
+    el('line', {x1: w0[0], y1: w0[1], x2: w1[0], y2: w1[1], stroke: COPPER, 'stroke-width': 9, 'stroke-linecap': 'round', opacity: (1 - endOn).toFixed(2)}, mid);
+    for (let k = 0; k < 9; k++){
+      const y = ((k / 9 + I * clock * 0.25) % 1 + 1) % 1 * 5.6 - 2.8, q = P(0, y, 0);
+      el('circle', {cx: q[0], cy: q[1], r: 2.4, fill: '#fff', opacity: (1 - endOn).toFixed(2)}, mid);
+    }
+  }
+  // end-on: the wire becomes a dot or a cross
+  if (endOn > 0.02){
+    const c = P(0, 2.9, 0), gE = el('g', {opacity: endOn.toFixed(2)}, front);
+    el('circle', {cx: c[0], cy: c[1], r: 15, fill: '#fff', stroke: INK, 'stroke-width': 2.4}, gE);
+    if (I > 0) el('circle', {cx: c[0], cy: c[1], r: 4.2, fill: INK}, gE);
+    else el('path', {d: `M${c[0] - 8},${c[1] - 8}L${c[0] + 8},${c[1] + 8}M${c[0] + 8},${c[1] - 8}L${c[0] - 8},${c[1] + 8}`, stroke: INK, 'stroke-width': 2.4}, gE);
+    txt(gE, {x: c[0] + 22, y: c[1] - 20, 'font-size': 13, 'font-weight': 700, fill: '#96640f'}, I > 0 ? 'current out of the screen' : 'current into the screen');
+  }
+  // the right-hand rule labels: thumb = current, fingers = field
+  const side = 1 - endOn;
+  if (side > 0.05){
+    const gL = el('g', {opacity: side.toFixed(2)}, front);
+    const a = P(-2.9, -0.9 * I, 0), b = P(-2.9, 0.9 * I, 0);
+    el('line', {x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: MUSTARD, 'stroke-width': 6, 'stroke-linecap': 'round'}, gL);
+    arrowHead(gL, a, b, MUSTARD, 16);
+    txt(gL, {x: a[0] - 14, y: (a[1] + b[1]) / 2 - 6, 'font-size': 13, 'font-weight': 700, fill: '#96640f', 'text-anchor': 'end'}, 'thumb:');
+    txt(gL, {x: a[0] - 14, y: (a[1] + b[1]) / 2 + 10, 'font-size': 13, 'font-weight': 700, fill: '#96640f', 'text-anchor': 'end'}, 'current');
+    const q = P(2.15, 1.5, 0);
+    txt(gL, {x: q[0] + 12, y: q[1] - 4, 'font-size': 13, 'font-weight': 700, fill: MAROON}, 'fingers:');
+    txt(gL, {x: q[0] + 12, y: q[1] + 12, 'font-size': 13, 'font-weight': 700, fill: MAROON}, 'field');
+  }
+  // the dart inset (chapter 2)
+  if (ch === 1){
+    const gD = el('g', {transform: 'translate(366,14)'}, g);
+    el('rect', {x: 0, y: 0, width: 144, height: 104, rx: 4, fill: '#fff', stroke: GRID}, gD);
+    const dart = (y, toward) => {
+      // side view of a dart, then what you see from the front
+      const x0 = 12, x1 = 70;
+      el('line', {x1: x0, y1: y, x2: x1, y2: y, stroke: MUSTARD, 'stroke-width': 3}, gD);
+      if (toward){ el('polygon', {points: `${x1 + 10},${y} ${x1},${y - 6} ${x1},${y + 6}`, fill: MUSTARD}, gD);
+        el('path', {d: `M${x0},${y} l-6,-6 M${x0},${y} l-6,6`, stroke: MUSTARD, 'stroke-width': 2.4}, gD); }
+      else { el('polygon', {points: `${x0 - 10},${y} ${x0},${y - 6} ${x0},${y + 6}`, fill: MUSTARD}, gD);
+        el('path', {d: `M${x1},${y} l6,-6 M${x1},${y} l6,6`, stroke: MUSTARD, 'stroke-width': 2.4}, gD); }
+      el('path', {d: `M90,${y} Q98,${y - 7} 106,${y} Q98,${y + 7} 90,${y} Z`, fill: '#fff', stroke: INK, 'stroke-width': 1.4}, gD);   // an eye
+      el('circle', {cx: 99, cy: y, r: 2.4, fill: INK}, gD);
+      el('circle', {cx: 126, cy: y, r: 9, fill: '#fff', stroke: INK, 'stroke-width': 1.8}, gD);
+      if (toward) el('circle', {cx: 126, cy: y, r: 2.8, fill: INK}, gD);
+      else el('path', {d: `M120,${y - 6}L132,${y + 6}M132,${y - 6}L120,${y + 6}`, stroke: INK, 'stroke-width': 1.8}, gD);
+    };
+    dart(30, true); dart(76, false);
+    txt(gD, {x: 72, y: 52, 'font-size': 10.5, fill: MUTED, 'text-anchor': 'middle'}, 'coming at you: the point');
+    txt(gD, {x: 72, y: 98, 'font-size': 10.5, fill: MUTED, 'text-anchor': 'middle'}, 'going away: the feathers');
+  }
+}
+
+// ---- chapter 3: coil ----
+function drawCoil(g){
+  cam.yaw = -24 * D2R; cam.pitch = 16 * D2R; cam.s = 46; cam.cx = 262; cam.cy = 186;
+  const I = S.coilDir, turns = 6, R = 1.05, x0 = -2.3, x1 = 2.3, k = S.coilIn;
+  const back = el('g', {}, g), fieldG = el('g', {}, g), front = el('g', {}, g);
+  // helix: x advances along the axis as the wire goes round (y = R cos t, z = R sin t)
+  const N = turns * 48, H = [];
+  for (let j = 0; j <= N; j++){ const t = TAU * turns * j / N; H.push(P(x0 + (x1 - x0) * j / N, R * Math.cos(t), R * Math.sin(t))); }
+  const shown = Math.floor(N * k);
+  for (let j = 0; j < shown; j++){
+    const a = H[j], b = H[j + 1], D = (a[2] + b[2]) / 2;
+    el('line', {x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: COPPER, 'stroke-width': D < 0 ? 4.5 : 6.5, 'stroke-linecap': 'round', opacity: D < 0 ? 0.55 : 1}, D < 0 ? back : front);
+  }
+  // current dots moving round the turns
+  for (let m = 0; m < 24; m++){
+    const f = ((m / 24 + I * clock * 0.04) % 1 + 1) % 1, j = Math.floor(f * N);
+    if (j >= shown) continue;
+    const q = H[j];
+    el('circle', {cx: q[0], cy: q[1], r: 2.2, fill: '#fff', opacity: q[2] < 0 ? 0.6 : 1}, q[2] < 0 ? back : front);
+  }
+  // field lines (in the plane z = 0): straight through the middle, looping back round outside
+  const fA = smooth((k - 0.6) / 0.4);
+  if (fA > 0){
+    const B = I;                                       // + : field to the right inside (towards +x)
+    const loops = [[0.32, 1.95], [0.62, 2.55]];
+    const path = (yi, yo, sgn) => {
+      const L = 3.3, E = 5.0, seg = [];
+      for (let j = 0; j <= 30; j++) seg.push([-L + 2 * L * j / 30, sgn * yi]);
+      for (let j = 1; j <= 30; j++){ const u = j / 30, a = Math.PI * u; seg.push([L + (E - L) * Math.sin(a), sgn * (yi + (yo - yi) * (1 - Math.cos(a)) / 2)]); }
+      for (let j = 1; j <= 30; j++) seg.push([L - 2 * L * j / 30, sgn * yo]);
+      for (let j = 1; j <= 30; j++){ const u = j / 30, a = Math.PI * u; seg.push([-L - (E - L) * Math.sin(a), sgn * (yo - (yo - yi) * (1 - Math.cos(a)) / 2)]); }
+      return seg.map(p => P(p[0], p[1], 0));
+    };
+    loops.forEach(([yi, yo]) => [1, -1].forEach(sg => {
+      const sp = path(yi, yo, sg);
+      el('polyline', {points: pts(sp), fill: 'none', stroke: MAROON, 'stroke-width': 2, opacity: (0.8 * fA).toFixed(2)}, fieldG);
+      const n = sp.length - 1;
+      for (let m = 0; m < 4; m++){
+        const f = ((m / 4 + B * clock * 0.06) % 1 + 1) % 1, j = Math.min(n - 1, Math.floor(f * n));
+        const a = sp[B > 0 ? j : j + 1], b = sp[B > 0 ? j + 1 : j];          // along the path for B > 0, against it for B < 0
+        const gg = el('g', {opacity: fA.toFixed(2)}, fieldG); arrowHead(gg, a, b, MAROON, 9);
+      }
+    }));
+    // big field arrow along the axis, the thumb
+    const a = P(-3.6 * B, 0, 0), b = P(3.9 * B, 0, 0);
+    el('line', {x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: MAROON, 'stroke-width': 5, opacity: (0.9 * fA).toFixed(2)}, fieldG);
+    const gH = el('g', {opacity: fA.toFixed(2)}, front); arrowHead(gH, a, b, MAROON, 18);
+    const nP = P(5.55 * B, 0, 0), sP = P(-5.55 * B, 0, 0);
+    txt(gH, {x: nP[0], y: nP[1] + 6, 'font-size': 20, 'font-weight': 700, fill: MAROON, 'text-anchor': 'middle'}, 'N');
+    txt(gH, {x: sP[0], y: sP[1] + 6, 'font-size': 20, 'font-weight': 700, fill: FOCUS, 'text-anchor': 'middle'}, 'S');
+    txt(gH, {x: 258, y: 26, 'font-size': 13, 'font-weight': 700, fill: MAROON, 'text-anchor': 'middle'}, 'thumb: the field inside points to the north end');
+    // fingers: a curled arrow following the current round the first turn
+    const gF = el('g', {opacity: fA.toFixed(2)}, front), arc = [];
+    for (let j = 0; j <= 24; j++){ const t = I * (0.15 + 1.25 * Math.PI * j / 24); arc.push(P(x0 - 0.75, 1.55 * Math.cos(t), 1.55 * Math.sin(t))); }
+    el('polyline', {points: pts(arc), fill: 'none', stroke: MUSTARD, 'stroke-width': 4, 'stroke-linecap': 'round'}, gF);
+    arrowHead(gF, arc[arc.length - 2], arc[arc.length - 1], MUSTARD, 13);
+    txt(gF, {x: arc[0][0] - 6, y: arc[0][1] - 12, 'font-size': 13, 'font-weight': 700, fill: '#96640f', 'text-anchor': 'middle'}, 'fingers: current');
+  }
+}
+
+// ---- chapter 4: flux through a hoop ----
+let hoopLines = 0;
+function drawHoop(g){
+  cam.yaw = -34 * D2R; cam.pitch = 20 * D2R; cam.s = 30; cam.cx = 262; cam.cy = 186;
+  const B = S.B, R = S.R, th = S.th * D2R, spacing = Math.sqrt(1 / (5 * B));   // each line carries 0.02 mWb; 1 cm^2 at B tesla holds 0.1B mWb, i.e. 5B lines
+  const lines = [], half = 4.2;
+  const n = Math.floor(half / spacing);
+  for (let a = -n; a <= n; a++) for (let b = -n; b <= n; b++) lines.push([a * spacing, b * spacing]);
+  // the hoop: centred at the origin, its normal tilted by theta away from the field (about the vertical axis)
+  const through = ([y, z]) => (y * y + (z / Math.max(1e-6, Math.cos(th))) * (z / Math.max(1e-6, Math.cos(th)))) <= R * R && Math.cos(th) > 1e-3;
+  hoopLines = lines.filter(through).length;
+  const gBack = el('g', {}, g), gHoopB = el('g', {}, g), gMid = el('g', {}, g), gHoopF = el('g', {}, g), gFront = el('g', {}, g);
+  lines.forEach(([y, z]) => {
+    const inside = through([y, z]);
+    // where this line crosses the hoop's plane (x = -z tan theta): split the line there
+    const xc = -z * Math.tan(Math.min(th, 89.5 * D2R));
+    const a = P(-6.5, y, z), c = P(xc, y, z), b = P(6.5, y, z);
+    const col = inside ? MAROON : '#cfc6ba', wd = inside ? 2.2 : 1.3;
+    el('line', {x1: a[0], y1: a[1], x2: c[0], y2: c[1], stroke: col, 'stroke-width': wd}, inside ? gBack : gBack);
+    el('line', {x1: c[0], y1: c[1], x2: b[0], y2: b[1], stroke: col, 'stroke-width': wd}, inside ? gFront : gBack);
+    // a moving arrowhead on each line, in the field's direction (+x)
+    const f = ((clock * 0.18 + (y * 0.37 + z * 0.61)) % 1 + 1) % 1, xa = -6.5 + 13 * f;
+    const p0 = P(xa - 0.3, y, z), p1 = P(xa, y, z);
+    arrowHead(xa > xc && inside ? gFront : gBack, p0, p1, col, inside ? 8 : 6);
+  });
+  // hoop outline, back half then front half
+  const N = 96;
+  for (let k = 0; k < N; k++){
+    const t0 = TAU * k / N, t1 = TAU * (k + 1) / N;
+    const q = t => { const y = R * Math.cos(t), w = R * Math.sin(t); return P(-w * Math.sin(th), y, w * Math.cos(th)); };
+    const a = q(t0), b = q(t1);
+    el('line', {x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: FOCUS, 'stroke-width': 4, 'stroke-linecap': 'round'}, (a[2] + b[2]) / 2 < 0 ? gHoopB : gHoopF);
+  }
+  // fill to show the hoop's area
+  const poly = []; for (let k = 0; k < 48; k++){ const t = TAU * k / 48, y = R * Math.cos(t), w = R * Math.sin(t); poly.push(P(-w * Math.sin(th), y, w * Math.cos(th))); }
+  el('polygon', {points: pts(poly), fill: FOCUS, opacity: 0.08}, gHoopB);
+  const lab = P(0, R + 0.7, 0);
+  txt(g, {x: lab[0], y: lab[1], 'font-size': 13, 'font-weight': 700, fill: FOCUS, 'text-anchor': 'middle'}, `hoop: θ = ${Math.round(S.th)}°`);
+  const fl = P(-6.2, 4.9, 0);
+  txt(g, {x: 16, y: 26, 'font-size': 13, 'font-weight': 700, fill: MAROON}, 'field B →');
+}
+
+// ---- chapter 5: the same flux squeezed ----
+function drawSqueeze(g){
+  const k = S.k, x0 = 40, xs = 230, xe = 330, x1 = 470, ym = 150, h1 = 210, h2 = h1 * k;
+  const top = x => x <= xs ? ym - h1 / 2 : x >= xe ? ym - h2 / 2 : ym - (h1 / 2 + (h2 - h1) / 2 * smooth((x - xs) / (xe - xs)));
+  // the iron piece
+  let d = `M${x0},${ym - h1 / 2} L${xs},${ym - h1 / 2}`;
+  for (let x = xs; x <= xe; x += 4) d += ` L${x},${top(x).toFixed(1)}`;
+  d += ` L${x1},${ym - h2 / 2} L${x1},${ym + h2 / 2}`;
+  for (let x = xe; x >= xs; x -= 4) d += ` L${x},${(2 * ym - top(x)).toFixed(1)}`;
+  d += ` L${x0},${ym + h1 / 2} Z`;
+  el('path', {d, fill: '#e9e3da', stroke: INK, 'stroke-width': 1.8}, g);
+  // 12 field lines: evenly spread across the wide end, evenly across the narrow end
+  const NL = 12;
+  for (let j = 0; j < NL; j++){
+    const f = (j + 0.5) / NL - 0.5;
+    const yAt = x => ym + f * (2 * (ym - top(x))) * 0.9;
+    let p = '';
+    for (let x = x0 - 20; x <= x1 + 20; x += 5) p += (p ? 'L' : 'M') + x + ',' + yAt(Math.max(x0, Math.min(x1, x))).toFixed(1);
+    el('path', {d: p, fill: 'none', stroke: MAROON, 'stroke-width': 2}, g);
+    for (let m = 0; m < 3; m++){
+      const u = ((m / 3 + clock * 0.12 + j * 0.07) % 1), x = x0 - 10 + (x1 - x0 + 20) * u;
+      arrowHead(g, [x - 6, yAt(Math.max(x0, Math.min(x1, x - 6)))], [x, yAt(Math.max(x0, Math.min(x1, x)))], MAROON, 8);
+    }
+  }
+  // cross-sections: the same 12 lines through a large and a small area
+  const cs = (cx, frac, label, Bv) => {
+    const side = 96 * Math.sqrt(frac);
+    const gc = el('g', {}, g);
+    el('rect', {x: cx - side / 2, y: 290 - side / 2, width: side, height: side, fill: '#fff', stroke: FOCUS, 'stroke-width': 2}, gc);
+    const n = 4, m = 3;
+    for (let a = 0; a < n; a++) for (let b = 0; b < m; b++){
+      const px = cx - side / 2 + side * (a + 0.5) / n, py = 290 - side / 2 + side * (b + 0.5) / m;
+      el('circle', {cx: px, cy: py, r: 2.8, fill: MAROON}, gc);
+    }
+    txt(gc, {x: cx, y: 290 - side / 2 - 8, 'font-size': 12, 'font-weight': 700, fill: FOCUS, 'text-anchor': 'middle'}, label);
+    el('line', {x1: cx, y1: ym + (cx < 250 ? h1 : h2) / 2 + 2, x2: cx, y2: 290 - side / 2 - 22, stroke: FOCUS, 'stroke-width': 1, 'stroke-dasharray': '3,3'}, gc);
+    txt(gc, {x: cx + side / 2 + 8, y: 294, 'font-size': 13, 'font-weight': 700, fill: MAROON}, ['B = ' + Bv.toFixed(2) + ' T']);
+  };
+  cs(120, 1, 'cross-section here', 0.5);
+  cs(410, k, '…and here', 0.5 / k);
+  txt(g, {x: 260, y: 24, 'font-size': 13, 'font-weight': 700, fill: MAROON, 'text-anchor': 'middle'}, 'the same 12 lines (the same flux Φ) all the way along');
+}
+
+// =====================================================================================
+// Story control
+// =====================================================================================
+function chapterDuration(k){ return [4, 7, 5, 8, 5][k]; }
+function startChapter(k, autoplay){
+  ch = k; chT = 0; playing = !!autoplay;
+  if (k === 0){ S.view = 18; S.wireDir = 1; S.ringsIn = autoplay ? 0 : 1; }
+  if (k === 1){ S.view = 18; S.wireDir = 1; S.ringsIn = 1; }
+  if (k === 2){ S.coilDir = 1; S.coilIn = autoplay ? 0 : 1; }
+  if (k === 3){ S.B = DEF.B; S.R = DEF.R; S.th = 0; }
+  if (k === 4){ S.k = 1; }
+  if (!autoplay && k === 1) S.view = 90;
+  if (!autoplay && k === 4) S.k = 0.35;
+  syncControls(); renderStory();
+}
+function tickStory(dt){
+  if (!playing) return;
+  chT += REDUCED ? 1e9 : dt;
+  const T = chT;
+  if (ch === 0) S.ringsIn = smooth(T / 2);
+  if (ch === 1){ S.view = 18 + 72 * smooth(T / 3); if (T > 4.5 && S.wireDir > 0) S.wireDir = -1; }
+  if (ch === 2) S.coilIn = smooth(T / 3.2);
+  if (ch === 3){ S.th = T < 4 ? 75 * smooth(T / 4) : 75 * (1 - smooth((T - 4.5) / 3)); }
+  if (ch === 4) S.k = 1 - 0.65 * smooth(T / 3.5);
+  syncControls(true);
+  if (T >= chapterDuration(ch)){
+    playing = false; renderStory();
+    if ($('autoNext').checked && ch < CH.length - 1) setTimeout(() => { if (!playing) startChapter(ch + 1, true); }, 2000);
+  }
+}
+function syncControls(valuesOnly){
+  $('sliderView').value = S.view; $('valView').textContent = S.view >= 88 ? 'looking down it' : Math.round(S.view) + '°';
+  $('sliderB').value = S.B; $('valB').textContent = S.B.toFixed(2) + ' T';
+  $('sliderR').value = S.R; $('valR').textContent = S.R.toFixed(1) + ' cm';
+  $('sliderTh').value = S.th; $('valTh').textContent = Math.round(S.th) + '°';
+  $('sliderK').value = S.k; $('valK').textContent = Math.round(S.k * 100) + '%';
+  $('segWire').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v === S.wireDir)));
+  $('segCoil').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v === S.coilDir)));
+  if (valuesOnly) return;
+  document.querySelectorAll('.ctl').forEach(c => c.classList.toggle('on', c.dataset.ch.split(' ').includes(String(ch))));
+}
+function renderStory(){
+  const c = CH[ch];
+  $('chN').textContent = `Chapter ${ch + 1} of ${CH.length}`;
+  $('chTitle').textContent = c.title; $('chText').innerHTML = c.text;
+  $('sceneCh').textContent = `Chapter ${ch + 1}: ${c.label}`;
+  $('legExtra').innerHTML = ch === 3 ? '<i style="border-color:#1c5f7a"></i><span>hoop</span>' : ch === 4 ? '<i style="border-color:#1c5f7a"></i><span>cross-section area</span>' : '';
+  $('dots').querySelectorAll('button').forEach((b, k) => {
+    b.classList.toggle('done', k < ch);
+    if (k === ch) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+  });
+  $('btnPlay').textContent = playing ? 'Pause' : chT > 0 ? 'Replay' : 'Play';
+  $('btnBack').disabled = ch === 0; $('btnNext').disabled = ch === CH.length - 1;
+  $('btnNext').classList.toggle('primary', !playing && chT > 0 && ch < CH.length - 1);
+}
+function updateStats(){
+  const A = Math.PI * S.R * S.R, phi = S.B * A * 1e-4 * Math.cos(S.th * D2R) * 1e3;    // mWb
+  $('stLines').textContent = hoopLines + (hoopLines === 1 ? ' line' : ' lines');
+  $('stPhi').textContent = phi.toFixed(2) + ' mWb';
+  $('stPhiSub').textContent = `${S.B.toFixed(2)} T × ${A.toFixed(1)} cm² × cos ${Math.round(S.th)}°`;
+  const B1 = 0.5, B2 = 0.5 / S.k;
+  $('stB1').textContent = B1.toFixed(2) + ' T'; $('stB1sub').textContent = 'Φ = 1.2 mWb, A = 24 cm²';
+  $('stB2').textContent = B2.toFixed(2) + ' T'; $('stB2').className = 'stat-value' + (B2 > 1.6 ? ' warn' : '');
+  $('stB2sub').textContent = B2 > 1.6 ? 'above about 1.6 T: iron saturates' : `Φ = 1.2 mWb, A = ${(24 * S.k).toFixed(1)} cm²`;
+}
+function showScene(){
+  if (window.matchMedia('(max-width:800px)').matches){
+    const r = document.querySelector('.p-scene').getBoundingClientRect();
+    if (r.top < 0 || r.top > 80) document.querySelector('.p-scene').scrollIntoView({block: 'start', behavior: REDUCED ? 'auto' : 'smooth'});
+  }
+}
+CH.forEach((c, k) => {
+  const b = document.createElement('button'); b.type = 'button'; b.textContent = k + 1; b.title = c.title;
+  b.setAttribute('aria-label', 'Chapter ' + (k + 1) + ': ' + c.title);
+  b.addEventListener('click', () => { startChapter(k, true); showScene(); });
+  $('dots').appendChild(b);
+});
+$('btnBack').addEventListener('click', () => { startChapter(Math.max(0, ch - 1), true); showScene(); });
+$('btnNext').addEventListener('click', () => { startChapter(Math.min(CH.length - 1, ch + 1), true); showScene(); });
+$('btnPlay').addEventListener('click', () => {
+  if (!playing && chT > 0){ startChapter(ch, true); showScene(); return; }
+  playing = !playing; renderStory(); if (playing) showScene();
+});
+const takeOver = () => { if (playing){ playing = false; renderStory(); } S.ringsIn = 1; S.coilIn = 1; };
+$('segWire').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { takeOver(); S.wireDir = +b.dataset.v; syncControls(true); }));
+$('segCoil').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { takeOver(); S.coilDir = +b.dataset.v; syncControls(true); }));
+[['sliderView', 'view'], ['sliderB', 'B'], ['sliderR', 'R'], ['sliderTh', 'th'], ['sliderK', 'k']].forEach(([id, key]) =>
+  $(id).addEventListener('input', e => { takeOver(); S[key] = parseFloat(e.target.value); syncControls(true); }));
+$('btnReset').addEventListener('click', () => { Object.assign(S, DEF, {ringsIn: 1, coilIn: 1}); $('autoNext').checked = false; startChapter(0, false); });
+
+// =====================================================================================
+let last = null, gScene = null;
+function frame(ts){
+  const dt = last === null ? 0 : Math.min(0.05, (ts - last) / 1000); last = ts;
+  if (!REDUCED) clock += dt;
+  tickStory(dt);
+  if (gScene) scene.removeChild(gScene);
+  gScene = el('g', {}, scene);
+  [drawWire, drawWire, drawCoil, drawHoop, drawSqueeze][ch](gScene);
+  updateStats();
+  requestAnimationFrame(frame);
+}
+startChapter(0, false);
+requestAnimationFrame(frame);
+window.__mb = { S, startChapter, get hoopLines(){ return hoopLines; }, get ch(){ return ch; } };
+})();
+</script>
+</body>
+</html>
