@@ -352,7 +352,7 @@
       <h1>Gym Crew Availability</h1>
       <p class="subtitle">Who's around and who's away over the next four months — tap any day for the details, or untick names to plan around a smaller group.</p>
     </div>
-    <div class="legend-note">Today · Thu 10 Sep 2026</div>
+    <div class="legend-note" id="todayLabel"></div>
   </header>
 
   <div class="layout">
@@ -429,10 +429,20 @@
   ];
   const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
-  const today = new Date(Date.UTC(2026,8,10));
+  // Today's date, taken from the viewer's own clock (local date, stored as UTC midnight)
+  const now = new Date();
+  const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  document.getElementById("todayLabel").textContent =
+    "Today · " + today.toLocaleDateString("en-AU", {weekday:"short", day:"numeric", month:"short", year:"numeric", timeZone:"UTC"});
 
   const active = new Set(people); // toggled-on people
-  let currentMonthIdx = 0;
+  // Default to the current month; if today falls outside the range, use the nearest end
+  let currentMonthIdx = (() => {
+    const key = today.getUTCFullYear()*12 + today.getUTCMonth();
+    const idx = months.findIndex(m => m.year*12 + m.month === key);
+    if(idx >= 0) return idx;
+    return key < months[0].year*12 + months[0].month ? 0 : months.length - 1;
+  })();
   let selectedDateStr = null;
 
   function pad(n){ return n.toString().padStart(2,"0"); }
