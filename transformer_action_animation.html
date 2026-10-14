@@ -257,6 +257,7 @@ function mix(a, b, f){
 // core geometry (px)
 const C = { ox0: 150, ox1: 410, oy0: 40, oy1: 250, ix0: 190, ix1: 370, iy0: 80, iy1: 210 }, LW = 40;
 const WY0 = 94, WY1 = 196;                        // windings occupy this height on each limb
+const YEND = 214;                                 // each winding finishes on the outside of its limb here, so its lead leaves horizontally
 const scene = $('scene');
 let gBack, gFront, gSec, gSecFront, priStrands = [], secStrands = [], streaks = [], flowP, flowS, switchArm, mmf1, mmf2, mmfLab1, mmfLab2, labN2, gLoad, gV2;
 
@@ -272,7 +273,7 @@ function buildScene(){
   for (let k = 0; k < 90; k++){ const s = {el: el('line', {stroke: MAROON, 'stroke-width': 2.6, 'stroke-linecap': 'round', opacity: 0}, gStreak)}; spawnStreak(s, true); streaks.push(s); }
   // primary circuit: source, leads
   const gP = el('g', {}, scene);
-  const pPath = `M${C.ox0 - 4},${WY0} H58 V127 M58,163 V268 H${C.ox0 + LW + 4} V${WY1 + 6}`;
+  const pPath = `M${C.ox0 - 4},${WY0} H58 V127 M58,163 V${YEND} H${C.ox0 - 4}`;
   el('path', {d: pPath, stroke: INK, 'stroke-width': 2.4, fill: 'none', 'stroke-linejoin': 'round'}, gP);
   flowP = el('path', {d: pPath, stroke: '#fff', 'stroke-width': 2.0, fill: 'none', 'stroke-linecap': 'round', 'stroke-dasharray': '0.1 14'}, gP);
   el('circle', {cx: 58, cy: 145, r: 18, fill: '#fff', stroke: INK, 'stroke-width': 2.2}, gP);
@@ -286,9 +287,9 @@ function buildScene(){
   gFront = el('g', {}, scene);                   // front halves of the primary turns
   // secondary (fades in): load, switch, leads
   gSec = el('g', {}, scene);
-  const sx = C.ox1 + 4, sPath = `M${sx},${WY0} H470 M494,${WY0} H510 V120 M510,170 V268 H${C.ox1 - LW - 4} V${WY1 + 6}`;
+  const sx = C.ox1 + 4, sPath = `M${sx},${WY0} H470 M494,${WY0} H510 V120 M510,170 V${YEND} H${sx}`;
   el('path', {d: sPath, stroke: INK, 'stroke-width': 2.4, fill: 'none', 'stroke-linejoin': 'round'}, gSec);
-  flowS = el('path', {d: `M${sx},${WY0} H470 L494,${WY0} H510 V120 M510,170 V268 H${C.ox1 - LW - 4} V${WY1 + 6}`, stroke: '#fff', 'stroke-width': 2.0, fill: 'none', 'stroke-linecap': 'round', 'stroke-dasharray': '0.1 14'}, gSec);
+  flowS = el('path', {d: `M${sx},${WY0} H470 L494,${WY0} H510 V120 M510,170 V${YEND} H${sx}`, stroke: '#fff', 'stroke-width': 2.0, fill: 'none', 'stroke-linecap': 'round', 'stroke-dasharray': '0.1 14'}, gSec);
   el('circle', {cx: 470, cy: WY0, r: 3, fill: INK}, gSec); el('circle', {cx: 494, cy: WY0, r: 3, fill: INK}, gSec);
   switchArm = el('line', {x1: 470, y1: WY0, x2: 492, y2: WY0 - 14, stroke: INK, 'stroke-width': 2.6, 'stroke-linecap': 'round'}, gSec);
   gLoad = el('g', {}, gSec);
@@ -315,7 +316,9 @@ function strands(xa, xb, n, g, gb){
   for (let k = 0; k < n; k++){
     const y = n > 1 ? WY0 + k * sp : (WY0 + WY1) / 2 - 3;
     out.push(el('line', {x1: xa, y1: y, x2: xb, y2: y + 6, stroke: INK, 'stroke-width': 2.8, 'stroke-linecap': 'round'}, g));
-    if (k < n - 1) el('line', {x1: xb, y1: y + 6, x2: xa, y2: y + sp, stroke: '#9b928a', 'stroke-width': 2.2, 'stroke-linecap': 'round'}, gb);
+    // back half of the turn, behind the core: to the next turn, or after the last turn out to where the lead leaves
+    const yNext = k < n - 1 ? y + sp : YEND;
+    el('line', {x1: xb, y1: y + 6, x2: xa, y2: yNext, stroke: '#9b928a', 'stroke-width': 2.2, 'stroke-linecap': 'round'}, gb);
   }
   return out;
 }
@@ -326,12 +329,10 @@ function buildWindings(){
   secStrands = strands(C.ox1 + 4, C.ox1 - LW - 4, n2, gSecFront, gbS);
   gbS.setAttribute('opacity', secP); gSecFront.setAttribute('opacity', secP);
   gBack._sec = gbS;
-  if (n2 === 1){                                   // a single turn sits mid-limb: join its ends to the leads
+  if (n2 === 1){                                   // a single turn sits mid-limb: run its top lead down the outside to it
     const ym = (WY0 + WY1) / 2 - 3;
     el('line', {x1: C.ox1 + 4, y1: WY0, x2: C.ox1 + 4, y2: ym, stroke: INK, 'stroke-width': 2.4}, gSecFront);
-    el('line', {x1: C.ox1 - LW - 4, y1: ym + 6, x2: C.ox1 - LW - 4, y2: WY1 + 6, stroke: INK, 'stroke-width': 2.4}, gSecFront);
   }
-  // with one turn the leads still meet its two ends
   const tSpan = labN2.querySelectorAll('tspan'); tSpan[tSpan.length - 1].textContent = ' = ' + n2;
 }
 
