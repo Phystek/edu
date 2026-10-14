@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Core Losses: Hysteresis and Eddy Currents — ELEC2005</title>
+<style>
+:root{
+  --ink:#1a1512; --paper:#faf7f2; --panel:#ffffff; --maroon:#7a1730;
+  --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a; --mustard:#c98a2c;
+  --serif:"Iowan Old Style","Georgia",serif;
+  --sans:"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+body{margin:0;background:#e6e6e4;color:var(--ink);font-family:var(--sans);}
+.wrap{max-width:960px;margin:0 auto;padding:24px 20px 36px;}
+header{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:6px 16px;
+  border-bottom:1px solid var(--grid);padding-bottom:12px;margin-bottom:14px;}
+.eyebrow{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin:0 0 4px;}
+h1{font-family:var(--serif);font-size:26px;letter-spacing:-0.01em;line-height:1.15;margin:0;font-weight:700;}
+.tag{font-size:12px;color:var(--muted);white-space:nowrap;}
+.intro{font-size:14px;line-height:1.55;margin:0 0 12px;max-width:820px;}
+.callout{background:#fbe9c6;border:1px solid #e0be6f;color:#5c4a12;border-radius:4px;padding:9px 12px;font-size:12.5px;line-height:1.45;margin:0 0 16px;}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start;}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0;}
+.panel{background:var(--panel);border:1px solid var(--grid);border-radius:4px;padding:14px 16px;min-width:0;}
+.panel-label{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 8px;}
+.sym{text-transform:none;letter-spacing:0;}
+svg{display:block;width:100%;height:auto;}
+svg text{font-family:var(--sans);user-select:none;-webkit-user-select:none;paint-order:stroke;stroke:#fff;stroke-width:3.5px;stroke-linejoin:round;}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:11.5px;color:var(--muted);margin-top:8px;}
+.legend > span{display:inline-flex;align-items:center;gap:6px;}
+.legend i{display:inline-block;width:22px;height:0;border-top:3px solid;}
+.legend i.sw{width:14px;height:14px;border:1px solid var(--grid);border-radius:2px;}
+
+.chapter-n{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin:0 0 4px;}
+.story h2{font-family:var(--serif);font-size:20px;letter-spacing:-0.01em;line-height:1.2;margin:0 0 8px;}
+.story-text{font-family:var(--serif);font-size:15.5px;line-height:1.55;margin:0;min-height:11em;}
+.story-text b{color:var(--maroon);}
+.dots{display:flex;gap:6px;margin:14px 0 10px;}
+.dots button{flex:1;height:30px;border:1px solid var(--grid);border-radius:4px;background:var(--paper);color:var(--muted);
+  font:700 12px var(--sans);cursor:pointer;padding:0;}
+.dots button.done{background:#f3e6e9;color:var(--maroon);border-color:#e3c9cf;}
+.dots button[aria-current="step"]{background:var(--maroon);color:#fff;border-color:var(--maroon);}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;}
+.btn{flex:1 1 0;min-width:80px;padding:9px 10px;font:700 13px var(--sans);border-radius:4px;border:1px solid var(--ink);
+  background:transparent;color:var(--ink);cursor:pointer;line-height:1.2;}
+.btn.primary{background:var(--ink);color:var(--paper);flex:1.6 1 0;}
+@media (hover:hover){ .btn:hover{background:var(--ink);color:var(--paper);} .btn.primary:hover{background:var(--maroon);border-color:var(--maroon);} }
+.btn:disabled{opacity:0.35;cursor:default;pointer-events:none;}
+.btn.reset{display:block;width:100%;margin-top:12px;}
+button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
+.switch{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);margin-top:10px;cursor:pointer;}
+.switch input{accent-color:var(--maroon);width:15px;height:15px;margin:0;}
+
+.slider-block{margin-bottom:12px;}
+.slider-label-row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:4px;gap:8px;}
+.slider-value{font-weight:700;color:var(--maroon);font-variant-numeric:tabular-nums;white-space:nowrap;}
+input[type=range]{width:100%;accent-color:var(--maroon);margin:2px 0;}
+.slider-caption{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);}
+.seg{display:flex;border:1px solid var(--grid);border-radius:4px;overflow:hidden;}
+.seg button{flex:1;padding:7px 6px;font:700 12px var(--sans);line-height:1.2;background:var(--paper);color:var(--muted);cursor:pointer;border:none;border-left:1px solid var(--grid);}
+.seg button:first-child{border-left:none;}
+.seg button small{display:block;font-weight:400;font-size:10.5px;margin-top:1px;}
+.seg button[aria-pressed="true"]{background:var(--maroon);color:#fff;}
+.ctl-label{font-size:13px;margin:0 0 5px;}
+.losses{margin-top:14px;display:flex;flex-direction:column;gap:8px;}
+.loss{background:var(--paper);border:1px solid var(--grid);border-radius:4px;padding:8px 11px;}
+.loss-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
+.loss-label{font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);}
+.loss-value{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--maroon);white-space:nowrap;}
+.bar{height:8px;background:#eee8df;border-radius:4px;margin-top:5px;overflow:hidden;}
+.bar > span{display:block;height:100%;border-radius:4px;}
+.loss-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+footer{text-align:center;color:var(--muted);font-size:11.5px;margin-top:26px;}
+
+@media (max-width:800px){
+  .wrap{padding:16px 12px 28px;}
+  h1{font-size:22px;}
+  .grid{grid-template-columns:minmax(0,1fr);gap:12px;}
+  .col{display:contents;}
+  .p-scene{order:1;} .p-graph{order:2;} .p-story{order:3;} .p-explore{order:4;}
+  .story-text{min-height:0;font-size:15px;}
+  .legend{font-size:11px;}
+}
+@media (pointer:coarse){ input[type=range]{height:30px;} .btn,.seg button,.dots button{min-height:40px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">Transformers &middot; Animated explainer</p>
+      <h1>Core Losses: Hysteresis and Eddy Currents</h1>
+    </div>
+    <div class="tag">ELEC2005 &middot; Week 10</div>
+  </header>
+
+  <p class="intro">Switch a transformer on with nothing connected to it and its core still gets warm. Two things waste
+  power inside the iron every cycle: the domains being dragged back and forth (<b>hysteresis</b>), and currents swirling
+  round inside the iron itself (<b>eddy currents</b>). Watch both happen, see what makes each one worse, and why both end
+  up as one resistor in the equivalent circuit.</p>
+
+  <div class="callout"><b>Relative numbers, exaggerated sizes.</b> Losses are shown relative to a reference core (soft
+  steel, 50 Hz, 1 T peak, 10 laminations), using how each loss scales: hysteresis loss follows <i>f</i> × the area of the
+  drawn loop, and eddy loss follows <i>f</i>²<i>B</i>²<i>t</i>². The animation runs about 150 times slower than 50 Hz,
+  the loop is wider than real transformer steel, and the laminations are drawn far thicker than the 0.23 to 0.35 mm of a real core.</div>
+
+  <div class="grid">
+    <div class="col">
+      <div class="panel p-scene">
+        <p class="panel-label">The core<span id="sceneCh"></span></p>
+        <svg id="scene" viewBox="0 0 520 280" role="img" aria-label="Left: side view of a transformer core with domains flipping. Right: cross-section of one limb with eddy currents circulating."></svg>
+        <div class="legend">
+          <span><i style="border-color:#7a1730"></i><span>flux</span></span>
+          <span><i style="border-color:#c98a2c"></i><span>eddy current</span></span>
+          <span><i class="sw" style="background:#e8a35c"></i><span>heat (brighter = more power lost)</span></span>
+        </div>
+      </div>
+      <div class="panel p-graph">
+        <p class="panel-label">What the core goes through each cycle</p>
+        <svg id="graph" viewBox="0 0 460 200" role="img" aria-label="Left: the B–H loop. Right: flux and eddy current against time."></svg>
+        <div class="legend">
+          <span><i style="border-color:#7a1730"></i><span>B–H loop / flux Φ</span></span>
+          <span><i class="sw" style="background:#f3dcae"></i><span>loop area = energy lost per cycle</span></span>
+          <span><i style="border-color:#c98a2c"></i><span>eddy current</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="panel story p-story" aria-live="polite">
+        <p class="chapter-n" id="chN"></p>
+        <h2 id="chTitle"></h2>
+        <p class="story-text" id="chText"></p>
+        <div class="dots" id="dots" role="group" aria-label="Chapters"></div>
+        <div class="btnrow">
+          <button type="button" class="btn" id="btnBack">&#9664; Back</button>
+          <button type="button" class="btn primary" id="btnPlay">Play</button>
+          <button type="button" class="btn" id="btnNext">Next &#9654;</button>
+        </div>
+        <label class="switch"><input type="checkbox" id="autoNext"> Carry on to the next chapter automatically</label>
+      </div>
+
+      <div class="panel p-explore">
+        <p class="panel-label">Take control</p>
+        <div class="slider-block">
+          <div class="slider-label-row"><span>Frequency, <i>f</i></span><span class="slider-value" id="valF"></span></div>
+          <input type="range" id="sliderF" min="1" max="2.602" step="0.002" value="1.7" aria-label="Frequency, log scale">
+          <div class="slider-caption"><span>10 Hz</span><span>400 Hz</span></div>
+        </div>
+        <div class="slider-block">
+          <div class="slider-label-row"><span>Peak flux density, <i>B</i><sub>pk</sub></span><span class="slider-value" id="valB"></span></div>
+          <input type="range" id="sliderB" min="0.3" max="1.6" step="0.05" value="1" aria-label="Peak flux density in tesla">
+          <div class="slider-caption"><span>0.3 T</span><span>1.6 T</span></div>
+        </div>
+        <div class="slider-block">
+          <div class="slider-label-row"><span>Laminations across the limb</span><span class="slider-value" id="valN"></span></div>
+          <input type="range" id="sliderN" min="1" max="16" step="1" value="10" aria-label="Number of laminations">
+          <div class="slider-caption"><span>1 (solid iron)</span><span>16</span></div>
+        </div>
+        <p class="ctl-label">Core material</p>
+        <div class="seg" id="matSeg" role="group" aria-label="Core material">
+          <button type="button" data-mat="soft" aria-pressed="true">Soft steel<small>narrow loop</small></button>
+          <button type="button" data-mat="hard" aria-pressed="false">Hard steel<small>wide loop</small></button>
+        </div>
+        <div class="losses">
+          <div class="loss"><div class="loss-top"><span class="loss-label">Hysteresis loss</span><span class="loss-value" id="lH"></span></div><div class="bar"><span id="bH" style="background:#7a1730"></span></div><div class="loss-sub">∝ <i>f</i> × loop area · × the reference core</div></div>
+          <div class="loss"><div class="loss-top"><span class="loss-label">Eddy-current loss</span><span class="loss-value" id="lE"></span></div><div class="bar"><span id="bE" style="background:#c98a2c"></span></div><div class="loss-sub">∝ <i>f</i>² <i>B</i><sub>pk</sub>² <i>t</i>² (<i>t</i> = sheet thickness) · × the reference</div></div>
+          <div class="loss"><div class="loss-top"><span class="loss-label">Total core loss</span><span class="loss-value" id="lT"></span></div><div class="bar"><span id="bT" style="background:#1a1512"></span></div><div class="loss-sub">reference core: ⅔ hysteresis, ⅓ eddy</div></div>
+        </div>
+        <button type="button" class="btn reset" id="btnReset">Reset to defaults</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>ELEC2005 &middot; Week 10 &middot; for concept exploration, not assessment</footer>
+</div>
+
+<script>
+(function(){
+'use strict';
+// =====================================================================================
+// Model (relative units; reference = soft steel, 50 Hz, 1 T peak, 10 laminations)
+//   B-H loop: B = Bpk sin(th);  H = (0.4 + 0.6 Bpk) (sinh(K sin th)/sinh K + c cos th); c sets the loop width.
+//   Hysteresis loss  P_h = (f / 50) * loopArea / loopArea_ref       (energy per cycle x cycles per second)
+//   Eddy loss        P_e = 0.5 * (f / 50)^2 * Bpk^2 * (10 / N)^2      (t = limb width / N)
+// =====================================================================================
+const K = 2.2, PHI = { soft: 0.18, hard: 0.55 }, TAU = 2 * Math.PI;      // PHI: how far the loop opens (its width)
+const hAmp = Bpk => 0.4 + 0.6 * Bpk;               // a bigger flux swing needs a bigger H swing, so the loop grows in both directions
+// The supply voltage fixes the flux, so B is sinusoidal in time; H is distorted near the peaks (the knee of the curve)
+// and leads B by the opening term c cos(th), which is what makes the loop.
+const loopB = (th, Bpk) => Bpk * Math.sin(th);
+const loopH = (th, Bpk, c) => hAmp(Bpk) * (Math.sinh(K * Math.sin(th)) / Math.sinh(K) + c * Math.cos(th));
+function loopArea(Bpk, c){                         // closed integral of H dB over one cycle (= pi c hAmp Bpk)
+  let a = 0, n = 720, Bp = loopB(0, Bpk);
+  for (let k = 1; k <= n; k++){ const th = TAU * k / n, B = loopB(th, Bpk), H = loopH(th - TAU / n / 2, Bpk, c); a += H * (B - Bp); Bp = B; }
+  return Math.abs(a);
+}
+const AREA_REF = loopArea(1, PHI.soft);
+function losses(s){
+  const Ph = (s.f / 50) * loopArea(s.B, PHI[s.mat]) / AREA_REF;
+  const Pe = Math.pow(s.f / 50, 2) * s.B * s.B * Math.pow(10 / s.N, 2);          // 1 at the reference; the reference core splits 2:1 hysteresis:eddy
+  return { Ph, Pe, Pt: (2 * Ph + Pe) / 3 };            // total relative to the reference total
+}
+
+const CH = [
+  { title: 'Hysteresis: dragging the domains round', focus: 'left', N: 10, mat: 'soft', f: 50,
+    text: 'With AC, the domains in the iron are pulled one way, then the other, every cycle. They resist being turned, a bit like friction, so each flip wastes a little energy as <b>heat</b>. On the B–H plot the core goes round a <b>loop</b> rather than back along the same line. The <b>area inside the loop</b> is the energy lost in each cubic metre of iron, every cycle.' },
+  { title: 'Higher frequency, or a wider loop, means more heat', focus: 'left', N: 10, mat: 'soft', f: 50, script: 'freq',
+    text: 'The same energy is lost on every trip round the loop, so the power lost is that energy times the number of cycles per second: <b>hysteresis loss ∝ f × loop area</b>. Watch the frequency rise, then switch to a harder steel with a wider loop. Transformer cores use <b>soft</b> silicon steel, with a loop as narrow as possible (low coercivity).' },
+  { title: 'Eddy currents in solid iron', focus: 'right', N: 1, mat: 'soft', f: 50,
+    text: 'Iron conducts electricity. Look at a slice across the limb: the changing flux through it induces a voltage round any loop in the iron (Faraday’s law), so currents swirl round inside it, the <b>eddy currents</b>. They flow through the iron’s resistance and heat it (<b>i²R</b>). They are strongest when the flux is changing fastest, as the flux passes through zero.' },
+  { title: 'Slice it up: laminations', focus: 'right', N: 1, mat: 'soft', f: 50, script: 'lam',
+    text: 'Build the core from thin sheets, insulated from each other. Each eddy current is now trapped in one thin sheet: its loop encloses far less flux, so far less voltage drives it, round a long, narrow path. <b>Eddy loss ∝ f² B² t²</b>, so halving the sheet thickness quarters the loss. Real transformer laminations are about 0.3 mm thick.' },
+  { title: 'Both losses together: R<sub>m</sub>', focus: 'both', N: 10, mat: 'soft', f: 50,
+    text: 'Both losses depend on how hard and how fast the flux swings, which is set by the <b>voltage and frequency</b>, not by the load current. They are present whenever the transformer is switched on, even with nothing connected. That is why core loss is modelled as one resistor <b>R<sub>m</sub></b> in <b>parallel with L<sub>m</sub></b>, across the voltage, rather than in series with the load.' }
+];
+const EXPLORE = { title: 'Your turn', text: 'Change the frequency, the peak flux, the number of laminations and the steel. Which loss grows faster with frequency? Try a solid core (1 lamination) at 400 Hz, then see how few laminations it takes to bring the eddy loss under control.' };
+
+const DEF = { f: 50, B: 1, N: 10, mat: 'soft' };
+const S = Object.assign({}, DEF, { fillA: 0 });
+let ch = 0, mode = 'story', playing = false, chT = 0, theta = 0, Nshown = 10;
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// =====================================================================================
+// Drawing helpers
+// =====================================================================================
+const NS = 'http://www.w3.org/2000/svg';
+const $ = id => document.getElementById(id);
+function el(tag, attrs, parent, text){
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function txt(parent, attrs, parts){
+  const t = el('text', attrs, parent), fs = parseFloat(attrs['font-size'] || 12);
+  let shifted = false;
+  (Array.isArray(parts) ? parts : [parts]).forEach(p => {
+    const isSub = typeof p === 'object', a = {};
+    if (isSub){ a['font-size'] = (fs * 0.72).toFixed(1); a.dy = (fs * 0.28).toFixed(1); }
+    else if (shifted) a.dy = (-fs * 0.28).toFixed(1);
+    el('tspan', a, t, isSub ? p.sub : p); shifted = isSub;
+  });
+  return t;
+}
+const INK = '#1a1512', MAROON = '#7a1730', MUSTARD = '#c98a2c', MUTED = '#6b6156', GRID = '#e4ddd2', FOCUS = '#1c5f7a';
+function mix(a, b, f){
+  f = Math.max(0, Math.min(1, f));
+  const pa = [1, 3, 5].map(k => parseInt(a.substr(k, 2), 16)), pb = [1, 3, 5].map(k => parseInt(b.substr(k, 2), 16));
+  return '#' + pa.map((v, k) => Math.round(v + (pb[k] - v) * f).toString(16).padStart(2, '0')).join('');
+}
+const heatCol = h => h < 0.5 ? mix('#e4ddd2', '#efc58a', h * 2) : mix('#efc58a', '#d9622b', (h - 0.5) * 2);
+
+// =====================================================================================
+// Scene: left = side view with domains; right = cross-section of the right-hand limb
+// =====================================================================================
+const scene = $('scene');
+const SV = { ox0: 22, ox1: 232, oy0: 34, oy1: 236, t: 38 };
+SV.ix0 = SV.ox0 + SV.t; SV.ix1 = SV.ox1 - SV.t; SV.iy0 = SV.oy0 + SV.t; SV.iy1 = SV.oy1 - SV.t;
+const XS = { x0: 296, y0: 50, w: 200, h: 172 };      // cross-section rectangle (the limb, cut across)
+let gLeft, gRight, coreEl, domains = [], puffs = [], gPuffs, phiArrow, phiLab, gX, xsFluxG, xsSlices, xsLoops, cutLine;
+function buildScene(){
+  scene.innerHTML = '';
+  gLeft = el('g', {}, scene); gRight = el('g', {}, scene);
+  // ---- side view ----
+  coreEl = el('path', {d: `M${SV.ox0},${SV.oy0} H${SV.ox1} V${SV.oy1} H${SV.ox0} Z M${SV.ix0},${SV.iy0} V${SV.iy1} H${SV.ix1} V${SV.iy0} Z`,
+    'fill-rule': 'evenodd', stroke: INK, 'stroke-width': 2}, gLeft);
+  // winding on the left limb
+  for (let k = 0; k < 6; k++){ const y = 84 + k * 18;
+    el('line', {x1: SV.ox0 - 5, y1: y, x2: SV.ix0 + 5, y2: y + 7, stroke: INK, 'stroke-width': 3, 'stroke-linecap': 'round'}, gLeft); }
+  txt(gLeft, {x: SV.ox0 + 4, y: 26, 'font-size': 12, 'font-weight': 700, fill: INK}, 'AC winding');
+  // domains in the top and bottom limbs
+  const R = (() => { let s = 7; return () => { s = (s * 16807) % 2147483647; return s / 2147483647; }; })();
+  [[SV.oy0 + SV.t / 2, 8], [SV.oy1 - SV.t / 2, 8]].forEach(([y, n]) => {
+    for (let k = 0; k < n; k++){
+      const x = SV.ix0 + 8 + (SV.ix1 - SV.ix0 - 16) * (k + 0.5) / n;
+      const g = el('g', {}, gLeft);
+      el('line', {x1: -7, y1: 0, x2: 4, y2: 0, stroke: INK, 'stroke-width': 2, 'stroke-linecap': 'round'}, g);
+      el('polygon', {points: '8,0 2,-3.6 2,3.6', fill: INK}, g);
+      domains.push({x, y, g, th: (R() - 0.5) * 0.25, hc: 0.12 + 0.75 * (k + 0.5 + R() * 0.3) / n, s: 1, a: 0});
+    }
+  });
+  gPuffs = el('g', {}, gLeft);
+  // flux arrow round the core (size and direction follow the flux)
+  phiArrow = el('path', {fill: MAROON}, gLeft);
+  phiLab = txt(gLeft, {x: (SV.ix0 + SV.ix1) / 2, y: SV.iy0 + 20, 'font-size': 14, 'font-weight': 700, fill: MAROON, 'text-anchor': 'middle'}, 'Φ');
+  // where the cross-section is taken
+  cutLine = el('g', {}, gLeft);
+  el('line', {x1: SV.ix1 - 6, y1: 135, x2: SV.ox1 + 6, y2: 135, stroke: FOCUS, 'stroke-width': 2, 'stroke-dasharray': '5,3'}, cutLine);
+  el('path', {d: `M${SV.ox1 + 8},135 C${SV.ox1 + 30},135 ${XS.x0 - 26},${XS.y0 + XS.h / 2} ${XS.x0 - 6},${XS.y0 + XS.h / 2}`, stroke: FOCUS, 'stroke-width': 1.4, fill: 'none', 'stroke-dasharray': '3,3'}, cutLine);
+  txt(cutLine, {x: SV.ox1 + 10, y: 128, 'font-size': 11, fill: FOCUS}, 'cut');
+  // ---- cross-section ----
+  gX = el('g', {}, gRight);
+  txt(gRight, {x: XS.x0 + XS.w / 2, y: XS.y0 - 24, 'font-size': 12, 'font-weight': 700, fill: FOCUS, 'text-anchor': 'middle'}, 'the limb, cut across');
+  txt(gRight, {x: XS.x0 + XS.w / 2, y: XS.y0 - 10, 'font-size': 11, fill: MUTED, 'text-anchor': 'middle'}, 'flux goes into / out of the page');
+  xsSlices = el('g', {}, gX); xsFluxG = el('g', {}, gX); xsLoops = el('g', {}, gX);
+}
+// laminations: N slices across the width, separated by thin insulating gaps
+let slices = [], loops = [];
+function buildSlices(N){
+  xsSlices.innerHTML = ''; xsLoops.innerHTML = ''; slices = []; loops = [];
+  const gap = N > 1 ? 3 : 0, w = (XS.w - gap * (N - 1)) / N;
+  for (let k = 0; k < N; k++){
+    const x = XS.x0 + k * (w + gap);
+    slices.push({x, w, el: el('rect', {x, y: XS.y0, width: w, height: XS.h, stroke: INK, 'stroke-width': 1.4}, xsSlices)});
+    if (gap) el('rect', {x: x + w, y: XS.y0, width: gap, height: XS.h, fill: '#f7e7c4'}, xsSlices);
+    // eddy-current loops inside this slice: nested rounded rectangles
+    const nest = N === 1 ? [0.14, 0.3, 0.44] : [Math.min(0.32, 0.3)];
+    nest.forEach(f => {
+      const ix = Math.max(2.2, w * f), iy = N === 1 ? XS.h * f : 14;
+      const lx0 = x + ix, lx1 = x + w - ix, ly0 = XS.y0 + iy, ly1 = XS.y0 + XS.h - iy;
+      if (lx1 - lx0 < 1.5) return;
+      const r = Math.min(10, (lx1 - lx0) / 2);
+      const d = `M${lx0 + r},${ly0} H${lx1 - r} Q${lx1},${ly0} ${lx1},${ly0 + r} V${ly1 - r} Q${lx1},${ly1} ${lx1 - r},${ly1} H${lx0 + r} Q${lx0},${ly1} ${lx0},${ly1 - r} V${ly0 + r} Q${lx0},${ly0} ${lx0 + r},${ly0} Z`;
+      const path = el('path', {d, fill: 'none', stroke: MUSTARD, 'stroke-width': 1.6, opacity: 0.55}, xsLoops);
+      const len = path.getTotalLength ? path.getTotalLength() : 2 * (lx1 - lx0 + ly1 - ly0);
+      const nd = Math.max(3, Math.round(len / 22)), dots = [];
+      for (let j = 0; j < nd; j++) dots.push(el('circle', {r: 2.6, fill: MUSTARD}, xsLoops));
+      const M = 160, pts = [];                       // sample the path once; dots then just look points up
+      for (let j = 0; j < M; j++){ const q = path.getPointAtLength ? path.getPointAtLength(len * j / M) : {x: 0, y: 0}; pts.push([q.x, q.y]); }
+      loops.push({path, len, dots, pts, off: 0, scale: w / XS.w});
+    });
+  }
+  // flux symbols: dots (out of the page) or crosses (into it)
+  xsFluxG.innerHTML = '';
+  for (let a = 0; a < 5; a++) for (let b = 0; b < 4; b++){
+    const cx = XS.x0 + XS.w * (a + 0.5) / 5, cy = XS.y0 + XS.h * (b + 0.5) / 4;
+    const g = el('g', {transform: `translate(${cx},${cy})`}, xsFluxG);
+    el('circle', {r: 7, fill: '#fff', stroke: MAROON, 'stroke-width': 1.5}, g);
+    el('circle', {r: 2.2, fill: MAROON, class: 'dotS'}, g);
+    el('path', {d: 'M-4,-4L4,4M4,-4L-4,4', stroke: MAROON, 'stroke-width': 1.5, class: 'crossS'}, g);
+  }
+}
+function blockArrow(x0, y, len, th){
+  const s = Math.sign(len) || 1, L = Math.abs(len); if (L < 2) return '';
+  const head = Math.min(11, L), x1 = x0 + s * (L - head), x2 = x0 + s * L;
+  return `M${x0},${y - th / 2} L${x1},${y - th / 2} L${x1},${y - th / 2 - 4} L${x2},${y} L${x1},${y + th / 2 + 4} L${x1},${y + th / 2} L${x0},${y + th / 2} Z`;
+}
+
+// =====================================================================================
+// Graph: left = B-H loop (fills in after a cycle); right = flux and eddy current over time
+// =====================================================================================
+const graph = $('graph');
+const GL = { x0: 18, y0: 14, w: 186, h: 172 }, GR = { x0: 238, y0: 14, w: 210, h: 172 };
+let gLoopDyn, gWaveDyn;
+const LX = h => GL.x0 + GL.w / 2 + h / 1.7 * GL.w / 2, LY = b => GL.y0 + GL.h / 2 - b / 1.75 * GL.h / 2;
+function buildGraph(){
+  graph.innerHTML = '';
+  // loop axes
+  el('line', {x1: GL.x0, y1: LY(0), x2: GL.x0 + GL.w, y2: LY(0), stroke: INK, 'stroke-width': 1.2}, graph);
+  el('line', {x1: LX(0), y1: GL.y0, x2: LX(0), y2: GL.y0 + GL.h, stroke: INK, 'stroke-width': 1.2}, graph);
+  txt(graph, {x: GL.x0 + GL.w, y: LY(0) + 14, 'font-size': 11, fill: MUTED, 'text-anchor': 'end'}, 'H');
+  txt(graph, {x: LX(0) + 5, y: GL.y0 + 9, 'font-size': 11, fill: MUTED}, 'B');
+  gLoopDyn = el('g', {}, graph);
+  // waveform axes
+  el('line', {x1: GR.x0, y1: GR.y0 + GR.h / 2, x2: GR.x0 + GR.w, y2: GR.y0 + GR.h / 2, stroke: INK, 'stroke-width': 1.2}, graph);
+  el('line', {x1: GR.x0, y1: GR.y0, x2: GR.x0, y2: GR.y0 + GR.h, stroke: INK, 'stroke-width': 1.2}, graph);
+  txt(graph, {x: GR.x0 + GR.w, y: GR.y0 + GR.h / 2 + 14, 'font-size': 11, fill: MUTED, 'text-anchor': 'end'}, 'time →');
+  gWaveDyn = el('g', {}, graph);
+}
+function drawGraph(){
+  gLoopDyn.innerHTML = ''; gWaveDyn.innerHTML = '';
+  const phi = PHI[S.mat];
+  let d = '';
+  for (let k = 0; k <= 240; k++){ const th = TAU * k / 240; d += (k ? 'L' : 'M') + LX(loopH(th, S.B, phi)).toFixed(1) + ',' + LY(loopB(th, S.B)).toFixed(1); }
+  if (S.fillA > 0) el('path', {d: d + 'Z', fill: '#f3dcae', opacity: S.fillA.toFixed(2)}, gLoopDyn);
+  el('path', {d, fill: 'none', stroke: MAROON, 'stroke-width': 2.2, opacity: 0.35}, gLoopDyn);
+  // the part already travelled this cycle, drawn solid
+  let dd = '', th0 = theta - TAU;
+  for (let k = 0; k <= 120; k++){ const th = th0 + TAU * k / 120; dd += (k ? 'L' : 'M') + LX(loopH(th, S.B, phi)).toFixed(1) + ',' + LY(loopB(th, S.B)).toFixed(1); }
+  el('path', {d: dd, fill: 'none', stroke: MAROON, 'stroke-width': 2.6}, gLoopDyn);
+  el('circle', {cx: LX(loopH(theta, S.B, phi)), cy: LY(loopB(theta, S.B)), r: 5.5, fill: INK, stroke: '#fff', 'stroke-width': 2}, gLoopDyn);
+  if (S.fillA > 0.5) txt(gLoopDyn, {x: LX(0) - 4, y: LY(0) - 6, 'font-size': 11, 'font-weight': 700, fill: '#8a5a00', 'text-anchor': 'end'}, 'area');
+  // waveforms over the last two cycles: flux (maroon) and eddy current ~ dPhi/dt (mustard)
+  const span = 2 * TAU, yc = GR.y0 + GR.h / 2, amp = GR.h / 2 * 0.85;
+  let pf = '', pe = '';
+  for (let k = 0; k <= 160; k++){
+    const th = theta - span + span * k / 160, x = GR.x0 + GR.w * k / 160;
+    pf += (k ? 'L' : 'M') + x.toFixed(1) + ',' + (yc - amp * S.B / 1.6 * Math.sin(th)).toFixed(1);
+    pe += (k ? 'L' : 'M') + x.toFixed(1) + ',' + (yc + amp * eddyShape(th) * eddyAmp()).toFixed(1);
+  }
+  el('path', {d: pf, fill: 'none', stroke: MAROON, 'stroke-width': 2.4}, gWaveDyn);
+  el('path', {d: pe, fill: 'none', stroke: MUSTARD, 'stroke-width': 2.2, opacity: ch < 2 && mode === 'story' ? 0.35 : 1}, gWaveDyn);
+  el('line', {x1: GR.x0 + GR.w, y1: GR.y0, x2: GR.x0 + GR.w, y2: GR.y0 + GR.h, stroke: MUTED, 'stroke-dasharray': '2,3'}, gWaveDyn);
+}
+// eddy current follows -dPhi/dt (Lenz), normalised to 1 at its peak for a soft core
+function eddyShape(th){ return Math.cos(th); }      // eddy current ~ dB/dt (the plot draws it with Lenz's minus sign)
+// eddy current in one sheet ~ f B t (shown relative to a solid core at 50 Hz, 1 T)
+function eddyAmp(){ return Math.max(0.12, Math.min(1, (S.f / 50) * S.B / Nshown)); }
+
+// =====================================================================================
+// Frame update
+// =====================================================================================
+let lastFlux = 0;
+function update(dt){
+  const L = losses(Object.assign({}, S, {N: Nshown}));
+  // cycle rate: about 3 s per cycle at 50 Hz, faster at higher frequency (capped so it stays visible)
+  const period = Math.max(0.45, 3 * 50 / S.f);
+  if (!REDUCED) theta += TAU * dt / period;
+  const phi = PHI[S.mat], H = loopH(theta, S.B, phi), flux = Math.sin(theta);
+  const dflux = eddyShape(theta);
+  // ---- side view: core warms with total loss; domains flip as H passes their switching level ----
+  const heat = Math.min(1, Math.log10(1 + L.Pt) / Math.log10(1 + 40));
+  coreEl.setAttribute('fill', heatCol(heat * 0.85));
+  domains.forEach(dm => {
+    const prev = dm.s;
+    const hs = phi * hAmp(S.B) * (0.3 + 1.4 * dm.hc);      // switching levels spread round the coercive field
+    if (dm.s < 0 && H > hs) dm.s = 1;
+    else if (dm.s > 0 && H < -hs) dm.s = -1;
+    const target = dm.s > 0 ? dm.th : dm.th + Math.PI;
+    let dd = target - dm.a; dd = Math.atan2(Math.sin(dd), Math.cos(dd));
+    dm.a += REDUCED ? dd : Math.sign(dd) * Math.min(Math.abs(dd), 12 * dt);
+    dm.g.setAttribute('transform', `translate(${dm.x.toFixed(1)},${dm.y.toFixed(1)}) rotate(${(-dm.a * 180 / Math.PI).toFixed(1)})`);
+    if (prev !== dm.s && !REDUCED && puffs.length < 40){                     // a flip gives off a little heat
+      puffs.push({x: dm.x, y: dm.y, age: 0, el: el('circle', {cx: dm.x, cy: dm.y, r: 3, fill: '#e8a35c'}, gPuffs)});
+    }
+  });
+  puffs = puffs.filter(p => { p.age += dt; const f = p.age / 0.9;
+    if (f >= 1){ p.el.remove(); return false; }
+    p.el.setAttribute('r', (3 + 13 * f).toFixed(1)); p.el.setAttribute('opacity', (0.75 * (1 - f)).toFixed(2)); p.el.setAttribute('cy', (p.y - 8 * f).toFixed(1)); return true; });
+  // flux arrow along the top limb (direction and size follow the flux)
+  const fl = 70 * flux;
+  phiArrow.setAttribute('d', blockArrow((SV.ix0 + SV.ix1) / 2 - fl / 2, SV.iy0 + 34, fl, 6));
+  phiLab.setAttribute('y', SV.iy0 + 58);
+  // ---- cross-section: flux symbols, eddy loops, heating of each slice ----
+  const sgn = Math.sign(flux) || 1, fsz = Math.abs(flux);
+  xsFluxG.querySelectorAll('g').forEach(g => {
+    g.setAttribute('opacity', (0.25 + 0.75 * fsz).toFixed(2));
+    g.querySelector('.dotS').setAttribute('opacity', flux > 0.03 ? 1 : 0);
+    g.querySelector('.crossS').setAttribute('opacity', flux < -0.03 ? 1 : 0);
+  });
+  const fE = Math.pow(S.f / 50, 1) * S.B;                                     // drive for the eddy currents (emf ~ f B per unit area)
+  slices.forEach(sl => {
+    // local heating ~ (dPhi/dt * width)^2: the instantaneous i^2R in that sheet
+    const p = Math.pow(dflux * fE * sl.w / XS.w * 2.2, 2);
+    sl.el.setAttribute('fill', heatCol(Math.min(1, p)));
+  });
+  loops.forEach(lp => {
+    // Lenz: current circulates to oppose the change of flux; speed ~ emf ~ dPhi/dt x sheet width
+    const v = dflux * fE * lp.scale * 120 * (REDUCED ? 0 : 1);          // paths run clockwise on screen: clockwise when outward flux grows
+    lp.off = (lp.off + v * dt) % lp.len; if (lp.off < 0) lp.off += lp.len;
+    const vis = Math.min(1, 0.15 + Math.abs(dflux) * Math.min(1, lp.scale * 6));
+    lp.dots.forEach((dt_, j) => {
+      const s = (lp.off + j * lp.len / lp.dots.length) % lp.len, pt = lp.pts[Math.floor(s / lp.len * lp.pts.length) % lp.pts.length];
+      dt_.setAttribute('cx', pt[0].toFixed(1)); dt_.setAttribute('cy', pt[1].toFixed(1)); dt_.setAttribute('opacity', vis.toFixed(2));
+    });
+    lp.path.setAttribute('opacity', (0.2 + 0.5 * vis).toFixed(2));
+  });
+  // focus: dim the half the chapter is not about
+  const f = mode === 'explore' ? 'both' : CH[ch].focus;
+  gLeft.setAttribute('opacity', f === 'right' ? 0.35 : 1); gRight.setAttribute('opacity', f === 'left' ? 0.35 : 1);
+  return L;
+}
+function updateStats(L){
+  const fmt = v => v >= 10 ? v.toFixed(0) : v >= 1 ? v.toFixed(1) : v.toFixed(2);
+  $('lH').textContent = '×' + fmt(L.Ph); $('lE').textContent = '×' + fmt(L.Pe); $('lT').textContent = '×' + fmt(L.Pt);
+  const bw = v => Math.min(100, 100 * Math.log10(1 + v) / Math.log10(1 + 60)) + '%';
+  $('bH').style.width = bw(L.Ph); $('bE').style.width = bw(L.Pe); $('bT').style.width = bw(L.Pt);
+  $('valF').textContent = Math.round(S.f) + ' Hz';
+  $('valB').textContent = S.B.toFixed(2) + ' T';
+  $('valN').textContent = Nshown === 1 ? '1 (solid iron)' : Nshown + ' sheets';
+}
+
+// =====================================================================================
+// Story
+// =====================================================================================
+function setN(n){ n = Math.max(1, Math.round(n)); if (n !== Nshown){ Nshown = n; buildSlices(n); } }
+function startChapter(k, autoplay){
+  mode = 'story'; ch = k; chT = 0; playing = !!autoplay;
+  const c = CH[k];
+  S.f = c.f; S.B = DEF.B; S.mat = c.mat; setN(c.N);
+  S.fillA = k === 0 && autoplay ? 0 : 1;
+  if (!autoplay && c.script === 'freq'){ S.f = 150; S.mat = 'hard'; }
+  if (!autoplay && c.script === 'lam') setN(12);
+  theta = 0;
+  syncControls(); renderStory();
+}
+function tickStory(dt){
+  if (mode !== 'story' || !playing) return;
+  const c = CH[ch]; chT += REDUCED ? 1e9 : dt; const T = chT;
+  if (ch === 0) S.fillA = Math.min(1, Math.max(0, (theta - TAU) / 1.2 + 0.2));
+  if (c.script === 'freq'){ S.f = T < 6 ? 50 + 100 * Math.min(1, T / 5) : 150; if (T > 7.5 && S.mat !== 'hard') S.mat = 'hard'; }
+  if (c.script === 'lam'){ const steps = [1, 2, 4, 8, 12]; setN(steps[Math.min(steps.length - 1, Math.floor(T / 2.4))]); }
+  syncControls();
+  const dur = c.script === 'freq' ? 11 : c.script === 'lam' ? 12.5 : ch === 0 ? 7.5 : 6;
+  if (T > dur){
+    playing = false; renderStory();
+    if ($('autoNext').checked && ch < CH.length - 1) setTimeout(() => { if (mode === 'story' && !playing) startChapter(ch + 1, true); }, 2000);
+  }
+}
+function syncControls(){
+  $('sliderF').value = Math.log10(S.f); $('sliderB').value = S.B; $('sliderN').value = Nshown;
+  $('matSeg').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mat === S.mat)));
+}
+function renderStory(){
+  const exploring = mode === 'explore', c = exploring ? EXPLORE : CH[ch];
+  $('chN').textContent = exploring ? 'Explore' : `Chapter ${ch + 1} of ${CH.length}`;
+  $('chTitle').innerHTML = c.title; $('chText').innerHTML = c.text;
+  $('sceneCh').textContent = exploring ? ' · exploring' : ` · chapter ${ch + 1}`;
+  $('dots').querySelectorAll('button').forEach((b, k) => {
+    b.classList.toggle('done', !exploring && k < ch);
+    if (!exploring && k === ch) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+  });
+  $('btnPlay').textContent = exploring ? 'Back to the story' : playing ? 'Pause' : chT > 0 ? 'Replay' : 'Play';
+  $('btnBack').disabled = !exploring && ch === 0; $('btnNext').disabled = !exploring && ch === CH.length - 1;
+  $('btnNext').classList.toggle('primary', !exploring && !playing && chT > 0 && ch < CH.length - 1);
+}
+function showScene(){
+  if (window.matchMedia('(max-width:800px)').matches){
+    const r = document.querySelector('.p-scene').getBoundingClientRect();
+    if (r.top < 0 || r.top > 80) document.querySelector('.p-scene').scrollIntoView({block: 'start', behavior: REDUCED ? 'auto' : 'smooth'});
+  }
+}
+CH.forEach((c, k) => {
+  const b = document.createElement('button'); b.type = 'button'; b.textContent = k + 1; b.title = c.title.replace(/<[^>]+>/g, '');
+  b.setAttribute('aria-label', 'Chapter ' + (k + 1) + ': ' + b.title);
+  b.addEventListener('click', () => { startChapter(k, true); showScene(); });
+  $('dots').appendChild(b);
+});
+$('btnBack').addEventListener('click', () => { startChapter(mode === 'explore' ? ch : Math.max(0, ch - 1), true); showScene(); });
+$('btnNext').addEventListener('click', () => { startChapter(mode === 'explore' ? ch : Math.min(CH.length - 1, ch + 1), true); showScene(); });
+$('btnPlay').addEventListener('click', () => {
+  if (mode === 'explore' || (!playing && chT > 0)){ startChapter(ch, true); showScene(); return; }
+  playing = !playing; renderStory(); if (playing) showScene();
+});
+function enterExplore(){ if (mode !== 'explore'){ mode = 'explore'; playing = false; S.fillA = 1; renderStory(); } }
+$('sliderF').addEventListener('input', e => { enterExplore(); S.f = Math.pow(10, parseFloat(e.target.value)); });
+$('sliderB').addEventListener('input', e => { enterExplore(); S.B = parseFloat(e.target.value); });
+$('sliderN').addEventListener('input', e => { enterExplore(); setN(parseInt(e.target.value, 10)); });
+$('matSeg').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { enterExplore(); S.mat = b.dataset.mat; syncControls(); }));
+$('btnReset').addEventListener('click', () => { $('autoNext').checked = false; Object.assign(S, DEF); startChapter(0, false); });
+
+buildScene(); buildGraph(); buildSlices(10); startChapter(0, false);
+let last = null;
+function frame(ts){
+  const dt = last === null ? 0 : Math.min(0.05, (ts - last) / 1000); last = ts;
+  tickStory(dt);
+  const L = update(dt); drawGraph(); updateStats(L);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+window.__cl = { losses, loopArea, S, startChapter, setN, get N(){ return Nshown; }, get ch(){ return ch; }, get mode(){ return mode; }, eddyShape };
+})();
+</script>
+</body>
+</html>
