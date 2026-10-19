@@ -75,10 +75,14 @@ footer{text-align:center;color:var(--muted);font-size:11.5px;margin-top:26px;}
   .legend{font-size:11px;}
 }
 @media (pointer:coarse){ input[type=range]{height:30px;} .btn,.dots button{min-height:40px;} }
+.motion-note{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--paper);border:1px solid var(--grid);border-radius:4px;padding:8px 12px;font-size:12.5px;margin:0 0 14px;}
+.motion-note .btn{flex:0 0 auto;width:auto;padding:6px 12px;font-size:12px;margin:0;}
+.noscript{background:#f7e9e7;border:1px solid #a3372c;color:#5c1a14;border-radius:4px;padding:10px 14px;font-size:14px;line-height:1.45;margin:0 0 14px;}
 </style>
 </head>
 <body>
 <div class="wrap">
+  <noscript><div class="noscript"><b>This page needs JavaScript to run.</b> Open it in a web browser (Chrome, Edge, Safari or Firefox), not in a file preview.</div></noscript>
   <header>
     <div>
       <p class="eyebrow">Magnetic fields &middot; Animated explainer</p>
@@ -255,7 +259,21 @@ const EXPLORE = { title: 'Your turn', text: 'You are in control of the current. 
 
 let ch = 0, mode = 'story', playing = false, stepIdx = 0, stepT = 0, stepFrom = 0, holdT = 0;
 let cur = 0, morphP = 1, mark = [2, 0];
-const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// These pages exist to animate, so they play even when the device asks for reduced motion (Windows "animation
+// effects" off, macOS "Reduce motion"). In that case a note above the panels says so and offers a button that
+// switches the animation off (REDUCED = true: chapters jump to their end state, nothing moves).
+const OS_REDUCED = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+let REDUCED = false;
+(function motionNote(){
+  if (!OS_REDUCED) return;
+  const d = document.createElement('div');
+  d.className = 'motion-note';
+  d.innerHTML = '<span>Your device’s <b>reduce motion</b> setting is on. This page is an animation, so it plays anyway.</span>';
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = 'Turn animation off';
+  b.addEventListener('click', () => { REDUCED = !REDUCED; document.body.classList.toggle('reduced', REDUCED); b.textContent = REDUCED ? 'Turn animation on' : 'Turn animation off'; });
+  d.appendChild(b);
+  const g = document.querySelector('.grid'); g.parentNode.insertBefore(d, g);
+})();
 
 function applyMorph(p){
   const e = smooth(p);
