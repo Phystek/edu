@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finding the Peak: MPPT on a Shaded String — ELEC2005</title>
+<style>
+:root{
+  --ink:#1a1512; --paper:#faf7f2; --panel:#ffffff; --maroon:#7a1730;
+  --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a; --mustard:#c98a2c;
+  --serif:"Iowan Old Style","Georgia",serif;
+  --sans:"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+body{margin:0;background:#e6e6e4;color:var(--ink);font-family:var(--sans);}
+.wrap{max-width:960px;margin:0 auto;padding:24px 20px 36px;}
+header{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:6px 16px;
+  border-bottom:1px solid var(--grid);padding-bottom:12px;margin-bottom:14px;}
+.eyebrow{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin:0 0 4px;}
+h1{font-family:var(--serif);font-size:26px;letter-spacing:-0.01em;line-height:1.15;margin:0;font-weight:700;}
+.tag{font-size:12px;color:var(--muted);white-space:nowrap;}
+.intro{font-size:14px;line-height:1.55;margin:0 0 12px;max-width:820px;}
+.callout{background:#fbe9c6;border:1px solid #e0be6f;color:#5c4a12;border-radius:4px;padding:9px 12px;font-size:12.5px;line-height:1.45;margin:0 0 16px;}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start;}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0;}
+.panel{background:var(--panel);border:1px solid var(--grid);border-radius:4px;padding:14px 16px;min-width:0;}
+.panel-label{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 8px;}
+.sym{text-transform:none;letter-spacing:0;}
+svg{display:block;width:100%;height:auto;}
+svg text{font-family:var(--sans);user-select:none;-webkit-user-select:none;}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:11.5px;color:var(--muted);margin-top:8px;min-height:1.4em;}
+.legend > span{display:inline-flex;align-items:center;gap:6px;}
+.legend > span > i{display:inline-block;width:22px;height:0;border-top:3px solid;}
+.legend > span > i.dot{width:10px;height:10px;border:none;border-radius:50%;}
+
+.chapter-n{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin:0 0 4px;}
+.story h2{font-family:var(--serif);font-size:20px;letter-spacing:-0.01em;line-height:1.2;margin:0 0 8px;}
+.story-text{font-family:var(--serif);font-size:15.5px;line-height:1.55;margin:0;min-height:10.5em;}
+.story-text b{color:var(--maroon);}
+.dots{display:flex;gap:6px;margin:14px 0 10px;}
+.dots button{flex:1;height:30px;border:1px solid var(--grid);border-radius:4px;background:var(--paper);color:var(--muted);
+  font:700 12px var(--sans);cursor:pointer;padding:0;}
+.dots button.done{background:#f3e6e9;color:var(--maroon);border-color:#e3c9cf;}
+.dots button[aria-current="step"]{background:var(--maroon);color:#fff;border-color:var(--maroon);}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;}
+.btn{flex:1 1 0;min-width:80px;padding:9px 10px;font:700 13px var(--sans);border-radius:4px;border:1px solid var(--ink);
+  background:transparent;color:var(--ink);cursor:pointer;line-height:1.2;}
+.btn.primary{background:var(--ink);color:var(--paper);flex:1.6 1 0;}
+@media (hover:hover){ .btn:hover{background:var(--ink);color:var(--paper);} .btn.primary:hover{background:var(--maroon);border-color:var(--maroon);} }
+.btn:disabled{opacity:0.35;cursor:default;pointer-events:none;}
+.btn.reset{display:block;width:100%;margin-top:12px;}
+button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
+.switch{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);margin-top:10px;cursor:pointer;}
+.switch input{accent-color:var(--maroon);width:15px;height:15px;margin:0;}
+
+.slider-block{margin-bottom:12px;}
+.slider-label-row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:4px;gap:8px;}
+.slider-value{font-weight:700;color:var(--maroon);font-variant-numeric:tabular-nums;white-space:nowrap;}
+input[type=range]{width:100%;accent-color:var(--maroon);margin:2px 0;}
+.slider-caption{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);}
+.seg{display:flex;border:1px solid var(--grid);border-radius:4px;overflow:hidden;margin-bottom:12px;}
+.seg button{flex:1;padding:8px 6px;font:700 12px var(--sans);background:var(--paper);color:var(--muted);cursor:pointer;border:none;border-left:1px solid var(--grid);}
+.seg button:first-child{border-left:none;}
+.seg button[aria-pressed="true"]{background:var(--maroon);color:#fff;}
+.ctl-label{font-size:13px;margin:0 0 5px;}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
+.stat-card{background:var(--paper);border:1px solid var(--grid);border-radius:4px;padding:9px 11px;}
+.stat-label{font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+.stat-value{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--maroon);white-space:nowrap;}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:2px;min-height:13px;}
+.hint{font-size:12px;color:var(--muted);margin:6px 0 0;line-height:1.4;}
+footer{text-align:center;color:var(--muted);font-size:11.5px;margin-top:26px;}
+
+@media (max-width:800px){
+  .wrap{padding:16px 12px 28px;}
+  h1{font-size:22px;}
+  .grid{grid-template-columns:minmax(0,1fr);gap:12px;}
+  .col{display:contents;}
+  .p-scene{order:1;} .p-plot{order:2;} .p-story{order:3;} .p-explore{order:4;}
+  .story-text{min-height:0;font-size:15px;}
+  .legend{font-size:11px;}
+}
+@media (pointer:coarse){ input[type=range]{height:30px;} .btn,.seg button,.dots button{min-height:40px;} }
+.motion-note{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--paper);border:1px solid var(--grid);border-radius:4px;padding:8px 12px;font-size:12.5px;margin:0 0 14px;}
+.motion-note .btn{flex:0 0 auto;padding:6px 12px;font-size:12px;}
+.noscript{background:#f7e9e7;border:1px solid #a3372c;color:#5c1a14;border-radius:4px;padding:10px 14px;font-size:14px;line-height:1.45;margin:0 0 14px;}
+
+.mods .slider-block{margin-bottom:10px;}
+.status{font-family:var(--serif);font-size:15px;line-height:1.5;margin:0;min-height:4.6em;}
+.status b{color:var(--maroon);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <noscript><div class="noscript"><b>This page needs JavaScript to run.</b> Open the file in a web browser (Chrome, Edge, Safari or Firefox), not in a file preview.</div></noscript>
+  <header>
+    <div>
+      <p class="eyebrow">Solar photovoltaics &middot; Interactive explorer</p>
+      <h1>Finding the Peak: MPPT on a Shaded String</h1>
+    </div>
+    <div class="tag">ELEC2005 &middot; Week 11</div>
+  </header>
+
+  <p class="intro">Three PV modules in series, each with a bypass diode, feeding a dc–dc converter that controls the string
+  voltage. Shade the modules and the <i>p–v</i> curve grows several peaks. Then run a simple
+  <b>perturb-and-observe</b> (P&amp;O) tracker and watch whether it finds the true maximum, or gets stuck on a smaller local peak.</p>
+
+  <div class="callout"><b>Simplified on purpose.</b> Each module is Masters’ 36-cell example (55 W at 1000 W/m², 25 °C), with every
+  cell in a module equally shaded, and one bypass diode per module (a fixed 0.6 V drop). The tracker is slowed right down: a real
+  converter takes a step every few milliseconds.</div>
+
+  <div class="grid">
+    <div class="col">
+      <div class="panel p-scene">
+        <p class="panel-label">The string</p>
+        <svg id="scene" viewBox="0 0 560 190" role="img" aria-label="Three PV modules in series, each with a bypass diode, connected to an MPPT dc-dc converter"></svg>
+      </div>
+      <div class="panel p-plot">
+        <p class="panel-label">String power–voltage (<span class="sym"><i>p–v</i></span>) curve</p>
+        <svg id="pvPlot" viewBox="0 0 520 250" role="img" aria-label="String power against voltage with the tracker's operating point"></svg>
+        <div class="legend">
+          <span><i style="border-color:#7a1730"></i><span>string power</span></span>
+          <span><i class="dot" style="background:#c98a2c"></i><span>tracker (with recent steps)</span></span>
+          <span><i class="dot" style="background:#fff;border:2px solid #1c5f7a;box-sizing:border-box"></i><span>true maximum</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="panel p-story">
+        <p class="panel-label">Sunlight on each module</p>
+        <div class="seg" id="segPreset" role="group" aria-label="Shading presets">
+          <button type="button" data-p="0">Full sun</button>
+          <button type="button" data-p="1">One shaded</button>
+          <button type="button" data-p="2">Uneven</button>
+        </div>
+        <div class="mods" id="mods"></div>
+      </div>
+      <div class="panel p-explore">
+        <p class="panel-label">Tracker</p>
+        <p class="status" id="status" aria-live="polite"></p>
+        <div class="btnrow" style="margin-top:12px">
+          <button type="button" class="btn primary" id="btnRun">Run P&amp;O</button>
+          <button type="button" class="btn" id="btnScan">Global scan</button>
+        </div>
+        <div class="btnrow" style="margin-top:8px">
+          <button type="button" class="btn" id="btnRestart">Restart at <i>V</i><sub>oc</sub></button>
+        </div>
+        <p class="ctl-label" style="margin-top:12px">Step size, Δ<i>V</i></p>
+        <div class="seg" id="segStep" role="group" aria-label="Tracker step size">
+          <button type="button" data-s="0.4">Small (0.4 V)</button>
+          <button type="button" data-s="1.5">Large (1.5 V)</button>
+        </div>
+        <button type="button" class="btn reset" id="btnReset">Reset to defaults</button>
+        <div class="stats">
+          <div class="stat-card"><div class="stat-label">Tracker power</div><div class="stat-value" id="stP"></div><div class="stat-sub" id="stPSub"></div></div>
+          <div class="stat-card"><div class="stat-label">True maximum</div><div class="stat-value" id="stMax"></div><div class="stat-sub" id="stMaxSub"></div></div>
+          <div class="stat-card"><div class="stat-label">Tracking efficiency</div><div class="stat-value" id="stEff"></div><div class="stat-sub">tracker ÷ true maximum</div></div>
+          <div class="stat-card"><div class="stat-label">Bypass diodes on</div><div class="stat-value" id="stBp"></div><div class="stat-sub" id="stBpSub"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>ELEC2005 &middot; Week 11 &middot; for concept exploration, not assessment</footer>
+</div>
+
+<script>
+(function(){
+'use strict';
+// ---------- shared drawing helpers ----------
+const NS = 'http://www.w3.org/2000/svg';
+const $ = id => document.getElementById(id);
+function el(tag, attrs, parent, text){
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+// text with tspan subscripts: parts = ['I', {sub:'sc'}, ' = 3 A']
+function txt(parent, attrs, parts){
+  const t = el('text', attrs, parent), fs = parseFloat(attrs['font-size'] || 12);
+  let shifted = false;
+  (Array.isArray(parts) ? parts : [parts]).forEach(p => {
+    const isSub = typeof p === 'object', a = {};
+    if (isSub){ a['font-size'] = (fs * 0.72).toFixed(1); a.dy = (fs * 0.28).toFixed(1); a['font-style'] = 'normal'; }
+    else if (shifted) a.dy = (-fs * 0.28).toFixed(1);
+    el('tspan', a, t, isSub ? p.sub : p); shifted = isSub;
+  });
+  return t;
+}
+const INK = '#1a1512', MAROON = '#7a1730', FOCUS = '#1c5f7a', MUSTARD = '#c98a2c', MUTED = '#6b6156', GRID = '#e4ddd2', PAPER = '#faf7f2';
+function mix(a, b, f){
+  f = Math.max(0, Math.min(1, f));
+  const pa = [1, 3, 5].map(k => parseInt(a.substr(k, 2), 16)), pb = [1, 3, 5].map(k => parseInt(b.substr(k, 2), 16));
+  return '#' + pa.map((v, k) => Math.round(v + (pb[k] - v) * f).toString(16).padStart(2, '0')).join('');
+}
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const smooth = t => t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
+
+// ---------- PV cell model (single-diode, Masters Ch. 8 parameters) ----------
+// One cell: I = Iph - I0 (exp(Vd/VT) - 1) - Vd/Rp,   V = Vd - Rs I
+// Reference cell (25 C, 1 sun): Isc = 3.4 A, I0 = 6e-10 A, Rp = 6.6 ohm, Rs = 5 mohm (Masters' 36-cell module example).
+// Temperature: Iph rises 0.05 %/K; I0 follows the usual T^3 exp(-Eg/kT) law with Eg = 1.12 eV (silicon).
+const PV = {
+  Q: 1.602176634e-19, K: 1.380649e-23, ISC: 3.4, I0: 6e-10, RP: 6.6, RS: 0.005, EG: 1.12, ALPHA: 0.0005,
+  params(o){                                   // o: {G (suns), T (deg C), rp, rs}
+    const T = (o.T === undefined ? 25 : o.T) + 273.15, Tr = 298.15;
+    const G = o.G === undefined ? 1 : o.G;
+    return {
+      iph: PV.ISC * G * (1 + PV.ALPHA * (T - Tr)),
+      i0: PV.I0 * Math.pow(T / Tr, 3) * Math.exp(PV.EG * PV.Q / PV.K * (1 / Tr - 1 / T)),
+      vt: PV.K * T / PV.Q,
+      rp: o.rp === undefined ? PV.RP : o.rp,
+      rs: o.rs === undefined ? PV.RS : o.rs
+    };
+  },
+  cellI(Vd, p){ return p.iph - p.i0 * (Math.exp(Vd / p.vt) - 1) - Vd / p.rp; },
+  // terminal voltage of one cell carrying current I (any sign); bisection on Vd (cellI is strictly decreasing in Vd)
+  cellV(I, p){
+    let lo = -200, hi = 1.2;
+    if (PV.cellI(lo, p) < I) return lo - I * p.rs;          // ideal cell (Rp -> inf) cannot pass this current: deep reverse
+    for (let k = 0; k < 60; k++){ const m = 0.5 * (lo + hi); if (PV.cellI(m, p) > I) lo = m; else hi = m; }
+    const vd = 0.5 * (lo + hi);
+    return vd - I * p.rs;
+  },
+  // open-circuit diode voltage of one cell
+  vdOC(p){ let lo = 0, hi = 1.2; for (let k = 0; k < 60; k++){ const m = 0.5 * (lo + hi); if (PV.cellI(m, p) > 0) lo = m; else hi = m; } return 0.5 * (lo + hi); }
+};
+
+// ---------- motion ----------
+// These pages exist to animate, so they play even when the device asks for reduced motion; in that case a note
+// at the top says so and offers a button to switch the animation off (REDUCED = true: jump to end states, no movement).
+const OS_REDUCED = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+let REDUCED = false;
+function motionNote(){
+  if (!OS_REDUCED) return;
+  const d = document.createElement('div');
+  d.className = 'motion-note';
+  d.innerHTML = '<span>Your device’s <b>reduce motion</b> setting is on. This page is an animation, so it plays anyway.</span>';
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = 'Turn animation off';
+  b.addEventListener('click', () => { REDUCED = !REDUCED; b.textContent = REDUCED ? 'Turn animation on' : 'Turn animation off'; });
+  d.appendChild(b);
+  const g = document.querySelector('.grid'); g.parentNode.insertBefore(d, g);
+}
+
+
+// =====================================================================================
+// Physics: string of 3 modules (36 identical cells each, uniformly lit within a module),
+// one bypass diode per module (module voltage clamped at -VBP when it would go more negative).
+// =====================================================================================
+const NM = 3, NCELL = 36, VBP = 0.6;
+const PRESETS = [[1, 1, 1], [1, 1, 0.3], [1, 0.6, 0.25]];
+let G = PRESETS[1].slice();
+let P_ = [];                                              // cell params per module
+function setParams(){ P_ = G.map(g => PV.params({ G: g })); }
+function moduleV(I, k){ const v = NCELL * PV.cellV(I, P_[k]); return Math.max(v, -VBP); }
+function stringV(I){ let v = 0; for (let k = 0; k < NM; k++) v += moduleV(I, k); return v; }
+const IMAX = () => Math.max(...P_.map(p => p.iph)) * 1.02 + 0.02;
+function stringI(V){                                      // stringV is non-increasing in I
+  const hi0 = IMAX();
+  if (V <= stringV(hi0)) return hi0;
+  if (V >= stringV(0)) return 0;
+  let lo = 0, hi = hi0;
+  for (let k = 0; k < 50; k++){ const m = 0.5 * (lo + hi); if (stringV(m) > V) lo = m; else hi = m; }
+  return 0.5 * (lo + hi);
+}
+const power = V => V * stringI(V);
+function curve(){
+  const pts = [], im = IMAX();
+  for (let k = 0; k <= 260; k++){ const I = im * (1 - Math.pow(1 - k / 260, 1.6)); const V = stringV(I); pts.push({ I, V, P: V * I }); }
+  return pts.filter(q => q.V >= 0).sort((a, b) => a.V - b.V);
+}
+// peaks of P(V): local maxima on a fine voltage grid, refined
+function peaks(voc){
+  const n = 400, Ps = []; for (let k = 0; k <= n; k++){ const V = voc * k / n; Ps.push(power(V)); }
+  const out = [];
+  for (let k = 1; k < n; k++) if (Ps[k] >= Ps[k - 1] && Ps[k] > Ps[k + 1] && Ps[k] > 1){
+    let a = voc * (k - 1) / n, b = voc * (k + 1) / n; const gr = (Math.sqrt(5) - 1) / 2;
+    for (let j = 0; j < 40; j++){ const c = b - gr * (b - a), d = a + gr * (b - a); if (power(c) > power(d)) b = d; else a = c; }
+    const V = 0.5 * (a + b); out.push({ V, P: power(V) });
+  }
+  return out;
+}
+
+// =====================================================================================
+// Tracker: perturb and observe on the voltage reference
+// =====================================================================================
+let Vref = 0, Pprev = 0, dir = -1, step = 0.4, running = false, scanning = false, scan = null, trail = [], tAcc = 0, nSteps = 0;
+let cur = null, pk = null, Voc = 0;
+function recompute(){
+  setParams(); cur = curve(); Voc = stringV(0); pk = peaks(Voc);
+  dirtyPlot = true;
+}
+function restart(){ Vref = Math.max(0, Voc - 0.5); Pprev = power(Vref); dir = -1; trail = [{ V: Vref, P: Pprev }]; nSteps = 0; scanning = false; }
+function poStep(){
+  const P = power(Vref);
+  if (P < Pprev) dir = -dir;                              // got worse: reverse
+  Pprev = P;
+  Vref = clamp(Vref + dir * step, 0, Voc);
+  nSteps++;
+  trail.push({ V: Vref, P: power(Vref) }); if (trail.length > 24) trail.shift();
+}
+function scanStep(){
+  scan.V += Voc / 40;
+  const P = power(Math.min(scan.V, Voc));
+  if (P > scan.best.P) scan.best = { V: scan.V, P };
+  Vref = Math.min(scan.V, Voc);
+  trail.push({ V: Vref, P }); if (trail.length > 60) trail.shift();
+  if (scan.V >= Voc){
+    scanning = false; Vref = scan.best.V; Pprev = power(Vref); dir = -1;
+    trail = [{ V: Vref, P: Pprev }]; running = true;
+  }
+}
+
+// =====================================================================================
+// Scene: three modules, bypass diodes, converter
+// =====================================================================================
+const scene = $('scene');
+const MX = [30, 172, 314], MW = 118, MY = 52, MH = 74;
+const sc = {};
+(function buildScene(){
+  const defs = el('defs', {}, scene);
+  const pat = el('pattern', { id: 'sh', width: 6, height: 6, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, defs);
+  el('rect', { width: 6, height: 6, fill: '#3b3732' }, pat); el('line', { x1: 0, y1: 0, x2: 0, y2: 6, stroke: '#57514a', 'stroke-width': 2 }, pat);
+  // main wire: left end of module 1 ... right end of module 3 -> converter; return along the bottom
+  el('path', { d: `M14,${MY + MH / 2} H${MX[0]} M${MX[0] + MW},${MY + MH / 2} H${MX[1]} M${MX[1] + MW},${MY + MH / 2} H${MX[2]} M${MX[2] + MW},${MY + MH / 2} H462 M462,170 H14 V${MY + MH / 2}`,
+    stroke: INK, 'stroke-width': 2, fill: 'none' }, scene);
+  sc.flow = el('path', { d: `M14,${MY + MH / 2} H462`, stroke: MUSTARD, 'stroke-width': 2.4, 'stroke-dasharray': '5 9', fill: 'none', 'stroke-linecap': 'round' }, scene);
+  sc.mods = [];
+  for (let k = 0; k < NM; k++){
+    const x = MX[k];
+    const g = el('g', {}, scene);
+    el('rect', { x, y: MY, width: MW, height: MH, rx: 3, fill: '#2d4a66', stroke: '#1a2c3d', 'stroke-width': 1.2 }, g);
+    for (let i = 1; i < 9; i++) el('line', { x1: x + i * MW / 9, y1: MY + 2, x2: x + i * MW / 9, y2: MY + MH - 2, stroke: '#4d6884', 'stroke-width': 0.8 }, g);
+    for (let j = 1; j < 4; j++) el('line', { x1: x + 2, y1: MY + j * MH / 4, x2: x + MW - 2, y2: MY + j * MH / 4, stroke: '#4d6884', 'stroke-width': 0.8 }, g);
+    const sh = el('rect', { x, y: MY, width: MW, height: MH, rx: 3, fill: 'url(#sh)', opacity: 0 }, g);
+    const lab = el('text', { x: x + MW / 2, y: MY + MH + 16, 'font-size': 11.5, 'font-weight': 700, fill: MAROON, 'text-anchor': 'middle' }, scene, '');
+    const vl = el('text', { x: x + MW / 2, y: MY + MH + 30, 'font-size': 11, fill: MUTED, 'text-anchor': 'middle' }, scene, '');
+    // bypass diode above the module (current flows left to right)
+    const yb = MY - 20, xm = x + MW / 2;
+    el('path', { d: `M${x - 8},${MY + MH / 2} V${yb} H${x + MW + 8} V${MY + MH / 2}`, stroke: INK, 'stroke-width': 1.6, fill: 'none' }, scene);
+    el('rect', { x: xm - 10, y: yb - 8, width: 20, height: 16, fill: '#fff' }, scene);
+    const tri = el('path', { d: `M${xm - 7},${yb - 7} L${xm + 6},${yb} L${xm - 7},${yb + 7} Z`, fill: INK }, scene);
+    const bar = el('line', { x1: xm + 7, y1: yb - 7, x2: xm + 7, y2: yb + 7, stroke: INK, 'stroke-width': 2 }, scene);
+    const bflow = el('path', { d: `M${x - 8},${MY + MH / 2} V${yb} H${x + MW + 8} V${MY + MH / 2}`, stroke: MUSTARD, 'stroke-width': 2.4, 'stroke-dasharray': '5 9', fill: 'none', opacity: 0, 'stroke-linecap': 'round' }, scene);
+    txt(scene, { x: x + MW / 2, y: MY - 32, 'font-size': 10.5, fill: MUTED, 'text-anchor': 'middle' }, 'module ' + (k + 1));
+    sc.mods.push({ sh, lab, vl, tri, bar, bflow });
+  }
+  // converter
+  el('rect', { x: 462, y: 40, width: 86, height: 140, rx: 4, fill: PAPER, stroke: INK, 'stroke-width': 1.6 }, scene);
+  el('text', { x: 505, y: 64, 'font-size': 12, 'font-weight': 700, fill: INK, 'text-anchor': 'middle' }, scene, 'dc–dc');
+  el('text', { x: 505, y: 79, 'font-size': 12, 'font-weight': 700, fill: INK, 'text-anchor': 'middle' }, scene, '+ MPPT');
+  txt(scene, { x: 505, y: 106, 'font-size': 11, fill: MUTED, 'text-anchor': 'middle' }, ['sets ', 'V', { sub: 'ref' }]);
+  sc.vref = el('text', { x: 505, y: 124, 'font-size': 14, 'font-weight': 700, fill: MAROON, 'text-anchor': 'middle' }, scene, '');
+  sc.pnow = el('text', { x: 505, y: 150, 'font-size': 12, 'font-weight': 700, fill: MUSTARD, 'text-anchor': 'middle' }, scene, '');
+})();
+let flowOff = 0, bOff = [0, 0, 0];
+function drawScene(dt){
+  const I = stringI(Vref);
+  flowOff -= 9 * I * dt; sc.flow.setAttribute('stroke-dashoffset', flowOff.toFixed(1));
+  sc.flow.setAttribute('opacity', I > 0.02 ? 1 : 0);
+  let on = 0;
+  for (let k = 0; k < NM; k++){
+    const m = sc.mods[k], vRaw = NCELL * PV.cellV(I, P_[k]), bp = vRaw < -VBP;
+    if (bp) on++;
+    m.sh.setAttribute('opacity', (0.85 * (1 - G[k])).toFixed(2));
+    m.lab.textContent = Math.round(G[k] * 1000) + ' W/m²';
+    m.vl.textContent = (bp ? 'bypassed, ' : '') + (bp ? -VBP : vRaw).toFixed(1) + ' V';
+    m.vl.setAttribute('fill', bp ? MAROON : MUTED);
+    m.tri.setAttribute('fill', bp ? MUSTARD : INK); m.bar.setAttribute('stroke', bp ? MUSTARD : INK);
+    bOff[k] -= 9 * I * dt; m.bflow.setAttribute('stroke-dashoffset', bOff[k].toFixed(1)); m.bflow.setAttribute('opacity', bp ? 1 : 0);
+  }
+  sc.vref.textContent = Vref.toFixed(1) + ' V';
+  sc.pnow.textContent = (Vref * I).toFixed(0) + ' W';
+  return on;
+}
+
+// =====================================================================================
+// Plot
+// =====================================================================================
+const pv = $('pvPlot');
+const F = { l: 46, t: 14, w: 458, h: 196 }, VM = 70, PM = 180;
+const X = v => F.l + v / VM * F.w, Y = p => F.t + F.h - p / PM * F.h;
+let gCurve, gTrack, dirtyPlot = true;
+(function buildPlot(){
+  for (let v = 0; v <= VM; v += 10){ el('line', { x1: X(v), y1: F.t, x2: X(v), y2: F.t + F.h, stroke: GRID }, pv); el('text', { x: X(v), y: F.t + F.h + 15, 'font-size': 11, fill: MUTED, 'text-anchor': 'middle' }, pv, v); }
+  for (let p = 0; p <= PM; p += 30){ el('line', { x1: F.l, y1: Y(p), x2: F.l + F.w, y2: Y(p), stroke: GRID }, pv); el('text', { x: F.l - 6, y: Y(p) + 4, 'font-size': 11, fill: MUTED, 'text-anchor': 'end' }, pv, p); }
+  el('line', { x1: F.l, y1: F.t + F.h, x2: F.l + F.w, y2: F.t + F.h, stroke: INK, 'stroke-width': 1.3 }, pv);
+  el('line', { x1: F.l, y1: F.t, x2: F.l, y2: F.t + F.h, stroke: INK, 'stroke-width': 1.3 }, pv);
+  el('text', { x: F.l + F.w, y: F.t + F.h + 31, 'font-size': 11.5, fill: MUTED, 'text-anchor': 'end' }, pv, 'string voltage (V)');
+  el('text', { x: 13, y: F.t + F.h / 2, 'font-size': 11.5, fill: MUTED, 'text-anchor': 'middle', transform: `rotate(-90 13 ${F.t + F.h / 2})` }, pv, 'power (W)');
+  gCurve = el('g', {}, pv); gTrack = el('g', {}, pv);
+})();
+function drawCurve(){
+  gCurve.innerHTML = '';
+  const d = cur.map((q, k) => (k ? 'L' : 'M') + X(q.V).toFixed(1) + ',' + Y(q.P).toFixed(1)).join('');
+  el('path', { d, fill: 'none', stroke: MAROON, 'stroke-width': 2.8, 'stroke-linejoin': 'round' }, gCurve);
+  const best = pk.reduce((a, b) => b.P > a.P ? b : a, { P: 0 });
+  pk.forEach(q => {
+    const g = q === best;
+    el('circle', { cx: X(q.V), cy: Y(q.P), r: g ? 8 : 5, fill: '#fff', stroke: g ? FOCUS : '#b9b0a5', 'stroke-width': 2 }, gCurve);
+    txt(gCurve, { x: X(q.V), y: Y(q.P) - 13, 'font-size': 11, 'font-weight': 700, fill: g ? FOCUS : MUTED, 'text-anchor': 'middle' }, (g ? 'global ' : 'local ') + q.P.toFixed(0) + ' W');
+  });
+  dirtyPlot = false;
+}
+function drawTrack(){
+  gTrack.innerHTML = '';
+  trail.forEach((q, k) => {
+    const a = (k + 1) / trail.length;
+    el('circle', { cx: X(q.V), cy: Y(q.P), r: 2.5 + 2 * a, fill: MUSTARD, opacity: (0.15 + 0.5 * a).toFixed(2) }, gTrack);
+  });
+  const P = power(Vref);
+  el('line', { x1: X(Vref), y1: Y(P), x2: X(Vref), y2: F.t + F.h, stroke: MUSTARD, 'stroke-width': 1.2, 'stroke-dasharray': '3,3' }, gTrack);
+  el('circle', { cx: X(Vref), cy: Y(P), r: 6.5, fill: MUSTARD, stroke: '#fff', 'stroke-width': 1.6 }, gTrack);
+  if (scanning) el('rect', { x: F.l, y: F.t, width: X(Vref) - F.l, height: F.h, fill: 'rgba(28,95,122,0.06)' }, gTrack);
+}
+
+// =====================================================================================
+// Status text, stats and controls
+// =====================================================================================
+let lastStatus = '';
+function nearestPeak(){ let b = null; pk.forEach(q => { if (!b || Math.abs(q.V - Vref) < Math.abs(b.V - Vref)) b = q; }); return b; }
+function updateUI(on){
+  const P = power(Vref), best = pk.reduce((a, b) => b.P > a.P ? b : a, { P: 0, V: 0 });
+  $('stP').textContent = P.toFixed(1) + ' W';
+  $('stPSub').textContent = 'at ' + Vref.toFixed(1) + ' V';
+  $('stMax').textContent = best.P.toFixed(1) + ' W';
+  $('stMaxSub').textContent = 'at ' + best.V.toFixed(1) + ' V' + (pk.length > 1 ? ' · ' + pk.length + ' peaks' : '');
+  $('stEff').textContent = best.P > 0 ? (100 * P / best.P).toFixed(0) + '%' : '—';
+  $('stBp').textContent = on + ' of 3';
+  $('stBpSub').textContent = on ? 'shaded module(s) bypassed' : 'all modules contributing';
+  const np = nearestPeak(), atPeak = np && Math.abs(np.V - Vref) < Math.max(2 * step, 1.2);
+  let s;
+  if (scanning) s = 'Global scan: sweeping the whole voltage range and remembering the best power seen so far (<b>' + scan.best.P.toFixed(0) + ' W</b>).';
+  else if (!running) s = nSteps === 0 ? 'Tracker idle, starting just below open circuit. Press <b>Run P&amp;O</b>: each step nudges the voltage and keeps going if the power went up, or turns round if it went down.' : 'Paused.';
+  else if (atPeak && np.P < best.P - 0.5) s = 'Stuck on a <b>local peak</b> (' + np.P.toFixed(0) + ' W). Every small step from here lowers the power, so P&amp;O stays put, while ' + (best.P - np.P).toFixed(0) + ' W more is available at ' + best.V.toFixed(0) + ' V. Try a <b>global scan</b>.';
+  else if (atPeak) s = 'At the <b>global maximum</b>, wobbling either side of it by one step each time. Bigger steps find the peak faster but wobble further.';
+  else s = 'Climbing: power rose after the last step, so the tracker keeps stepping ' + (dir < 0 ? 'down' : 'up') + ' in voltage.';
+  if (s !== lastStatus){ $('status').innerHTML = s; lastStatus = s; }
+  const bt = running ? 'Pause' : 'Run P&O'; if ($('btnRun').textContent !== bt) $('btnRun').textContent = bt;
+}
+const mods = $('mods');
+const sl = [];
+for (let k = 0; k < NM; k++){
+  const b = document.createElement('div'); b.className = 'slider-block';
+  b.innerHTML = `<div class="slider-label-row"><span>Module ${k + 1}</span><span class="slider-value" id="vg${k}"></span></div>
+    <input type="range" min="0" max="1000" step="10" aria-label="Irradiance on module ${k + 1}">
+    <div class="slider-caption"><span>0 (full shade)</span><span>1000 W/m²</span></div>`;
+  mods.appendChild(b);
+  const s = b.querySelector('input'); sl.push(s);
+  s.addEventListener('input', () => { G[k] = +s.value / 1000; syncPreset(); recompute(); clampVref(); });
+}
+function syncSliders(){ sl.forEach((s, k) => { s.value = Math.round(G[k] * 1000); $('vg' + k).textContent = Math.round(G[k] * 1000) + ' W/m²'; }); }
+function syncPreset(){
+  sl.forEach((s, k) => $('vg' + k).textContent = Math.round(G[k] * 1000) + ' W/m²');
+  $('segPreset').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(PRESETS[+b.dataset.p].every((g, k) => Math.abs(g - G[k]) < 1e-6))));
+}
+function clampVref(){ Vref = clamp(Vref, 0, Voc); Pprev = power(Vref); trail = [{ V: Vref, P: Pprev }]; }
+function syncStep(){ $('segStep').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.s === step))); }
+$('segPreset').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+  G = PRESETS[+b.dataset.p].slice(); syncSliders(); syncPreset(); recompute(); running = false; restart();
+}));
+$('segStep').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { step = +b.dataset.s; syncStep(); }));
+$('btnRun').addEventListener('click', () => { if (scanning) return; running = !running; });
+$('btnScan').addEventListener('click', () => { running = false; scanning = true; scan = { V: 0, best: { V: 0, P: 0 } }; trail = []; Vref = 0; });
+$('btnRestart').addEventListener('click', () => { running = false; restart(); });
+$('btnReset').addEventListener('click', () => { G = PRESETS[1].slice(); step = 0.4; syncStep(); syncSliders(); syncPreset(); recompute(); running = false; restart(); });
+
+G = PRESETS[1].slice(); syncSliders(); syncPreset(); syncStep(); recompute(); restart();
+let last = null;
+function frame(ts){
+  const dt = last === null ? 0 : Math.min(0.05, (ts - last) / 1000); last = ts;
+  tAcc += dt;
+  const period = scanning ? 0.06 : 0.16;
+  while (tAcc >= period){ tAcc -= period; if (scanning) scanStep(); else if (running) poStep(); }
+  if (dirtyPlot) drawCurve();
+  drawTrack();
+  const on = drawScene(REDUCED ? 0 : dt);
+  updateUI(on);
+  requestAnimationFrame(frame);
+}
+motionNote();
+requestAnimationFrame(frame);
+window.__mp = { stringV, stringI, power, peaks, get Voc(){ return Voc; }, get Vref(){ return Vref; }, setG(g){ G = g.slice(); syncSliders(); recompute(); restart(); },
+  run(){ running = true; }, scanNow(){ $('btnScan').click(); }, get state(){ return { running, scanning, nSteps, step }; } };
+})();
+</script>
+</body>
+</html>
