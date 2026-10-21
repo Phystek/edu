@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solar Panel Layers</title>
+<style>
+  :root {
+    --bg: #eef2f6;
+    --panel: #ffffff;
+    --text: #1d2733;
+    --muted: #5d6b7a;
+    --border: #d9e0e7;
+    --accent: #f2a900;
+    --stage: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12171d;
+      --panel: #1b222b;
+      --text: #e7edf3;
+      --muted: #96a3b1;
+      --border: #2c3642;
+      --stage: #ffffff;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  .app { display: flex; height: 100vh; }
+  aside {
+    overflow-y: auto;
+    width: 320px;
+    flex-shrink: 0;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    padding: 22px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  h1 { font-size: 20px; margin: 0; }
+  .sub { color: var(--muted); font-size: 13px; margin: 4px 0 0; }
+  .btns { display: flex; gap: 8px; }
+  .btns button {
+    flex: 1; padding: 8px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--border); background: transparent; color: var(--text);
+    font-size: 13px; font-weight: 600;
+  }
+  .btns button:hover { border-color: var(--accent); }
+  ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  li label {
+    display: grid;
+    grid-template-columns: 20px 18px 1fr;
+    gap: 10px;
+    align-items: start;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  li label:hover { border-color: var(--accent); background: rgba(242,169,0,.06); }
+  input[type=checkbox] { width: 18px; height: 18px; margin: 1px 0 0; accent-color: var(--accent); cursor: pointer; }
+  .sw { width: 18px; height: 18px; border-radius: 4px; border: 1px solid rgba(0,0,0,.25); margin-top: 1px; }
+  .name { font-weight: 600; font-size: 14px; }
+  .num { color: var(--muted); font-weight: 500; margin-right: 4px; }
+  .desc { color: var(--muted); font-size: 12px; line-height: 1.4; margin-top: 3px; }
+  .opts {
+    display: flex; gap: 6px; margin: 6px 0 2px 48px;
+  }
+  .opts label {
+    display: flex; align-items: center; gap: 6px;
+    flex: 1; padding: 6px 8px; font-size: 12px; font-weight: 600;
+    border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
+  }
+  .opts label:hover { border-color: var(--accent); }
+  .opts input { accent-color: var(--accent); margin: 0; cursor: pointer; }
+  .opts label:has(input:checked) { border-color: var(--accent); background: rgba(242,169,0,.1); }
+  .flexbox { display: flex; flex-direction: column; gap: 10px; }
+  .sec { font-weight: 600; font-size: 14px; }
+  .opts.peel { margin: 0; }
+  .peelinfo { font-size: 12px; color: var(--accent); font-weight: 600; min-height: 15px; margin-top: -4px; }
+  .flexrow {
+    display: flex; align-items: center; gap: 10px; padding: 10px;
+    border: 1px solid var(--border); border-radius: 10px; cursor: pointer;
+    font-weight: 600; font-size: 14px;
+  }
+  .flexrow:hover { border-color: var(--accent); }
+  .flexrow:has(input:checked) { border-color: var(--accent); background: rgba(242,169,0,.1); }
+  .slider input:disabled { opacity: .4; }
+  .slider { font-size: 13px; color: var(--muted); }
+  .slider input { width: 100%; accent-color: var(--accent); margin-top: 6px; }
+  main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--stage);
+    padding: 16px;
+    min-width: 0;
+  }
+  svg { width: 100%; max-width: 980px; height: auto; max-height: calc(100vh - 32px); }
+  .layer { transition: opacity .35s ease, transform .35s ease; }
+  .layer.off { opacity: 0; pointer-events: none; }
+  .layer.dim { opacity: .15; }
+  .lbl text { font-size: 16px; font-weight: 600; fill: #1d2733; }
+  .lbl line, .lbl polyline { stroke: #5d6b7a; stroke-width: 1.2; fill: none; }
+  .lbl circle { fill: var(--accent); }
+  @media (max-width: 760px) {
+    .app { flex-direction: column; height: auto; }
+    aside { overflow: visible; }
+    aside { width: 100%; border-right: 0; border-bottom: 1px solid var(--border); padding: 16px; }
+    main { padding: 8px 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div>
+      <h1>Solar Panel Layers</h1>
+      <p class="sub">Tick a layer to show it, untick to hide it. Hover a layer to highlight it.</p>
+    </div>
+    <div class="btns">
+      <button id="showAll">Show all</button>
+      <button id="hideAll">Hide all</button>
+    </div>
+    <div class="btns">
+      <button id="grind">Grind layers 2–5</button>
+      <button id="restore">Restore intact</button>
+    </div>
+    <ul id="list"></ul>
+    <div class="slider">
+      Exploded ↔ Assembled
+      <input type="range" id="gap" min="0" max="80" value="58">
+    </div>
+    <div class="flexbox">
+      <div class="sec">Peel outer layer</div>
+      <div class="opts peel">
+        <label><input type="radio" name="peel" value="none" checked> None</label>
+        <label><input type="radio" name="peel" value="front"> Front</label>
+        <label><input type="radio" name="peel" value="back"> Back</label>
+      </div>
+      <div class="peelinfo" id="peelInfo"></div>
+      <div class="slider">
+        Peel amount
+        <input type="range" id="peelAmt" min="15" max="100" value="65" disabled>
+      </div>
+    </div>
+    <div class="flexbox">
+      <label class="flexrow"><input type="checkbox" id="flex"> Flexible panel</label>
+      <div class="slider">
+        Bend amount
+        <input type="range" id="bend" min="10" max="90" value="50" disabled>
+      </div>
+    </div>
+  </aside>
+  <main>
+    <svg id="svg" viewBox="90 20 860 910" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Exploded view of solar panel layers">
+      <defs>
+        <linearGradient id="cellGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#2f5597"/>
+          <stop offset="1" stop-color="#132a55"/>
+        </linearGradient>
+      </defs>
+      <g id="scene"></g>
+    </svg>
+  </main>
+</div>
+
+<script>
+const LAYERS = [
+  { id: 'frame', name: 'Aluminium Frame', swatch: '#c7ccd2',
+    desc: 'Anodised aluminium frame that seals the edges, adds rigidity and provides mounting points.' },
+  { id: 'glass', name: 'Front Glass', swatch: '#bfe0f2',
+    desc: 'Tempered, low-iron glass (≈3.2 mm) that lets sunlight through and protects the cells.' },
+  { id: 'eva1', name: 'EVA', swatch: '#f4f1e1',
+    desc: 'Ethylene-vinyl acetate encapsulant bonding the glass to the cells and cushioning them.' },
+  { id: 'cells', name: 'Silicon Cells', swatch: '#244a8a',
+    desc: 'Crystalline silicon solar cells that convert light to electricity; busbars collect the current.' },
+  { id: 'eva2', name: 'EVA', swatch: '#f4f1e1',
+    desc: 'Rear encapsulant layer that seals the cells from behind.' },
+  { id: 'back', name: 'Back Sheet', swatch: '#f7f7f5',
+    desc: 'Polymer back sheet providing electrical insulation and moisture protection.' },
+  { id: 'jbox', name: 'Junction Box', swatch: '#2b2e33',
+    desc: 'Weatherproof box with bypass diodes and output cables to connect the panel.' },
+];
+
+const state = Object.fromEntries(LAYERS.map(l => [l.id, true]));
+// condition of each layer that can be damaged: 'intact' | 'frits' (glass only) | 'ground'
+const modes = { glass: 'intact', eva1: 'intact', cells: 'intact', eva2: 'intact' };
+const MODE_OPTS = {
+  glass: [['intact', 'Intact'], ['frits', 'Frits left'], ['ground', 'Ground']],
+  eva1:  [['intact', 'Intact'], ['ground', 'Ground']],
+  cells: [['intact', 'Intact'], ['ground', 'Ground']],
+  eva2:  [['intact', 'Intact'], ['ground', 'Ground']],
+};
+const MODE_SUFFIX = { frits: ' (frits)', ground: ' (ground)' };
+let peelMode = 'none', peelAmt = 0.65, peelTarget = null;
+
+// ---------- isometric helpers ----------
+const W = 360, D = 220, CX = 330, CY = 500;
+const C = Math.cos(Math.PI / 6), S = 0.5;
+// flexible mode: every layer arches along its length by BEND units
+let BEND = 0;
+const bendZ = x => BEND * Math.sin(Math.PI * Math.min(W, Math.max(0, x)) / W);
+// the panel sags in the middle so the junction box underneath stays in view
+// peeling: while PEEL is set, one corner of the layer being drawn curls away from the stack.
+// front = far corner lifts up and curls towards the viewer; back = near corner droops and curls under.
+let PEEL = null; // { dir: 'front' | 'back', p: 0..1 }
+const NL = Math.hypot(1 / W, 1 / D), NX = (1 / W) / NL, NY = (1 / D) / NL;
+function peelPt(x, y, z) {
+  if (!PEEL) return [x, y, z];
+  const qf = PEEL.p * 1.1, q = x / W + y / D;
+  const d = (PEEL.dir === 'front' ? qf - q : q - (2 - qf)) / NL; // distance past the fold line
+  if (d <= 0) return [x, y, z];
+  const dmax = qf / NL, thMax = 0.4 + 1.5 * PEEL.p, R = dmax / thMax, th = d / R;
+  const pull = d - R * Math.sin(th), lift = R * (1 - Math.cos(th));
+  return PEEL.dir === 'front'
+    ? [x + pull * NX, y + pull * NY, z + lift]
+    : [x - pull * NX, y - pull * NY, z - lift];
+}
+const P = (x, y, z) => {
+  [x, y, z] = peelPt(x, y, z);
+  return [CX + (x - y) * C, CY + (x + y) * S - z + bendZ(x)];
+};
+const pts = a => a.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+const poly = (a, fill, extra = '') => `<polygon points="${pts(a)}" fill="${fill}" ${extra}/>`;
+// model-space shapes: edges running along x are split so they follow the bend
+function sub(m, closed = true) {
+  const out = [], last = closed ? m.length : m.length - 1;
+  for (let i = 0; i < last; i++) {
+    const a = m[i], b = m[(i + 1) % m.length];
+    const n = Math.max(1, Math.ceil(Math.max(Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1])) / 8));
+    for (let k = 0; k < n; k++) {
+      const t = k / n;
+      out.push(P(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t));
+    }
+  }
+  if (!closed) { const e = m[m.length - 1]; out.push(P(...e)); }
+  return out;
+}
+const polyM = (m, fill, extra = '') => poly(sub(m), fill, extra);
+
+function box(x0, y0, x1, y1, z0, z1, c, stroke = 'rgba(0,0,0,.28)') {
+  const st = `stroke="${stroke}" stroke-width="0.8" stroke-linejoin="round"`;
+  const front = [[x0,y1,z1], [x1,y1,z1], [x1,y1,z0], [x0,y1,z0]];
+  const right = [[x1,y0,z1], [x1,y1,z1], [x1,y1,z0], [x1,y0,z0]];
+  const top   = [[x0,y0,z1], [x1,y0,z1], [x1,y1,z1], [x0,y1,z1]];
+  return polyM(front, c.front, st) + polyM(right, c.right, st) + polyM(top, c.top, st);
+}
+
+// ---------- build each layer ----------
+const COL = {
+  glass: { top: 'rgba(186,224,245,0.55)', front: 'rgba(110,170,205,0.85)', right: 'rgba(145,195,222,0.85)' },
+  eva:   { top: 'rgba(250,248,235,0.82)', front: '#dcd8c3', right: '#e8e5d2' },
+  cells: { top: '#e3e7ec', front: '#1c2c4c', right: '#26385e' },
+  back:  { top: '#f7f7f5', front: '#d2d2ce', right: '#e2e2de' },
+  jbox:  { top: '#45484e', front: '#1d1f22', right: '#2b2d31' },
+  frame: { top: '#dadee3', front: '#a3aab3', right: '#bcc2c9', inner: '#8a919a' },
+};
+
+function cellsTop(z) {
+  let s = '';
+  const cols = 10, rows = 6, m = 8, g = 3;
+  const cw = (W - 2*m - (cols-1)*g) / cols, ch = (D - 2*m - (rows-1)*g) / rows;
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    const x0 = m + c*(cw+g), y0 = m + r*(ch+g), x1 = x0 + cw, y1 = y0 + ch;
+    s += polyM([[x0,y0,z], [x1,y0,z], [x1,y1,z], [x0,y1,z]], 'url(#cellGrad)');
+    for (const f of [0.25, 0.5, 0.75]) {
+      const yy = y0 + ch * f;
+      s += `<polyline points="${pts(sub([[x0, yy, z], [x1, yy, z]], false))}" fill="none" stroke="#c9d2de" stroke-width="0.9"/>`;
+    }
+  }
+  return s;
+}
+
+function glassSheen(z) {
+  return polyM([[W*.58,0,z], [W*.70,0,z], [W*.42,D,z], [W*.30,D,z]], 'rgba(255,255,255,0.35)') +
+         polyM([[W*.76,0,z], [W*.80,0,z], [W*.52,D,z], [W*.48,D,z]], 'rgba(255,255,255,0.25)');
+}
+
+// seeded random so the frit pattern stays the same between redraws
+function rng(seed) {
+  return () => {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+// glass removed: faint outline of the original sheet plus many leftover glass frits
+function glassFrits(z0, z1) {
+  const rnd = rng(42);
+  let s = polyM([[0,0,z1], [W,0,z1], [W,D,z1], [0,D,z1]], 'none',
+    'stroke="rgba(70,130,170,.55)" stroke-width="1" stroke-dasharray="5 4"');
+  const shard = (x, y, r, zz) => {
+    const n = 3 + Math.floor(rnd() * 3), a0 = rnd() * Math.PI * 2, v = [];
+    for (let k = 0; k < n; k++) {
+      const a = a0 + (k / n) * Math.PI * 2 + (rnd() - .5) * 0.9;
+      const rr = r * (0.45 + rnd() * 0.7);
+      v.push(P(Math.min(W, Math.max(0, x + Math.cos(a) * rr)), Math.min(D, Math.max(0, y + Math.sin(a) * rr)), zz));
+    }
+    const light = rnd() < 0.3;
+    return poly(v, light ? 'rgba(225,243,252,0.95)' : 'rgba(165,210,236,0.9)',
+      'stroke="rgba(55,115,155,.75)" stroke-width="0.5" stroke-linejoin="round"');
+  };
+  // small frits scattered across the sheet
+  for (let i = 0; i < 520; i++) {
+    s += shard(rnd() * W, rnd() * D, 1.5 + Math.pow(rnd(), 2) * 5, z0 + rnd() * (z1 - z0));
+  }
+  // larger fragments still stuck along the edges
+  for (let i = 0; i < 90; i++) {
+    const side = Math.floor(rnd() * 4), d = rnd() * 14;
+    const x = side === 0 ? d : side === 1 ? W - d : rnd() * W;
+    const y = side === 2 ? d : side === 3 ? D - d : rnd() * D;
+    s += shard(x, y, 4 + rnd() * 6, z0 + rnd() * (z1 - z0));
+  }
+  return s;
+}
+
+// ground layer: ragged, eaten-away remnant of the sheet plus a mix of contaminated particles
+const MIX = {
+  glass: '#bfe0f2', eva: '#efe9cf', si: '#2a4170', siDark: '#14264a',
+  metal: '#cfd4d9', dirt: '#8a7860',
+};
+const GROUND = {
+  glass: { base: 'rgba(160,200,222,0.45)', seed: 11,
+           mix: [['glass', .58], ['eva', .16], ['si', .12], ['metal', .07], ['dirt', .07]] },
+  eva1:  { base: 'rgba(220,212,180,0.55)', seed: 23,
+           mix: [['eva', .52], ['glass', .2], ['si', .15], ['metal', .06], ['dirt', .07]] },
+  cells: { base: 'rgba(55,70,98,0.55)', seed: 37,
+           mix: [['si', .38], ['siDark', .16], ['metal', .14], ['eva', .17], ['glass', .1], ['dirt', .05]] },
+  eva2:  { base: 'rgba(220,212,180,0.55)', seed: 51,
+           mix: [['eva', .55], ['si', .18], ['glass', .12], ['metal', .07], ['dirt', .08]] },
+};
+function groundLayer(id, z0, z1) {
+  const g = GROUND[id], rnd = rng(g.seed);
+  // dashed outline of the original sheet
+  let s = polyM([[0,0,z1], [W,0,z1], [W,D,z1], [0,D,z1]], 'none',
+    'stroke="rgba(90,90,90,.45)" stroke-width="1" stroke-dasharray="5 4"');
+  // ragged remnant: walk around the edge with random inward bites
+  const edge = [], step = 10;
+  const bite = () => 6 + rnd() * 26;
+  for (let x = 0; x < W; x += step) edge.push([x, bite()]);
+  for (let y = 0; y < D; y += step) edge.push([W - bite(), y]);
+  for (let x = W; x > 0; x -= step) edge.push([x, D - bite()]);
+  for (let y = D; y > 0; y -= step) edge.push([bite(), y]);
+  s += poly(edge.map(([x, y]) => P(x, y, z0 + 1)), g.base,
+    'stroke="rgba(60,60,60,.35)" stroke-width="0.6" stroke-linejoin="round"');
+  // particles
+  const pick = () => {
+    let r = rnd();
+    for (const [k, w] of g.mix) { if ((r -= w) <= 0) return MIX[k]; }
+    return MIX[g.mix[0][0]];
+  };
+  for (let i = 0; i < 750; i++) {
+    const x = rnd() * W, y = rnd() * D, r = 0.8 + Math.pow(rnd(), 2.2) * 3.2;
+    const zz = z0 + rnd() * (z1 - z0 + 3), n = 3 + Math.floor(rnd() * 2), a0 = rnd() * 6.28, v = [];
+    for (let k = 0; k < n; k++) {
+      const a = a0 + (k / n) * 6.28 + (rnd() - .5) * .8, rr = r * (0.5 + rnd() * 0.7);
+      v.push(P(Math.min(W, Math.max(0, x + Math.cos(a) * rr)), Math.min(D, Math.max(0, y + Math.sin(a) * rr)), zz));
+    }
+    s += poly(v, pick(), 'stroke="rgba(0,0,0,.35)" stroke-width="0.35"');
+  }
+  return s;
+}
+
+function frameParts(z0, z1, innerBottom) {
+  const o = 12, l = 6; // outer overhang and inner lip
+  const ox0 = -o, oy0 = -o, ox1 = W + o, oy1 = D + o;
+  const ix0 = l, iy0 = l, ix1 = W - l, iy1 = D - l;
+  const st = 'stroke="rgba(0,0,0,.3)" stroke-width="0.8" stroke-linejoin="round"';
+  const ib = Math.max(z0, innerBottom);
+  // inner walls visible through the opening (back wall & left wall)
+  const back =
+    polyM([[ix0,iy0,z1], [ix1,iy0,z1], [ix1,iy0,ib], [ix0,iy0,ib]], COL.frame.inner, st) +
+    polyM([[ix0,iy0,z1], [ix0,iy1,z1], [ix0,iy1,ib], [ix0,iy0,ib]], '#9aa1aa', st);
+  const path = m => 'M' + sub(m).map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' L') + ' Z';
+  const ring = path([[ox0,oy0,z1], [ox1,oy0,z1], [ox1,oy1,z1], [ox0,oy1,z1]]) + ' ' +
+               path([[ix0,iy0,z1], [ix1,iy0,z1], [ix1,iy1,z1], [ix0,iy1,z1]]);
+  const front =
+    polyM([[ox0,oy1,z1], [ox1,oy1,z1], [ox1,oy1,z0], [ox0,oy1,z0]], COL.frame.front, st) +
+    polyM([[ox1,oy0,z1], [ox1,oy1,z1], [ox1,oy1,z0], [ox1,oy0,z0]], COL.frame.right, st) +
+    `<path d="${ring}" fill="${COL.frame.top}" fill-rule="evenodd" ${st}/>` +
+    // subtle groove line on the frame face
+    `<polyline points="${pts(sub([[ox0,oy1,z1-8], [ox1,oy1,z1-8], [ox1,oy0,z1-8]], false))}" fill="none" stroke="rgba(0,0,0,.18)" stroke-width="1"/>`;
+  return { back, front };
+}
+
+function jboxParts(z1) {
+  const z0 = z1 - 24, x0 = 150, x1 = 230, y0 = 150, y1 = 200;
+  let s = box(x0, y0, x1, y1, z0, z1, COL.jbox, 'rgba(0,0,0,.6)');
+  // lid line
+  s += `<polyline points="${pts(sub([[x0,y1,z0+7], [x1,y1,z0+7], [x1,y0,z0+7]], false))}" fill="none" stroke="#55585e" stroke-width="1"/>`;
+  // two output cables with connectors
+  for (const [yy, dy] of [[y0 + 14, -30], [y1 - 14, 30]]) {
+    const a = P(x1, yy, z0 + 10), b = P(x1 + 60, yy + dy, z0 - 10), c = P(x1 + 95, yy + dy * 1.4, z0 - 40);
+    s += `<path d="M${a} Q${b} ${c}" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/>`;
+    const e = P(x1 + 110, yy + dy * 1.6, z0 - 52);
+    s += `<line x1="${c[0]}" y1="${c[1]}" x2="${e[0]}" y2="${e[1]}" stroke="#222" stroke-width="9" stroke-linecap="round"/>`;
+  }
+  return { s, anchor: P(x1, (y0 + y1) / 2, z0 + 12) };
+}
+
+// ---------- render ----------
+function render() {
+  const g = +document.getElementById('gap').value;
+  const t = g / 80;
+  // laminate stack (bottom → top): back, eva2, cells, eva1, glass
+  const T = { back: 4, eva2: 4, cells: 5, eva1: 4, glass: 8 };
+  const order = ['back', 'eva2', 'cells', 'eva1', 'glass'];
+  const Z = {}; let z = 0;
+  order.forEach((id, i) => { Z[id] = [z + i * g, z + i * g + T[id]]; z += T[id]; });
+  const lamTop = Z.glass[1];
+  const fz0 = 25 + 5 * g - 30 * (1 - t), fz1 = fz0 + 30;
+  const jz1 = -g * 0.75;
+
+  const anyLamVisible = order.some(id => state[id]);
+  const fr = frameParts(fz0, fz1, (anyLamVisible && fz0 < lamTop) ? lamTop : fz0);
+  const jb = jboxParts(jz1);
+
+  // which layer peels: the outermost visible laminate layer on the chosen side
+  const visible = ['glass', 'eva1', 'cells', 'eva2', 'back'].filter(id => state[id]);
+  peelTarget = peelMode === 'front' ? visible[0] : peelMode === 'back' ? visible[visible.length - 1] : null;
+  const withPeel = (id, fn) => {
+    PEEL = id === peelTarget ? { dir: peelMode, p: peelAmt } : null;
+    const r = fn(); PEEL = null; return r;
+  };
+  const build = {
+    back: () => box(0, 0, W, D, ...Z.back, COL.back),
+    eva2: () => modes.eva2 === 'ground' ? groundLayer('eva2', ...Z.eva2)
+      : box(0, 0, W, D, ...Z.eva2, COL.eva, 'rgba(120,110,80,.35)'),
+    cells: () => modes.cells === 'ground' ? groundLayer('cells', ...Z.cells)
+      : box(0, 0, W, D, ...Z.cells, COL.cells) + cellsTop(Z.cells[1]),
+    eva1: () => modes.eva1 === 'ground' ? groundLayer('eva1', ...Z.eva1)
+      : box(0, 0, W, D, ...Z.eva1, COL.eva, 'rgba(120,110,80,.35)'),
+    glass: () => modes.glass === 'ground' ? groundLayer('glass', ...Z.glass)
+      : modes.glass === 'frits' ? glassFrits(...Z.glass)
+      : box(0, 0, W, D, ...Z.glass, COL.glass, 'rgba(70,130,170,.6)') + glassSheen(Z.glass[1]),
+  };
+  const geo = { jbox: jb.s };
+  for (const id of order) geo[id] = withPeel(id, build[id]);
+
+  const info = document.getElementById('peelInfo');
+  info.textContent = peelMode === 'none' ? '' : peelTarget
+    ? `Peeling: ${LAYERS.find(l => l.id === peelTarget).name}` : 'No layer visible to peel';
+
+  const grp = (id, inner) => `<g class="layer ${state[id] ? '' : 'off'}" data-layer="${id}">${inner}</g>`;
+  const assembled = g < 12;
+  let out = grp('jbox', geo.jbox) + '<!--JBOX_LABEL-->';
+  if (assembled) out += grp('frame', fr.back);
+  for (const id of order) out += grp(id, geo[id]);
+  if (!assembled) out += grp('frame', fr.back);
+  out += grp('frame', fr.front);
+
+  // labels with collision avoidance
+  const anchors = {
+    frame: P(W + 12, D * 0.45, fz1 - 4),
+    glass: withPeel('glass', () => P(W, D * 0.55, Z.glass[1] - 2)),
+    eva1:  withPeel('eva1',  () => P(W, D * 0.65, Z.eva1[1] - 2)),
+    cells: withPeel('cells', () => P(W, D * 0.75, Z.cells[1] - 2)),
+    eva2:  withPeel('eva2',  () => P(W, D * 0.85, Z.eva2[1] - 2)),
+    back:  withPeel('back',  () => P(W, D * 0.95, Z.back[1] - 2)),
+    jbox:  jb.anchor,
+  };
+  // keep labels in stack order (top → bottom) so the junction box label is always last
+  const labs = LAYERS.map((l, i) => ({ ...l, i, a: anchors[l.id], y: anchors[l.id][1] }));
+  for (let k = 1; k < labs.length; k++) labs[k].y = Math.max(labs[k].y, labs[k-1].y + 26);
+  const jl = labs[labs.length - 1];
+  jl.y = Math.max(jl.y, anchors.back[1] + 30);
+  const LX = 760;
+  const labelSvg = l => {
+    const [ax, ay] = l.a;
+    return `<g class="layer lbl ${state[l.id] ? '' : 'off'}" data-layer="${l.id}">
+      <polyline points="${ax.toFixed(1)},${ay.toFixed(1)} ${LX - 30},${l.y.toFixed(1)} ${LX - 6},${l.y.toFixed(1)}"/>
+      <circle cx="${ax.toFixed(1)}" cy="${ay.toFixed(1)}" r="3.5"/>
+      <text x="${LX}" y="${(l.y + 5).toFixed(1)}">${l.i + 1}. ${l.name}${MODE_SUFFIX[modes[l.id]] || ''}${l.id === peelTarget ? ' (peeling)' : ''}</text>
+    </g>`;
+  };
+  // junction box label is drawn before the other layers so its leader line passes behind them
+  out = out.replace('<!--JBOX_LABEL-->', labelSvg(jl));
+  for (const l of labs) if (l.id !== 'jbox') out += labelSvg(l);
+  document.getElementById('scene').innerHTML = out;
+}
+
+// ---------- sidebar ----------
+const list = document.getElementById('list');
+LAYERS.forEach((l, i) => {
+  const li = document.createElement('li');
+  li.innerHTML = `<label>
+      <input type="checkbox" checked data-id="${l.id}">
+      <span class="sw" style="background:${l.swatch}"></span>
+      <span><div class="name"><span class="num">${i + 1}.</span>${l.name}</div><div class="desc">${l.desc}</div></span>
+    </label>` + (MODE_OPTS[l.id] ? `
+    <div class="opts">${MODE_OPTS[l.id].map(([v, txt]) =>
+      `<label><input type="radio" name="mode-${l.id}" value="${v}" ${v === modes[l.id] ? 'checked' : ''}> ${txt}</label>`).join('')}
+    </div>` : '');
+  li.addEventListener('mouseenter', () => highlight(l.id));
+  li.addEventListener('mouseleave', () => highlight(null));
+  list.appendChild(li);
+});
+
+function applyVisibility() {
+  document.querySelectorAll('#scene .layer').forEach(el =>
+    el.classList.toggle('off', !state[el.dataset.layer]));
+}
+function highlight(id) {
+  document.querySelectorAll('#scene .layer').forEach(el =>
+    el.classList.toggle('dim', !!id && el.dataset.layer !== id));
+}
+
+list.addEventListener('change', e => {
+  if (e.target.name && e.target.name.startsWith('mode-')) {
+    const id = e.target.name.slice(5);
+    modes[id] = e.target.value;
+    if (!state[id]) {              // changing the condition also shows the layer
+      state[id] = true;
+      list.querySelector(`input[data-id="${id}"]`).checked = true;
+    }
+    render(); return;
+  }
+  if (!e.target.dataset.id) return;
+  state[e.target.dataset.id] = e.target.checked;
+  // frame inner walls depend on laminate visibility, so re-render geometry
+  render(); applyVisibility();
+});
+function setAll(v) {
+  LAYERS.forEach(l => state[l.id] = v);
+  list.querySelectorAll('input').forEach(i => i.checked = v);
+  render();
+}
+function setGround(v) {
+  for (const id of Object.keys(modes)) {
+    modes[id] = v;
+    state[id] = true;
+    list.querySelector(`input[data-id="${id}"]`).checked = true;
+    list.querySelector(`input[name="mode-${id}"][value="${v}"]`).checked = true;
+  }
+  render();
+}
+document.getElementById('grind').onclick = () => setGround('ground');
+document.getElementById('restore').onclick = () => setGround('intact');
+document.getElementById('showAll').onclick = () => setAll(true);
+document.getElementById('hideAll').onclick = () => setAll(false);
+document.getElementById('gap').addEventListener('input', render);
+
+const peelSl = document.getElementById('peelAmt');
+document.querySelectorAll('input[name="peel"]').forEach(r => r.addEventListener('change', () => {
+  peelMode = r.value;
+  peelSl.disabled = peelMode === 'none';
+  render();
+}));
+peelSl.addEventListener('input', () => { peelAmt = peelSl.value / 100; render(); });
+
+const flexBox = document.getElementById('flex'), bendSl = document.getElementById('bend');
+flexBox.addEventListener('change', () => {
+  bendSl.disabled = !flexBox.checked;
+  BEND = flexBox.checked ? +bendSl.value : 0;
+  // flexible panels are frameless; untick the frame (it can be ticked back on)
+  state.frame = !flexBox.checked;
+  list.querySelector('input[data-id="frame"]').checked = state.frame;
+  render();
+});
+bendSl.addEventListener('input', () => { if (flexBox.checked) { BEND = +bendSl.value; render(); } });
+
+render();
+</script>
+</body>
+</html>
