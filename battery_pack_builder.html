@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Battery Pack Builder — ELEC2005</title>
+<style>
+:root{
+  --ink:#1a1512; --paper:#faf7f2; --panel:#ffffff; --maroon:#7a1730;
+  --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a; --mustard:#c98a2c;
+  --serif:"Iowan Old Style","Georgia",serif;
+  --sans:"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+body{margin:0;background:#e6e6e4;color:var(--ink);font-family:var(--sans);}
+.wrap{max-width:960px;margin:0 auto;padding:24px 20px 36px;}
+header{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:6px 16px;
+  border-bottom:1px solid var(--grid);padding-bottom:12px;margin-bottom:14px;}
+.eyebrow{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin:0 0 4px;}
+h1{font-family:var(--serif);font-size:26px;letter-spacing:-0.01em;line-height:1.15;margin:0;font-weight:700;}
+.tag{font-size:12px;color:var(--muted);white-space:nowrap;}
+.intro{font-size:14px;line-height:1.55;margin:0 0 12px;max-width:820px;}
+.callout.callout-end{margin:16px 0 0;}
+.callout{background:#fbe9c6;border:1px solid #e0be6f;color:#5c4a12;border-radius:4px;padding:9px 12px;font-size:12.5px;line-height:1.45;margin:0 0 16px;}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start;}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0;}
+.panel{background:var(--panel);border:1px solid var(--grid);border-radius:4px;padding:14px 16px;min-width:0;}
+.panel-label{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 8px;}
+svg{display:block;width:100%;height:auto;}
+svg text{font-family:var(--sans);user-select:none;-webkit-user-select:none;}
+.btn{padding:9px 10px;font:700 13px var(--sans);border-radius:4px;border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;line-height:1.2;}
+@media (hover:hover){ .btn:hover{background:var(--ink);color:var(--paper);} }
+.btn.reset{display:block;width:100%;margin-top:12px;}
+button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
+.slider-block{margin-bottom:12px;}
+.slider-label-row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:4px;gap:8px;}
+.slider-value{font-weight:700;color:var(--maroon);font-variant-numeric:tabular-nums;white-space:nowrap;}
+input[type=range]{width:100%;accent-color:var(--maroon);margin:2px 0;}
+.slider-caption{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);}
+.seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--grid);border-radius:4px;overflow:hidden;margin-bottom:12px;}
+.seg button{padding:8px 6px;font:700 12px var(--sans);background:var(--paper);color:var(--muted);cursor:pointer;border:none;border-left:1px solid var(--grid);border-top:1px solid var(--grid);line-height:1.25;}
+.seg button:nth-child(odd){border-left:none;}
+.seg button:nth-child(-n+2){border-top:none;}
+.seg button[aria-pressed="true"]{background:var(--maroon);color:#fff;}
+.seg button small{display:block;font-weight:400;font-size:11px;opacity:0.85;}
+.ctl-label{font-size:13px;margin:0 0 5px;}
+.presets{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;}
+.presets button{padding:7px 6px;font:700 12px var(--sans);border:1px solid var(--grid);border-radius:4px;background:#fff;color:var(--ink);cursor:pointer;line-height:1.25;text-align:left;}
+.presets button small{display:block;font-weight:400;color:var(--muted);font-size:11px;}
+@media (hover:hover){ .presets button:hover{border-color:var(--maroon);} }
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
+.stat-card{background:var(--paper);border:1px solid var(--grid);border-radius:4px;padding:9px 11px;}
+.stat-label{font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+.stat-value{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--maroon);white-space:nowrap;}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:2px;min-height:13px;}
+.hint{font-size:12.5px;color:var(--ink);margin:10px 0 0;line-height:1.5;font-family:var(--serif);}
+.hint b{color:var(--maroon);}
+.formula{font-family:var(--serif);font-size:14px;line-height:1.7;margin:10px 0 0;background:var(--paper);border:1px solid var(--grid);border-radius:4px;padding:8px 12px;}
+.formula b{color:var(--maroon);font-family:var(--sans);font-variant-numeric:tabular-nums;}
+footer{text-align:center;color:var(--muted);font-size:11.5px;margin-top:26px;}
+.noscript{background:#f7e9e7;border:1px solid #a3372c;color:#5c1a14;border-radius:4px;padding:10px 14px;font-size:14px;line-height:1.45;margin:0 0 14px;}
+@media (max-width:800px){
+  .wrap{padding:16px 12px 28px;}
+  h1{font-size:22px;}
+  .grid{grid-template-columns:minmax(0,1fr);gap:12px;}
+  .col{display:contents;}
+  .p-draw{order:1;} .p-ctl{order:2;}
+}
+@media (pointer:coarse){ input[type=range]{height:30px;} .btn,.seg button,.presets button{min-height:40px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <noscript><div class="noscript"><b>This page needs JavaScript to run.</b> Open the file in a web browser (Chrome, Edge, Safari or Firefox), not in a file preview.</div></noscript>
+  <header>
+    <div>
+      <p class="eyebrow">Electrochemical storage &middot; Interactive builder</p>
+      <h1>Battery Pack Builder: Cells in Series and Parallel</h1>
+    </div>
+    <div class="tag">ELEC2005 &middot; Week 12</div>
+  </header>
+
+  <p class="intro">Every battery, from a car’s 12 V starter battery to an EV pack, is built from cells. Cells in <b>series</b>
+  add their voltages; cells in <b>parallel</b> add their capacities (amp-hours). The stored energy depends only on how many cells you use.
+  Pick a cell, choose how many go in series (<i>S</i>) and in parallel (<i>P</i>), or start from a real-world example.</p>
+
+
+  <div class="grid">
+    <div class="col">
+      <div class="panel p-draw">
+        <p class="panel-label">Pack wiring (each column is one parallel group; the groups are in series)</p>
+        <svg id="pack" viewBox="0 0 520 320" role="img" aria-label="Diagram of the cells in the pack"></svg>
+        <div class="formula" id="formula"></div>
+        <p class="hint" id="hint"></p>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="panel p-ctl">
+        <p class="panel-label">Controls</p>
+        <p class="ctl-label">Cell type</p>
+        <div class="seg" role="group" aria-label="Cell type" id="cellSeg"></div>
+        <div class="slider-block">
+          <div class="slider-label-row"><span>Cells in series, <i>S</i></span><span class="slider-value" id="valS"></span></div>
+          <input type="range" id="sS" min="1" max="120" step="1" value="4" aria-label="Number of cells in series">
+          <div class="slider-caption"><span>1</span><span>120</span></div>
+        </div>
+        <div class="slider-block">
+          <div class="slider-label-row"><span>Cells in parallel, <i>P</i></span><span class="slider-value" id="valP"></span></div>
+          <input type="range" id="sP" min="1" max="50" step="1" value="1" aria-label="Number of cells in parallel">
+          <div class="slider-caption"><span>1</span><span>50</span></div>
+        </div>
+        <p class="ctl-label">Real-world examples</p>
+        <div class="presets" id="presets"></div>
+        <button type="button" class="btn reset" id="btnReset">Reset to defaults</button>
+        <div class="stats">
+          <div class="stat-card"><div class="stat-label">Pack voltage</div><div class="stat-value" id="stV"></div><div class="stat-sub" id="stVSub"></div></div>
+          <div class="stat-card"><div class="stat-label">Pack capacity</div><div class="stat-value" id="stQ"></div><div class="stat-sub" id="stQSub"></div></div>
+          <div class="stat-card"><div class="stat-label">Stored energy</div><div class="stat-value" id="stE"></div><div class="stat-sub" id="stESub"></div></div>
+          <div class="stat-card"><div class="stat-label">Cells and mass</div><div class="stat-value" id="stN"></div><div class="stat-sub" id="stNSub"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-end"><b>Typical cell values.</b> Each cell type uses round, typical figures for that format (nominal voltage, capacity,
+  mass and continuous current), not a particular manufacturer’s datasheet. Pack mass counts cells only; real packs add 20–40% for
+  busbars, cooling, the battery management system and the enclosure.</div>
+
+  <footer>ELEC2005 &middot; Week 12 &middot; for concept exploration, not assessment</footer>
+</div>
+
+<script>
+(function(){
+'use strict';
+const NS = 'http://www.w3.org/2000/svg';
+const $ = id => document.getElementById(id);
+function el(tag, attrs, parent, text){
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+const INK = '#1a1512', MAROON = '#7a1730', FOCUS = '#1c5f7a', MUSTARD = '#c98a2c', MUTED = '#6b6156', GRID = '#e4ddd2';
+
+// ---------- cells (typical values) ----------
+const CELLS = {
+  nmc:  { name: 'Li-ion 21700', sub: '3.6 V · 5 Ah', v: 3.6, q: 5,   m: 0.070, imax: 10,  colour: FOCUS },
+  lfp:  { name: 'LFP prismatic', sub: '3.2 V · 280 Ah', v: 3.2, q: 280, m: 5.4,  imax: 140, colour: '#2f7d4f' },
+  pb:   { name: 'Lead–acid cell', sub: '2.0 V · 100 Ah', v: 2.0, q: 100, m: 5.0,  imax: 100, colour: '#6b6156' },
+  nimh: { name: 'Ni–MH AA', sub: '1.2 V · 2 Ah', v: 1.2, q: 2,   m: 0.027, imax: 2,   colour: MUSTARD }
+};
+const PRESETS = [
+  { name: '12 V car battery', sub: 'lead–acid, 6S1P', cell: 'pb', s: 6, p: 1 },
+  { name: 'E-bike, 36 V', sub: 'Li-ion 21700, 10S4P', cell: 'nmc', s: 10, p: 4 },
+  { name: 'Home battery, 51.2 V', sub: 'LFP prismatic, 16S1P', cell: 'lfp', s: 16, p: 1 },
+  { name: 'EV pack, ≈ 350 V', sub: 'Li-ion 21700, 96S46P', cell: 'nmc', s: 96, p: 46 }
+];
+
+// ---------- pack maths ----------
+function pack(c, S, P){
+  const V = S * c.v, Q = P * c.q, E = V * Q, n = S * P, m = n * c.m, I = P * c.imax;
+  return { V, Q, E, n, m, I, P: V * I, wh_kg: E / m };
+}
+
+// ---------- drawing ----------
+const svg = $('pack');
+const VW = 520, VH = 320;
+function shownIndices(n, maxShow, head, tail){
+  if (n <= maxShow) return Array.from({ length: n }, (_, i) => i);
+  const a = []; for (let i = 0; i < head; i++) a.push(i); a.push(-1); for (let i = n - tail; i < n; i++) a.push(i); return a;
+}
+function drawPack(c, S, P){
+  svg.innerHTML = '';
+  const cols = shownIndices(S, 7, 3, 2), rows = shownIndices(P, 5, 3, 1);
+  const nC = cols.length, nR = rows.length;
+  const left = 40, right = VW - 40, top = 54, bottom = VH - 86;
+  const colW = (right - left) / nC, rowH = Math.min(36, (bottom - top) / nR);
+  const blockH = rowH * nR, y0 = top + ((bottom - top) - blockH) / 2;
+  const cellW = Math.min(46, colW * 0.62), cellH = Math.min(18, rowH * 0.56);
+  const busL = k => left + k * colW + (colW - cellW) / 2 - 6, busR = k => left + k * colW + (colW + cellW) / 2 + 6;
+  const g = el('g', {}, svg);
+  // series links between groups (+ bus of group k to − bus of group k+1), drawn on the top edge
+  for (let k = 0; k < nC; k++){
+    const isGap = cols[k] === -1;
+    if (isGap){
+      el('text', { x: left + k * colW + colW / 2, y: y0 + blockH / 2 + 5, 'font-size': 18, fill: MUTED, 'text-anchor': 'middle', 'font-weight': 700 }, g, '· · ·');
+      el('text', { x: left + k * colW + colW / 2, y: y0 + blockH / 2 + 22, 'font-size': 10, fill: MUTED, 'text-anchor': 'middle' }, g, (S - 5) + ' more');
+      continue;
+    }
+    const xl = busL(k), xr = busR(k);
+    // buses
+    el('line', { x1: xl, y1: y0 + rowH * 0.2, x2: xl, y2: y0 + blockH - rowH * 0.2, stroke: INK, 'stroke-width': 2 }, g);
+    el('line', { x1: xr, y1: y0 + rowH * 0.2, x2: xr, y2: y0 + blockH - rowH * 0.2, stroke: INK, 'stroke-width': 2 }, g);
+    rows.forEach((r, j) => {
+      const yc = y0 + rowH * (j + 0.5);
+      if (r === -1){
+        el('text', { x: (xl + xr) / 2, y: yc + 4, 'font-size': 14, fill: MUTED, 'text-anchor': 'middle', 'font-weight': 700 }, g, '⋮');
+        return;
+      }
+      const cx = (xl + xr) / 2;
+      el('line', { x1: xl, y1: yc, x2: cx - cellW / 2, y2: yc, stroke: INK, 'stroke-width': 1.4 }, g);
+      el('line', { x1: cx + cellW / 2 + 3, y1: yc, x2: xr, y2: yc, stroke: INK, 'stroke-width': 1.4 }, g);
+      el('rect', { x: cx - cellW / 2, y: yc - cellH / 2, width: cellW, height: cellH, rx: 3, fill: c.colour, stroke: INK, 'stroke-width': 1 }, g);
+      el('rect', { x: cx + cellW / 2, y: yc - 3, width: 3, height: 6, fill: INK }, g);
+      if (cellW > 30 && cellH >= 14) el('text', { x: cx, y: yc + 4, 'font-size': 9.5, fill: '#fff', 'text-anchor': 'middle', 'font-weight': 700 }, g, c.v + ' V');
+    });
+    if (P > 5) el('text', { x: (xl + xr) / 2, y: y0 + blockH + 14, 'font-size': 10, fill: MUTED, 'text-anchor': 'middle' }, g, P + ' cells');
+  }
+  // links between adjacent shown groups (skip over the gap with a dashed link)
+  for (let k = 0; k < nC - 1; k++){
+    if (cols[k] === -1) continue;
+    let kn = k + 1, dashed = false;
+    if (cols[kn] === -1){ kn = k + 2; dashed = true; }
+    if (kn >= nC) continue;
+    const yL = y0 + rowH * 0.2 - 8;
+    el('path', { d: `M${busR(k)},${y0 + rowH * 0.2} V${yL} H${busL(kn)} V${y0 + rowH * 0.2}`, fill: 'none', stroke: INK, 'stroke-width': 1.6, 'stroke-dasharray': dashed ? '4,3' : 'none' }, g);
+  }
+  // terminals
+  const firstX = busL(0), lastX = busR(nC - 1), yB = y0 + blockH - rowH * 0.2, yTerm = y0 + blockH + 30;
+  el('path', { d: `M${firstX},${yB} V${yTerm} H${firstX - 14}`, fill: 'none', stroke: INK, 'stroke-width': 1.6 }, g);
+  el('path', { d: `M${lastX},${yB} V${yTerm} H${lastX + 14}`, fill: 'none', stroke: INK, 'stroke-width': 1.6 }, g);
+  el('circle', { cx: firstX - 18, cy: yTerm, r: 7, fill: '#fff', stroke: INK, 'stroke-width': 1.6 }, g);
+  el('circle', { cx: lastX + 18, cy: yTerm, r: 7, fill: '#fff', stroke: INK, 'stroke-width': 1.6 }, g);
+  el('text', { x: firstX - 18, y: yTerm + 4.5, 'font-size': 13, 'font-weight': 700, fill: INK, 'text-anchor': 'middle' }, g, '−');
+  el('text', { x: lastX + 18, y: yTerm + 4.5, 'font-size': 12, 'font-weight': 700, fill: INK, 'text-anchor': 'middle' }, g, '+');
+  // pack voltage dimension line
+  const r = pack(c, S, P);
+  el('line', { x1: firstX - 18, y1: yTerm + 16, x2: lastX + 18, y2: yTerm + 16, stroke: MAROON, 'stroke-width': 1.4 }, g);
+  el('path', { d: `M${firstX - 18},${yTerm + 11} V${yTerm + 21} M${lastX + 18},${yTerm + 11} V${yTerm + 21}`, stroke: MAROON, 'stroke-width': 1.4 }, g);
+  el('text', { x: (firstX + lastX) / 2, y: yTerm + 34, 'font-size': 12.5, 'font-weight': 700, fill: MAROON, 'text-anchor': 'middle' }, g,
+     S + ' in series × ' + c.v + ' V = ' + fmtV(r.V));
+  // parallel annotation
+  el('text', { x: VW / 2, y: 22, 'font-size': 12.5, 'font-weight': 700, fill: FOCUS, 'text-anchor': 'middle' }, g,
+     'each column: ' + P + ' in parallel × ' + c.q + ' Ah = ' + fmtQ(r.Q));
+}
+function fmtV(v){ return (v >= 100 ? v.toFixed(0) : v.toFixed(1)) + ' V'; }
+function fmtQ(q){ return (q >= 100 ? q.toFixed(0) : q.toFixed(q < 10 ? 1 : 0)) + ' Ah'; }
+function fmtE(e){ return e >= 1000 ? (e / 1000).toFixed(e >= 10000 ? 1 : 2) + ' kWh' : e.toFixed(0) + ' Wh'; }
+function fmtM(m){ return m >= 1 ? (m >= 100 ? m.toFixed(0) : m.toFixed(1)) + ' kg' : (m * 1000).toFixed(0) + ' g'; }
+
+// ---------- controls ----------
+let cellKey = 'nmc';
+const sS = $('sS'), sP = $('sP');
+const DEF = { cell: 'nmc', S: 4, P: 1 };
+const seg = $('cellSeg');
+Object.entries(CELLS).forEach(([k, c]) => {
+  const b = document.createElement('button'); b.type = 'button'; b.dataset.k = k;
+  b.innerHTML = c.name + '<small>' + c.sub + '</small>';
+  b.addEventListener('click', () => { cellKey = k; update(); });
+  seg.appendChild(b);
+});
+PRESETS.forEach(pr => {
+  const b = document.createElement('button'); b.type = 'button';
+  b.innerHTML = pr.name + '<small>' + pr.sub + '</small>';
+  b.addEventListener('click', () => { cellKey = pr.cell; sS.value = pr.s; sP.value = pr.p; update(); });
+  $('presets').appendChild(b);
+});
+function update(){
+  const c = CELLS[cellKey], S = +sS.value, P = +sP.value;
+  seg.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === cellKey));
+  $('valS').textContent = S; $('valP').textContent = P;
+  drawPack(c, S, P);
+  const r = pack(c, S, P);
+  $('stV').textContent = fmtV(r.V);
+  $('stVSub').textContent = S + 'S × ' + c.v + ' V';
+  $('stQ').textContent = fmtQ(r.Q);
+  $('stQSub').textContent = 'max ≈ ' + (r.I >= 100 ? r.I.toFixed(0) : r.I.toFixed(1)) + ' A continuous';
+  $('stE').textContent = fmtE(r.E);
+  $('stESub').textContent = 'max power ≈ ' + (r.P >= 1000 ? (r.P / 1000).toFixed(1) + ' kW' : r.P.toFixed(0) + ' W');
+  $('stN').textContent = r.n.toLocaleString('en-AU') + ' cells';
+  $('stNSub').textContent = fmtM(r.m) + ' of cells (' + r.wh_kg.toFixed(0) + ' Wh/kg)';
+  $('formula').innerHTML = 'Energy = <i>S</i> × <i>P</i> × <i>V</i><sub>cell</sub> × <i>Q</i><sub>cell</sub> = ' + S + ' × ' + P + ' × ' + c.v + ' V × ' + c.q +
+    ' Ah = <b>' + fmtE(r.E) + '</b>';
+  // hint: compare with the same number of cells arranged the other way
+  const swap = pack(c, P, S);
+  $('hint').innerHTML = (S === P)
+    ? 'Swap the two sliders and the voltage and capacity trade places, but the energy stays the same.'
+    : 'The same ' + r.n.toLocaleString('en-AU') + ' cells wired ' + P + 'S' + S + 'P would give <b>' + fmtV(swap.V) + '</b> and <b>' + fmtQ(swap.Q) +
+      '</b>: different voltage and capacity, same <b>' + fmtE(swap.E) + '</b>. Higher voltage means lower current for the same power, so thinner cables and smaller losses.';
+}
+[sS, sP].forEach(s => s.addEventListener('input', update));
+$('btnReset').addEventListener('click', () => { cellKey = DEF.cell; sS.value = DEF.S; sP.value = DEF.P; update(); });
+update();
+window.__pack = { CELLS, pack };
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Depth of Discharge and Cycle Life Explorer — ELEC2005</title>
+<style>
+:root{
+  --ink:#1a1512; --paper:#faf7f2; --panel:#ffffff; --maroon:#7a1730;
+  --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a; --mustard:#c98a2c;
+  --serif:"Iowan Old Style","Georgia",serif;
+  --sans:"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+body{margin:0;background:#e6e6e4;color:var(--ink);font-family:var(--sans);}
+.wrap{max-width:960px;margin:0 auto;padding:24px 20px 36px;}
+header{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:6px 16px;
+  border-bottom:1px solid var(--grid);padding-bottom:12px;margin-bottom:14px;}
+.eyebrow{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin:0 0 4px;}
+h1{font-family:var(--serif);font-size:26px;letter-spacing:-0.01em;line-height:1.15;margin:0;font-weight:700;}
+.tag{font-size:12px;color:var(--muted);white-space:nowrap;}
+.intro{font-size:14px;line-height:1.55;margin:0 0 12px;max-width:820px;}
+.callout.callout-end{margin:16px 0 0;}
+.callout{background:#fbe9c6;border:1px solid #e0be6f;color:#5c4a12;border-radius:4px;padding:9px 12px;font-size:12.5px;line-height:1.45;margin:0 0 16px;}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start;}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0;}
+.panel{background:var(--panel);border:1px solid var(--grid);border-radius:4px;padding:14px 16px;min-width:0;}
+.panel-label{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 8px;}
+.sym{text-transform:none;letter-spacing:0;}
+svg{display:block;width:100%;height:auto;}
+svg text{font-family:var(--sans);user-select:none;-webkit-user-select:none;}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:11.5px;color:var(--muted);margin-top:8px;}
+.legend > span{display:inline-flex;align-items:center;gap:6px;}
+.legend > span > i{display:inline-block;width:22px;height:0;border-top:3px solid;}
+.btn{padding:9px 10px;font:700 13px var(--sans);border-radius:4px;border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;line-height:1.2;}
+@media (hover:hover){ .btn:hover{background:var(--ink);color:var(--paper);} }
+.btn.reset{display:block;width:100%;margin-top:12px;}
+button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
+.slider-block{margin-bottom:12px;}
+.slider-label-row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:4px;gap:8px;}
+.slider-value{font-weight:700;color:var(--maroon);font-variant-numeric:tabular-nums;white-space:nowrap;}
+input[type=range]{width:100%;accent-color:var(--maroon);margin:2px 0;}
+.slider-caption{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);}
+.seg{display:flex;border:1px solid var(--grid);border-radius:4px;overflow:hidden;margin-bottom:12px;}
+.seg button{flex:1;padding:8px 6px;font:700 12px var(--sans);background:var(--paper);color:var(--muted);cursor:pointer;border:none;border-left:1px solid var(--grid);}
+.seg button:first-child{border-left:none;}
+.seg button[aria-pressed="true"]{background:var(--maroon);color:#fff;}
+.ctl-label{font-size:13px;margin:0 0 5px;}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
+.stat-card{background:var(--paper);border:1px solid var(--grid);border-radius:4px;padding:9px 11px;}
+.stat-label{font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+.stat-value{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--maroon);white-space:nowrap;}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:2px;min-height:13px;}
+.hint{font-size:12.5px;color:var(--ink);margin:10px 0 0;line-height:1.5;font-family:var(--serif);}
+.hint b{color:var(--maroon);}
+footer{text-align:center;color:var(--muted);font-size:11.5px;margin-top:26px;}
+.noscript{background:#f7e9e7;border:1px solid #a3372c;color:#5c1a14;border-radius:4px;padding:10px 14px;font-size:14px;line-height:1.45;margin:0 0 14px;}
+@media (max-width:800px){
+  .wrap{padding:16px 12px 28px;}
+  h1{font-size:22px;}
+  .grid{grid-template-columns:minmax(0,1fr);gap:12px;}
+  .col{display:contents;}
+  .p-life{order:1;} .p-bat{order:2;} .p-ctl{order:3;} .p-cost{order:4;}
+}
+@media (pointer:coarse){ input[type=range]{height:30px;} .btn,.seg button{min-height:40px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <noscript><div class="noscript"><b>This page needs JavaScript to run.</b> Open the file in a web browser (Chrome, Edge, Safari or Firefox), not in a file preview.</div></noscript>
+  <header>
+    <div>
+      <p class="eyebrow">Battery specifications &middot; Interactive explorer</p>
+      <h1>Depth of Discharge and Cycle Life</h1>
+    </div>
+    <div class="tag">ELEC2005 &middot; Week 12</div>
+  </header>
+
+  <p class="intro">A home battery is cycled once a day to supply a fixed amount of energy. Choose how deeply it is discharged each day.
+  A shallow depth of discharge (DoD) makes each cycle gentler, so the battery lasts more cycles, but you must buy a bigger battery to
+  get the same daily energy. Which DoD gives the cheapest energy over the battery’s life?</p>
+
+
+  <div class="grid">
+    <div class="col">
+      <div class="panel p-life">
+        <p class="panel-label">Cycle life against depth of discharge</p>
+        <svg id="plotN" viewBox="0 0 520 250" role="img" aria-label="Number of cycles against depth of discharge, logarithmic"></svg>
+        <div class="legend">
+          <span><i style="border-color:#7a1730"></i><span>chosen chemistry</span></span>
+          <span><i style="border-color:#c9c1b6"></i><span>the other chemistry</span></span>
+          <span><i style="border-color:#1c5f7a;border-top-style:dashed"></i><span>cycles available before calendar life runs out</span></span>
+        </div>
+      </div>
+      <div class="panel p-cost">
+        <p class="panel-label">Battery cost per kWh delivered over its life</p>
+        <svg id="plotC" viewBox="0 0 520 220" role="img" aria-label="Battery cost per kilowatt-hour delivered against depth of discharge"></svg>
+        <p class="hint" id="hint"></p>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="panel p-bat">
+        <p class="panel-label">Battery needed</p>
+        <svg id="bat" viewBox="0 0 330 120" role="img" aria-label="Battery capacity split into the part used each day and the part held in reserve"></svg>
+      </div>
+      <div class="panel p-ctl">
+        <p class="panel-label">Controls</p>
+        <p class="ctl-label">Chemistry</p>
+        <div class="seg" role="group" aria-label="Battery chemistry">
+          <button type="button" id="bLead" aria-pressed="true">Lead–acid</button>
+          <button type="button" id="bLfp" aria-pressed="false">LFP lithium-ion</button>
+        </div>
+        <div class="slider-block">
+          <div class="slider-label-row"><span>Depth of discharge each day</span><span class="slider-value" id="valD"></span></div>
+          <input type="range" id="sD" min="10" max="100" step="1" value="50" aria-label="Depth of discharge in percent">
+          <div class="slider-caption"><span>10%</span><span>100%</span></div>
+        </div>
+        <div class="slider-block">
+          <div class="slider-label-row"><span>Energy needed each day</span><span class="slider-value" id="valE"></span></div>
+          <input type="range" id="sE" min="2" max="20" step="0.5" value="10" aria-label="Energy needed each day in kilowatt-hours">
+          <div class="slider-caption"><span>2 kWh</span><span>20 kWh</span></div>
+        </div>
+        <button type="button" class="btn reset" id="btnReset">Reset to defaults</button>
+        <div class="stats">
+          <div class="stat-card"><div class="stat-label">Battery size needed</div><div class="stat-value" id="stS"></div><div class="stat-sub" id="stSSub"></div></div>
+          <div class="stat-card"><div class="stat-label">Cycle life</div><div class="stat-value" id="stN"></div><div class="stat-sub" id="stNSub"></div></div>
+          <div class="stat-card"><div class="stat-label">Service life</div><div class="stat-value" id="stL"></div><div class="stat-sub" id="stLSub"></div></div>
+          <div class="stat-card"><div class="stat-label">Cost per kWh delivered</div><div class="stat-value" id="stC"></div><div class="stat-sub" id="stCSub"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-end"><b>Indicative parameters, not product data.</b> Cycle life follows <i>N</i> = <i>N</i><sub>100</sub> × DoD<sup>−β</sup>
+  (lead–acid: <i>N</i><sub>100</sub> = 500, β = 1.25; LFP lithium-ion: <i>N</i><sub>100</sub> = 4000, β = 1.1). Calendar life is capped at
+  6 years (lead–acid) and 15 years (LFP), and battery prices are taken as A$300 and A$600 per kWh of nameplate capacity. Real values vary
+  widely with product, temperature and charging.</div>
+
+  <footer>ELEC2005 &middot; Week 12 &middot; for concept exploration, not assessment</footer>
+</div>
+
+<script>
+(function(){
+'use strict';
+const NS = 'http://www.w3.org/2000/svg';
+const $ = id => document.getElementById(id);
+function el(tag, attrs, parent, text){
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+const INK = '#1a1512', MAROON = '#7a1730', FOCUS = '#1c5f7a', MUSTARD = '#c98a2c', MUTED = '#6b6156', GRID = '#e4ddd2', REFC = '#c9c1b6';
+
+// ---------- model ----------
+const CHEM = {
+  lead: { name: 'Lead–acid', N100: 500, beta: 1.25, cal: 6, price: 300 },
+  lfp:  { name: 'LFP',       N100: 4000, beta: 1.1, cal: 15, price: 600 }
+};
+function cycles(ch, D){ return ch.N100 * Math.pow(D, -ch.beta); }
+function evaluate(ch, D, Ed){
+  const N = cycles(ch, D);
+  const lifeCycles = N / 365;                      // years if limited by cycling (one cycle per day)
+  const life = Math.min(lifeCycles, ch.cal);
+  const size = Ed / D;                             // kWh nameplate
+  const delivered = Ed * 365 * life;               // kWh over life
+  const cost = ch.price * size / delivered;        // A$ per kWh delivered
+  return { N, life, limitedBy: lifeCycles < ch.cal ? 'cycling' : 'calendar', size, delivered, cost, capex: ch.price * size };
+}
+function optimum(ch){
+  // DoD at which cycle life equals calendar life (cost minimum when beta > 1)
+  const D = Math.pow(ch.N100 / (365 * ch.cal), 1 / ch.beta);
+  return Math.max(0.1, Math.min(1, D));
+}
+
+// ---------- plots (fixed axes) ----------
+const DMIN = 0.1, DMAX = 1;
+function frame(svg, F, yTicks, yFn, yLabel){
+  const g = el('g', {}, svg);
+  const X = d => F.l + (d - DMIN) / (DMAX - DMIN) * F.w;
+  for (let p = 10; p <= 100; p += 10){
+    el('line', { x1: X(p / 100), y1: F.t, x2: X(p / 100), y2: F.t + F.h, stroke: GRID, 'stroke-width': 1 }, g);
+    el('text', { x: X(p / 100), y: F.t + F.h + 15, 'font-size': 11, fill: MUTED, 'text-anchor': 'middle' }, g, p + '%');
+  }
+  yTicks.forEach(([v, s, major]) => {
+    el('line', { x1: F.l, y1: yFn(v), x2: F.l + F.w, y2: yFn(v), stroke: GRID, 'stroke-width': major === false ? 0.5 : 1 }, g);
+    if (s) el('text', { x: F.l - 6, y: yFn(v) + 4, 'font-size': 11, fill: MUTED, 'text-anchor': 'end' }, g, s);
+  });
+  el('line', { x1: F.l, y1: F.t + F.h, x2: F.l + F.w, y2: F.t + F.h, stroke: INK, 'stroke-width': 1.3 }, g);
+  el('line', { x1: F.l, y1: F.t, x2: F.l, y2: F.t + F.h, stroke: INK, 'stroke-width': 1.3 }, g);
+  el('text', { x: F.l + F.w, y: F.t + F.h + 31, 'font-size': 11.5, fill: MUTED, 'text-anchor': 'end' }, g, 'depth of discharge each cycle');
+  el('text', { x: 13, y: F.t + F.h / 2, 'font-size': 11.5, fill: MUTED, 'text-anchor': 'middle', transform: `rotate(-90 13 ${F.t + F.h / 2})` }, g, yLabel);
+  return X;
+}
+// cycle-life plot: log y, 100 .. 100 000
+const FN = { l: 58, t: 12, w: 446, h: 190 };
+const NMIN = 100, NMAX = 100000;
+const YN = n => FN.t + FN.h - (Math.log10(n) - Math.log10(NMIN)) / (Math.log10(NMAX) - Math.log10(NMIN)) * FN.h;
+const ntick = [];
+for (let e = 2; e <= 5; e++){
+  ntick.push([Math.pow(10, e), Math.pow(10, e).toLocaleString('en-AU'), true]);
+  if (e < 5) [2, 5].forEach(m => ntick.push([m * Math.pow(10, e), '', false]));
+}
+const XN = frame($('plotN'), FN, ntick, YN, 'cycles to end of life (log scale)');
+const gN = el('g', {}, $('plotN'));
+// cost plot: linear y, 0 .. 1.5 A$/kWh
+const FC = { l: 58, t: 12, w: 446, h: 160 };
+const CMAX = 1.5;
+const YC = c => FC.t + FC.h - Math.min(c, CMAX) / CMAX * FC.h;
+const XC = frame($('plotC'), FC, [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5].map(v => [v, 'A$' + v.toFixed(2), true]), YC, 'A$ per kWh delivered');
+const gC = el('g', {}, $('plotC'));
+
+function pathFn(X, Y, f){
+  let d = '';
+  for (let j = 0; j <= 180; j++){ const D = DMIN + (DMAX - DMIN) * j / 180; d += (j ? 'L' : 'M') + X(D).toFixed(1) + ',' + Y(f(D)).toFixed(1); }
+  return d;
+}
+function draw(key, D, Ed){
+  const ch = CHEM[key], other = CHEM[key === 'lead' ? 'lfp' : 'lead'];
+  gN.innerHTML = ''; gC.innerHTML = '';
+  // cycle life
+  el('path', { d: pathFn(XN, YN, x => cycles(other, x)), fill: 'none', stroke: REFC, 'stroke-width': 2 }, gN);
+  el('text', { x: XN(0.97), y: YN(cycles(other, 0.97)) - 8, 'font-size': 11, fill: '#a39a8e', 'text-anchor': 'end' }, gN, other.name);
+  const calN = 365 * ch.cal;
+  el('line', { x1: FN.l, y1: YN(calN), x2: FN.l + FN.w, y2: YN(calN), stroke: FOCUS, 'stroke-width': 1.5, 'stroke-dasharray': '6,4' }, gN);
+  el('text', { x: FN.l + 6, y: YN(calN) - 6, 'font-size': 11, fill: FOCUS }, gN, ch.cal + ' years × 365 = ' + calN.toLocaleString('en-AU') + ' cycles');
+  el('path', { d: pathFn(XN, YN, x => cycles(ch, x)), fill: 'none', stroke: MAROON, 'stroke-width': 3 }, gN);
+  const r = evaluate(ch, D, Ed);
+  el('line', { x1: XN(D), y1: YN(r.N), x2: XN(D), y2: FN.t + FN.h, stroke: MAROON, 'stroke-width': 1, 'stroke-dasharray': '3,3' }, gN);
+  el('circle', { cx: XN(D), cy: YN(r.N), r: 5.5, fill: MAROON, stroke: '#fff', 'stroke-width': 1.5 }, gN);
+  const right = XN(D) > FN.l + FN.w - 110;
+  el('text', { x: XN(D) + (right ? -9 : 9), y: YN(r.N) - 9, 'font-size': 12, 'font-weight': 700, fill: MAROON, 'text-anchor': right ? 'end' : 'start' }, gN,
+     Math.round(r.N).toLocaleString('en-AU') + ' cycles');
+  // cost
+  const Dopt = optimum(ch), ropt = evaluate(ch, Dopt, Ed);
+  const otherCost = x => evaluate(other, x, Ed).cost;
+  el('path', { d: pathFn(XC, YC, otherCost), fill: 'none', stroke: REFC, 'stroke-width': 2 }, gC);
+  el('path', { d: pathFn(XC, YC, x => evaluate(ch, x, Ed).cost), fill: 'none', stroke: MAROON, 'stroke-width': 3 }, gC);
+  el('line', { x1: XC(Dopt), y1: FC.t, x2: XC(Dopt), y2: FC.t + FC.h, stroke: MUSTARD, 'stroke-width': 1.5, 'stroke-dasharray': '6,4' }, gC);
+  const oRight = XC(Dopt) > FC.l + FC.w - 120;
+  el('text', { x: XC(Dopt) + (oRight ? -6 : 6), y: FC.t + 12, 'font-size': 11, 'font-weight': 700, fill: MUSTARD, 'text-anchor': oRight ? 'end' : 'start' }, gC,
+     'cheapest ≈ ' + Math.round(Dopt * 100) + '% DoD');
+  el('circle', { cx: XC(D), cy: YC(r.cost), r: 5.5, fill: MAROON, stroke: '#fff', 'stroke-width': 1.5 }, gC);
+  return { r, Dopt, ropt };
+}
+
+// ---------- battery bar ----------
+const bSvg = $('bat');
+function drawBattery(D, Ed, size){
+  bSvg.innerHTML = '';
+  const SMAX = 200, x0 = 14, W = 290, y0 = 34, h = 40;
+  // full-scale outline represents the chosen battery; width scales with size on a fixed 0..SMAX kWh scale (sqrt to keep it legible)
+  const wB = Math.max(30, W * Math.sqrt(Math.min(size, SMAX) / SMAX));
+  el('rect', { x: x0, y: y0, width: wB, height: h, rx: 4, fill: '#f3efe8', stroke: INK, 'stroke-width': 1.6 }, bSvg);
+  el('rect', { x: x0 + wB, y: y0 + 12, width: 6, height: 16, fill: INK }, bSvg);
+  el('rect', { x: x0 + 2, y: y0 + 2, width: Math.max(1, (wB - 4) * D), height: h - 4, rx: 3, fill: MAROON, opacity: 0.88 }, bSvg);
+  el('text', { x: x0, y: 22, 'font-size': 12.5, 'font-weight': 700, fill: INK }, bSvg, 'Nameplate ' + size.toFixed(1) + ' kWh');
+  el('text', { x: x0, y: 96, 'font-size': 11.5, fill: MAROON, 'font-weight': 700 }, bSvg, 'used each day: ' + Ed.toFixed(1) + ' kWh (' + Math.round(D * 100) + '%)');
+  el('text', { x: x0, y: 112, 'font-size': 11, fill: MUTED }, bSvg, 'unused reserve: ' + (size - Ed).toFixed(1) + ' kWh   ·   bar width ∝ √capacity');
+}
+
+// ---------- controls ----------
+let chem = 'lead';
+const S = { D: $('sD'), E: $('sE') };
+const DEF = { D: 50, E: 10, chem: 'lead' };
+function setChem(k){ chem = k; $('bLead').setAttribute('aria-pressed', k === 'lead'); $('bLfp').setAttribute('aria-pressed', k === 'lfp'); update(); }
+function fmtA(c){ return 'A$' + c.toFixed(2); }
+function update(){
+  const D = +S.D.value / 100, Ed = +S.E.value, ch = CHEM[chem];
+  $('valD').textContent = Math.round(D * 100) + '%';
+  $('valE').textContent = Ed.toFixed(1) + ' kWh';
+  const { r, Dopt, ropt } = draw(chem, D, Ed);
+  drawBattery(D, Ed, r.size);
+  $('stS').textContent = r.size.toFixed(1) + ' kWh';
+  $('stSSub').textContent = 'costs A$' + Math.round(r.capex).toLocaleString('en-AU');
+  $('stN').textContent = Math.round(r.N).toLocaleString('en-AU');
+  $('stNSub').textContent = 'at ' + Math.round(D * 100) + '% DoD';
+  $('stL').textContent = r.life.toFixed(1) + ' years';
+  $('stLSub').textContent = 'limited by ' + r.limitedBy;
+  $('stC').textContent = fmtA(r.cost);
+  $('stCSub').textContent = (r.delivered / 1000).toFixed(1) + ' MWh over its life';
+  const near = Math.abs(D - Dopt) < 0.03;
+  const lc = chem === 'lead' ? 'lead–acid' : 'LFP';
+  if (near){
+    $('hint').innerHTML = 'You are at the <b>cheapest point</b> for ' + lc + ' (about ' + Math.round(Dopt * 100) + '% DoD): the battery wears out at about the same time as it ages out, so you use every cycle you paid for.';
+  } else if (r.limitedBy === 'calendar'){
+    $('hint').innerHTML = 'At this DoD the battery <b>ages out</b> (calendar life) before it wears out, so you paid for cycles you never use. Discharging more deeply needs a smaller battery. The cheapest point for ' + lc + ' is about <b>' + Math.round(Dopt * 100) + '% DoD</b>, at ' + fmtA(ropt.cost) + ' per kWh.';
+  } else {
+    $('hint').innerHTML = 'At this DoD the battery <b>wears out</b> (cycle life) before its calendar life ends. A shallower DoD would make each kWh cheaper: the cheapest point for ' + lc + ' is about <b>' + Math.round(Dopt * 100) + '% DoD</b>, at ' + fmtA(ropt.cost) + ' per kWh.';
+  }
+}
+$('bLead').addEventListener('click', () => setChem('lead'));
+$('bLfp').addEventListener('click', () => setChem('lfp'));
+Object.values(S).forEach(s => s.addEventListener('input', update));
+$('btnReset').addEventListener('click', () => { S.D.value = DEF.D; S.E.value = DEF.E; setChem(DEF.chem); });
+update();
+window.__dod = { CHEM, evaluate, optimum, cycles };
+})();
+</script>
+</body>
+</html>
