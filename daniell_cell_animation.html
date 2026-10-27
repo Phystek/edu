@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How the Daniell Cell Works — ELEC2005</title>
+<style>
+:root{
+  --ink:#1a1512; --paper:#faf7f2; --panel:#ffffff; --maroon:#7a1730;
+  --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a; --mustard:#c98a2c;
+  --serif:"Iowan Old Style","Georgia",serif;
+  --sans:"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+body{margin:0;background:#e6e6e4;color:var(--ink);font-family:var(--sans);}
+.wrap{max-width:960px;margin:0 auto;padding:24px 20px 36px;}
+header{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:6px 16px;
+  border-bottom:1px solid var(--grid);padding-bottom:12px;margin-bottom:14px;}
+.eyebrow{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin:0 0 4px;}
+h1{font-family:var(--serif);font-size:26px;letter-spacing:-0.01em;line-height:1.15;margin:0;font-weight:700;}
+.tag{font-size:12px;color:var(--muted);white-space:nowrap;}
+.intro{font-size:14px;line-height:1.55;margin:0 0 12px;max-width:820px;}
+.callout{background:#fbe9c6;border:1px solid #e0be6f;color:#5c4a12;border-radius:4px;padding:9px 12px;font-size:12.5px;line-height:1.45;margin:16px 0 0;}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start;}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0;}
+.panel{background:var(--panel);border:1px solid var(--grid);border-radius:4px;padding:14px 16px;min-width:0;}
+.panel-label{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 8px;}
+.sym{text-transform:none;letter-spacing:0;}
+svg{display:block;width:100%;height:auto;}
+svg text{font-family:var(--sans);user-select:none;-webkit-user-select:none;}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11.5px;color:var(--muted);margin-top:8px;min-height:1.4em;}
+.legend > span{display:inline-flex;align-items:center;gap:6px;}
+.legend > span > i{display:inline-block;width:22px;height:0;border-top:3px solid;}
+.legend > span > i.dot{width:10px;height:10px;border:none;border-radius:50%;}
+.chapter-n{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin:0 0 4px;}
+.story h2{font-family:var(--serif);font-size:20px;letter-spacing:-0.01em;line-height:1.2;margin:0 0 8px;}
+.story-text{font-family:var(--serif);font-size:15.5px;line-height:1.55;margin:0;min-height:10.5em;}
+.story-text b{color:var(--maroon);}
+.dots{display:flex;gap:6px;margin:14px 0 10px;}
+.dots button{flex:1;height:30px;border:1px solid var(--grid);border-radius:4px;background:var(--paper);color:var(--muted);
+  font:700 12px var(--sans);cursor:pointer;padding:0;}
+.dots button.done{background:#f3e6e9;color:var(--maroon);border-color:#e3c9cf;}
+.dots button[aria-current="step"]{background:var(--maroon);color:#fff;border-color:var(--maroon);}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;}
+.btn{flex:1 1 0;min-width:80px;padding:9px 10px;font:700 13px var(--sans);border-radius:4px;border:1px solid var(--ink);
+  background:transparent;color:var(--ink);cursor:pointer;line-height:1.2;}
+.btn.primary{background:var(--ink);color:var(--paper);flex:1.6 1 0;}
+@media (hover:hover){ .btn:hover{background:var(--ink);color:var(--paper);} .btn.primary:hover{background:var(--maroon);border-color:var(--maroon);} }
+.btn:disabled{opacity:0.35;cursor:default;pointer-events:none;}
+.btn.reset{display:block;width:100%;margin-top:12px;}
+button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
+.switch{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);margin-top:10px;cursor:pointer;}
+.switch input{accent-color:var(--maroon);width:15px;height:15px;margin:0;}
+.slider-block{margin-bottom:12px;}
+.slider-label-row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:4px;gap:8px;}
+.slider-value{font-weight:700;color:var(--maroon);font-variant-numeric:tabular-nums;white-space:nowrap;}
+input[type=range]{width:100%;accent-color:var(--maroon);margin:2px 0;}
+.slider-caption{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);}
+.seg{display:flex;border:1px solid var(--grid);border-radius:4px;overflow:hidden;margin-bottom:12px;}
+.seg button{flex:1;padding:8px 6px;font:700 12px var(--sans);background:var(--paper);color:var(--muted);cursor:pointer;border:none;border-left:1px solid var(--grid);}
+.seg button:first-child{border-left:none;}
+.seg button[aria-pressed="true"]{background:var(--maroon);color:#fff;}
+.ctl-label{font-size:13px;margin:0 0 5px;}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
+.stat-card{background:var(--paper);border:1px solid var(--grid);border-radius:4px;padding:9px 11px;}
+.stat-label{font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+.stat-value{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--maroon);white-space:nowrap;}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:2px;min-height:13px;}
+footer{text-align:center;color:var(--muted);font-size:11.5px;margin-top:26px;}
+@media (max-width:800px){
+  .wrap{padding:16px 12px 28px;}
+  h1{font-size:22px;}
+  .grid{grid-template-columns:minmax(0,1fr);gap:12px;}
+  .col{display:contents;}
+  .p-scene{order:1;} .p-plot{order:2;} .p-story{order:3;} .p-explore{order:4;}
+  .story-text{min-height:0;font-size:15px;}
+  .legend{font-size:11px;}
+}
+@media (pointer:coarse){ input[type=range]{height:30px;} .btn,.seg button,.dots button{min-height:40px;} }
+.motion-note{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--paper);border:1px solid var(--grid);border-radius:4px;padding:8px 12px;font-size:12.5px;margin:0 0 14px;}
+.motion-note .btn{flex:0 0 auto;padding:6px 12px;font-size:12px;}
+.noscript{background:#f7e9e7;border:1px solid #a3372c;color:#5c1a14;border-radius:4px;padding:10px 14px;font-size:14px;line-height:1.45;margin:0 0 14px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <noscript><div class="noscript"><b>This page needs JavaScript to run.</b> Open the file in a web browser (Chrome, Edge, Safari or Firefox), not in a file preview.</div></noscript>
+  <header>
+    <div>
+      <p class="eyebrow">Electrochemical storage &middot; Animated explainer</p>
+      <h1>How the Daniell Cell Works</h1>
+    </div>
+    <div class="tag">ELEC2005 &middot; Week 12</div>
+  </header>
+
+  <p class="intro">The Daniell cell (1836) turns a chemical reaction into an electric current. Watch why a wire alone is not
+  enough, how the salt bridge completes the circuit, what happens at each electrode, and why the voltage holds at about 1.1 V
+  until the copper ions run out.</p>
+
+  <div class="grid">
+    <div class="col">
+      <div class="panel p-scene">
+        <p class="panel-label">The cell<span id="sceneCh" class="sym" style="font-weight:400"></span></p>
+        <svg id="scene" viewBox="0 0 560 400" role="img" aria-label="A zinc electrode in zinc sulfate and a copper electrode in copper sulfate, joined by a wire with a load and by a salt bridge"></svg>
+        <div class="legend">
+          <span><i class="dot" style="background:#1c5f7a"></i><span>electron</span></span>
+          <span><i class="dot" style="background:#9aa3a8;border:1.5px solid #4f4840;box-sizing:border-box"></i><span>Zn²⁺</span></span>
+          <span><i class="dot" style="background:#2f6fa8"></i><span>Cu²⁺</span></span>
+          <span><i class="dot" style="background:#fff;border:2px solid #7a1730;box-sizing:border-box"></i><span>negative ion (SO₄²⁻, bridge anion)</span></span>
+          <span><i class="dot" style="background:#c98a2c"></i><span>bridge cation</span></span>
+        </div>
+      </div>
+      <div class="panel p-plot">
+        <p class="panel-label">Cell voltage as the copper ions are used up</p>
+        <svg id="plot" viewBox="0 0 520 240" role="img" aria-label="Cell voltage against charge delivered"></svg>
+        <div class="legend">
+          <span><i style="border-color:#7a1730;border-top-style:dashed"></i><span>EMF (Nernst equation)</span></span>
+          <span><i style="border-color:#1c5f7a"></i><span>terminal voltage with the load</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="panel story p-story" aria-live="polite">
+        <p class="chapter-n" id="chN"></p>
+        <h2 id="chTitle"></h2>
+        <p class="story-text" id="chText"></p>
+        <div class="dots" id="dots" role="group" aria-label="Chapters"></div>
+        <div class="btnrow">
+          <button type="button" class="btn" id="btnBack">&#9664; Back</button>
+          <button type="button" class="btn primary" id="btnPlay">Play</button>
+          <button type="button" class="btn" id="btnNext">Next &#9654;</button>
+        </div>
+        <label class="switch"><input type="checkbox" id="autoNext"> Carry on to the next chapter automatically</label>
+      </div>
+
+      <div class="panel p-explore">
+        <p class="panel-label">Take control</p>
+        <div class="slider-block">
+          <div class="slider-label-row"><span>Load resistance, <i>R</i></span><span class="slider-value" id="valR"></span></div>
+          <input type="range" id="sR" min="0" max="3" step="0.01" value="1.69897" aria-label="Load resistance, logarithmic">
+          <div class="slider-caption"><span>1 Ω</span><span>log scale</span><span>1 kΩ</span></div>
+        </div>
+        <div class="slider-block">
+          <div class="slider-label-row"><span>Copper ions used up</span><span class="slider-value" id="valX"></span></div>
+          <input type="range" id="sX" min="0" max="3" step="0.01" value="0" aria-label="Fraction of copper ions used, logarithmic towards empty">
+          <div class="slider-caption"><span>0% (fresh)</span><span>90%</span><span>99%</span><span>99.9%</span></div>
+        </div>
+        <p class="ctl-label">Salt bridge</p>
+        <div class="seg" id="segBridge" role="group" aria-label="Salt bridge">
+          <button type="button" data-v="1">In place</button>
+          <button type="button" data-v="0">Removed</button>
+        </div>
+        <button type="button" class="btn reset" id="btnReset">Reset to defaults</button>
+        <div class="stats">
+          <div class="stat-card"><div class="stat-label">Cell EMF</div><div class="stat-value" id="stE"></div><div class="stat-sub" id="stESub"></div></div>
+          <div class="stat-card"><div class="stat-label">Terminal voltage</div><div class="stat-value" id="stV"></div><div class="stat-sub" id="stVSub"></div></div>
+          <div class="stat-card"><div class="stat-label">Current</div><div class="stat-value" id="stI"></div><div class="stat-sub" id="stISub"></div></div>
+          <div class="stat-card"><div class="stat-label">Zinc dissolved</div><div class="stat-value" id="stZ"></div><div class="stat-sub" id="stZSub"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout"><b>A cartoon of the chemistry, with real numbers on the graph.</b> Ions and electrons are drawn far fewer,
+  larger and slower than real ones, the electrodes visibly thin and thicken, and the charge build-up without a salt bridge (which
+  really takes a tiny fraction of a second) is slowed down. The graph and readouts use the Nernst equation,
+  <i>E</i> = 1.10 V − (<i>RT</i>/2<i>F</i>) ln([Zn²⁺]/[Cu²⁺]), for 100 mL of 1 M solution in each half-cell at 25 °C. The internal
+  resistance (5 Ω when fresh) is made to rise as the copper ions run out, a simple stand-in for concentration polarisation.</div>
+
+  <footer>ELEC2005 &middot; Week 12 &middot; for concept exploration, not assessment</footer>
+</div>
+
+<script>
+(function(){
+'use strict';
+const NS = 'http://www.w3.org/2000/svg';
+const $ = id => document.getElementById(id);
+function el(tag, attrs, parent, text){
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+const INK = '#1a1512', MAROON = '#7a1730', FOCUS = '#1c5f7a', MUSTARD = '#c98a2c', MUTED = '#6b6156', GRID = '#e4ddd2';
+const ZNC = '#9aa3a8', CUC = '#2f6fa8', COPPER = '#c27a4a';
+function mix(a, b, f){
+  f = Math.max(0, Math.min(1, f));
+  const pa = [1, 3, 5].map(k => parseInt(a.substr(k, 2), 16)), pb = [1, 3, 5].map(k => parseInt(b.substr(k, 2), 16));
+  return '#' + pa.map((v, k) => Math.round(v + (pb[k] - v) * f).toString(16).padStart(2, '0')).join('');
+}
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const smooth = t => t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
+const ramp = (t, t0, t1, a, b) => a + (b - a) * smooth((t - t0) / (t1 - t0));
+
+// ---------- motion (animate even when the OS asks for reduced motion; offer a switch) ----------
+const OS_REDUCED = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+let REDUCED = false;
+function motionNote(){
+  if (!OS_REDUCED) return;
+  const d = document.createElement('div'); d.className = 'motion-note';
+  d.innerHTML = '<span>Your device’s <b>reduce motion</b> setting is on. This page is an animation, so it plays anyway.</span>';
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = 'Turn animation off';
+  b.addEventListener('click', () => { REDUCED = !REDUCED; b.textContent = REDUCED ? 'Turn animation on' : 'Turn animation off'; document.body.classList.toggle('reduced', REDUCED); });
+  d.appendChild(b);
+  const g = document.querySelector('.grid'); g.parentNode.insertBefore(d, g);
+}
+
+// =====================================================================================
+// Model: Daniell cell, 100 mL of 1 M ZnSO4 and 100 mL of 1 M CuSO4, 25 C.
+// x = fraction of the Cu2+ used. [Cu2+] = 1 - x, [Zn2+] = 1 + x (mol/L).
+// EMF E = E0 - (RT/2F) ln([Zn2+]/[Cu2+]);  internal resistance r = 5 + 0.05/[Cu2+] ohm (stand-in for polarisation).
+// =====================================================================================
+const E0 = 1.10, KN = 8.314462618 * 298.15 / (2 * 96485.33212), QMAX = 0.1 * 2 * 96485.33212 / 3600;   // Ah
+function cell(x, R, bridge){
+  const cu = Math.max(1e-6, 1 - x), zn = 1 + x;
+  const E = E0 - KN * Math.log(zn / cu), r = 5 + 0.05 / cu;
+  if (!bridge) return { E, r, I: 0, V: 0, cu, zn };            // no ionic path: no current, and a voltmeter reads nothing
+  const I = E / (R + r);
+  return { E, r, I, V: I * R, cu, zn };
+}
+const xFromSlider = s => s <= 0 ? 0 : 1 - Math.pow(10, -s);    // 0 .. 0.999
+
+// =====================================================================================
+// Story
+// =====================================================================================
+const RDEF = 50;
+const CH = [
+  { title: 'Two metals, two solutions', dur: 10,
+    at: t => ({ wire: 0, bridge: 0, block: 0, x: 0, R: RDEF, zz: 0, zc: 0, lab: 0 }),
+    beats: [[0, 'A zinc rod stands in zinc sulfate solution: the solution holds Zn²⁺ and SO₄²⁻ ions'],
+            [3, 'A copper rod stands in copper sulfate solution: the blue colour comes from Cu²⁺ ions'],
+            [6.5, 'Nothing joins the two half-cells, so nothing happens: the ions just wander']],
+    text: 'The Daniell cell has two <b>half-cells</b>. On the left, a <b>zinc</b> rod stands in zinc sulfate solution; on the right, a <b>copper</b> rod stands in copper sulfate solution, which is blue because of its Cu²⁺ ions. Zinc gives up electrons more readily than copper does, and that difference is what will drive the current. For now nothing joins the two sides, so nothing happens.' },
+  { title: 'A wire alone is not enough', dur: 12,
+    at: t => ({ wire: t >= 1 ? 1 : 0, bridge: 0, block: ramp(t, 2.5, 7, 0, 1), x: 0, R: RDEF, zz: 0, zc: 0, lab: 0 }),
+    beats: [[0, 'Join the two rods with a wire and a load'],
+            [1, 'Electrons start to flow from the zinc, through the load, to the copper'],
+            [3, 'Zinc ions enter the left solution, so it becomes positively charged; the right side becomes negative'],
+            [7, 'That charge pushes back on the electrons, and the current stops (really in far less than a second)']],
+    text: 'Join the rods with a wire. For an instant electrons flow from zinc to copper, but the two solutions immediately become <b>charged</b>: new Zn²⁺ ions make the left side positive, and removing Cu²⁺ leaves the right side with spare negative SO₄²⁻ ions. That charge opposes the flow, and the current stops almost at once. A circuit needs a complete loop, and here the loop is broken between the two solutions.' },
+  { title: 'The salt bridge completes the loop', dur: 13,
+    at: t => ({ wire: 1, bridge: ramp(t, 0.8, 2.2, 0, 1), block: ramp(t, 2.4, 4, 1, 0), x: 0, R: RDEF, zz: 0, zc: 0, lab: 0 }),
+    beats: [[0, 'Add a salt bridge: a tube of gel soaked in a salt such as KNO₃ or KCl'],
+            [2.4, 'Negative ions drift out of the bridge towards the zinc side, positive ions towards the copper side'],
+            [5.5, 'The charge build-up is cancelled, so the current flows steadily and the load takes power'],
+            [9, 'The loop is complete: electrons carry the current in the wire, ions carry it in the solutions']],
+    text: 'A <b>salt bridge</b> joins the two solutions with a gel full of a harmless salt. Its <b>negative ions</b> drift into the zinc side to balance the new Zn²⁺, and its <b>positive ions</b> drift into the copper side to replace the Cu²⁺ that is used up. Now the circuit is a complete loop: <b>electrons</b> carry the current through the wire, and <b>ions</b> carry it through the solutions and the bridge. The current flows steadily and the load takes power.' },
+  { title: 'Anode: zinc is oxidised', dur: 12,
+    at: t => ({ wire: 1, bridge: 1, block: 0, x: 0, R: RDEF, zz: ramp(t, 0.6, 1.6, 0, 1), zc: 0, lab: ramp(t, 0, 1, 0, 1) }),
+    beats: [[0, 'Zoom in on the surface of the zinc rod'],
+            [1.6, 'A zinc atom leaves the metal as a Zn²⁺ ion and moves into the solution'],
+            [4.5, 'It leaves two electrons behind in the rod: Zn → Zn²⁺ + 2e⁻'],
+            [7.5, 'Losing electrons is oxidation, so the zinc is the anode, and it is the negative terminal']],
+    text: 'At the zinc surface, zinc atoms leave the metal as <b>Zn²⁺ ions</b> and move into the solution, leaving two electrons each in the rod: <b>Zn → Zn²⁺ + 2e⁻</b>. Losing electrons is <b>oxidation</b>, so the zinc electrode is the <b>anode</b>. The electrons it collects make it the <b>negative terminal</b> of the cell, and they flow out into the wire. The zinc rod slowly dissolves.' },
+  { title: 'Cathode: copper ions are reduced', dur: 12,
+    at: t => ({ wire: 1, bridge: 1, block: 0, x: 0, R: RDEF, zz: 0, zc: ramp(t, 0.6, 1.6, 0, 1), lab: 1 }),
+    beats: [[0, 'Zoom in on the surface of the copper rod'],
+            [1.6, 'A Cu²⁺ ion from the solution reaches the copper surface'],
+            [4.5, 'It takes two electrons that arrived through the wire: Cu²⁺ + 2e⁻ → Cu'],
+            [7.5, 'Gaining electrons is reduction, so the copper is the cathode, and it is the positive terminal']],
+    text: 'At the copper surface, <b>Cu²⁺ ions</b> from the solution pick up the electrons that arrived through the wire and become copper atoms on the rod: <b>Cu²⁺ + 2e⁻ → Cu</b>. Gaining electrons is <b>reduction</b>, so the copper electrode is the <b>cathode</b> and the <b>positive terminal</b>. The overall reaction is Zn + Cu²⁺ → Zn²⁺ + Cu, worth <b>1.10 V</b> per cell under standard conditions: 0.34 V − (−0.76 V).' },
+  { title: '1.1 V, until the copper runs out', dur: 17,
+    at: t => ({ wire: 1, bridge: 1, block: 0, x: xFromSlider(ramp(t, 2, 14, 0, 3)), R: RDEF, zz: 0, zc: 0, lab: 1 }),
+    beats: [[0, 'Fast-forward: keep the load connected and watch the cell run down'],
+            [2, 'The zinc rod thins, the copper rod thickens, and the blue colour fades as Cu²⁺ is used up'],
+            [6, 'The voltage hardly changes: the EMF depends only on the logarithm of the concentration ratio'],
+            [11, 'Near the end there are too few Cu²⁺ ions left and the voltage collapses'],
+            [14.5, 'Used this way it is a primary cell: when the copper ions are gone, the chemicals are replaced']],
+    text: 'Keep the load connected and fast-forward. The zinc rod thins, the copper rod thickens, and the solution loses its blue colour. The voltage stays almost flat because the EMF depends on the <b>logarithm</b> of the concentration ratio (the <b>Nernst equation</b>), so it falls only gradually. Near the end there are too few copper ions to carry the current, and the voltage <b>collapses</b>: the same flat-then-knee discharge curve we will see for real batteries. Used like this, the Daniell cell is a <b>primary cell</b>: when it is exhausted, you replace the chemicals.' }
+];
+const EXPLORE = { title: 'Your turn',
+  text: 'Change the load and how much of the copper has been used. A small load resistance draws more current, so more of the EMF is lost inside the cell. Push the copper used past 99% and watch the voltage collapse. Then remove the salt bridge: with no ionic path there is no current, and a voltmeter across the terminals reads nothing.' };
+
+// =====================================================================================
+// State
+// =====================================================================================
+let mode = 'story', ch = 0, playing = false, chT = 0, clock = 0;
+let S = CH[0].at(0);
+let exp = { R: RDEF, xs: 0, bridge: 1 };
+function startChapter(k, autoplay){
+  mode = 'story'; ch = k; playing = !!autoplay && !REDUCED;
+  chT = playing ? 0 : CH[k].dur;
+  S = CH[k].at(chT);
+  resetParticles();
+  syncControls(); renderStory();
+}
+function tickStory(dt){
+  if (mode !== 'story' || !playing) return;
+  chT = Math.min(CH[ch].dur, chT + dt);
+  S = CH[ch].at(chT);
+  syncControls();
+  if (chT >= CH[ch].dur){
+    playing = false; renderStory();
+    if ($('autoNext').checked && ch < CH.length - 1) setTimeout(() => { if (mode === 'story' && !playing) startChapter(ch + 1, true); }, 1800);
+  }
+}
+
+// =====================================================================================
+// Scene
+// =====================================================================================
+const scene = $('scene');
+const LB = { x0: 40, x1: 230 }, RB = { x0: 330, x1: 520 }, BTOP = 150, BBOT = 330, LIQ = 172;
+const ZX = 100, CUX = 460, RTOP = 88, RBOT = 305, RW = 26, WY = 46;
+const BRL = 198, BRR = 362, BRY = 118, BRB = 296;                 // salt bridge centre-line
+const INS = { x: 208, y: 140, w: 144, h: 162 };                    // zoom inset
+let gZnRod, gCuRod, cuDep, cuSol, znSol, wireG, wirePath, loadPath, loadGlow, readout, bridgeG, labsG, capTxt, capNum, blockG;
+let insZn, insCu, insZnAtom, insZnE, insCuIon, insCuE, insZnLead, insCuLead, insZnLab, insCuLab, insZnAtomLab, insCuIonLab;
+let plusMarks = [], minusMarks = [];
+
+(function build(){
+  // solutions (left behind beakers)
+  znSol = el('rect', { x: LB.x0 + 1, y: LIQ, width: LB.x1 - LB.x0 - 2, height: BBOT - LIQ - 1, fill: '#eceff1' }, scene);
+  cuSol = el('rect', { x: RB.x0 + 1, y: LIQ, width: RB.x1 - RB.x0 - 2, height: BBOT - LIQ - 1, fill: '#8fb8da' }, scene);
+  [LB, RB].forEach(B => el('path', { d: `M${B.x0},${BTOP} V${BBOT} H${B.x1} V${BTOP}`, fill: 'none', stroke: INK, 'stroke-width': 2 }, scene));
+  [LB, RB].forEach(B => el('line', { x1: B.x0 + 1, y1: LIQ, x2: B.x1 - 1, y2: LIQ, stroke: '#9fb3c2', 'stroke-width': 1 }, scene));
+  el('text', { x: (LB.x0 + LB.x1) / 2, y: 347, 'font-size': 12, fill: INK, 'text-anchor': 'middle' }, scene, 'ZnSO₄ (aq)');
+  el('text', { x: (RB.x0 + RB.x1) / 2, y: 347, 'font-size': 12, fill: INK, 'text-anchor': 'middle' }, scene, 'CuSO₄ (aq)');
+  // salt bridge (fades in)
+  bridgeG = el('g', { opacity: 0 }, scene);
+  const bp = `M${BRL - 8},${BRB} V${BRY - 8} H${BRR + 8} V${BRB} H${BRR - 8} V${BRY + 8} H${BRL + 8} V${BRB} Z`;
+  el('path', { d: bp, fill: '#f3ead8', stroke: INK, 'stroke-width': 1.3 }, bridgeG);
+  el('text', { x: (BRL + BRR) / 2, y: BRY - 13, 'font-size': 11, fill: MUTED, 'text-anchor': 'middle' }, bridgeG, 'salt bridge');
+  // electrodes
+  gZnRod = el('rect', { x: ZX - RW / 2, y: RTOP, width: RW, height: RBOT - RTOP, fill: ZNC, stroke: INK, 'stroke-width': 1.3 }, scene);
+  gCuRod = el('rect', { x: CUX - RW / 2, y: RTOP, width: RW, height: RBOT - RTOP, fill: COPPER, stroke: INK, 'stroke-width': 1.3 }, scene);
+  cuDep = el('rect', { x: CUX - RW / 2, y: LIQ, width: RW, height: RBOT - LIQ, fill: '#d58a58', stroke: INK, 'stroke-width': 1.3, opacity: 0 }, scene);
+  el('text', { x: ZX - RW / 2 - 6, y: 128, 'font-size': 13, 'font-weight': 700, fill: INK, 'text-anchor': 'end' }, scene, 'Zn');
+  el('text', { x: CUX + RW / 2 + 6, y: 128, 'font-size': 13, 'font-weight': 700, fill: INK, 'text-anchor': 'start' }, scene, 'Cu');
+  // wire + load + readout
+  wireG = el('g', { opacity: 0 }, scene);
+  wirePath = el('path', { d: `M${ZX},${RTOP} V${WY} H250 M310,${WY} H${CUX} V${RTOP}`, fill: 'none', stroke: INK, 'stroke-width': 1.8 }, wireG);
+  let z = `M250,${WY}`; for (let i = 0; i < 8; i++) z += ` L${254 + i * 7},${i % 2 ? WY + 7 : WY - 7}`; z += ` L310,${WY}`;
+  loadGlow = el('ellipse', { cx: 280, cy: WY, rx: 40, ry: 16, fill: MUSTARD, opacity: 0 }, wireG);
+  loadPath = el('path', { d: z, fill: 'none', stroke: INK, 'stroke-width': 1.8 }, wireG);
+  el('text', { x: 280, y: WY + 22, 'font-size': 11, fill: MUTED, 'text-anchor': 'middle' }, wireG, 'load');
+  readout = el('text', { x: 280, y: 20, 'font-size': 12.5, 'font-weight': 700, fill: MAROON, 'text-anchor': 'middle' }, scene, '');
+  // terminal signs and electrode labels
+  labsG = el('g', { opacity: 0 }, scene);
+  el('text', { x: 10, y: 70, 'font-size': 12, 'font-weight': 700, fill: FOCUS }, labsG, 'anode (−)');
+  el('text', { x: 10, y: 84, 'font-size': 11, fill: FOCUS }, labsG, 'oxidation');
+  el('text', { x: 550, y: 70, 'font-size': 12, 'font-weight': 700, fill: FOCUS, 'text-anchor': 'end' }, labsG, 'cathode (+)');
+  el('text', { x: 550, y: 84, 'font-size': 11, fill: FOCUS, 'text-anchor': 'end' }, labsG, 'reduction');
+  // charge build-up marks (no bridge)
+  blockG = el('g', {}, scene);
+  for (let k = 0; k < 8; k++){
+    plusMarks.push(el('text', { x: 125 + (k % 4) * 24, y: 190 + Math.floor(k / 4) * 22, 'font-size': 17, 'font-weight': 700, fill: MAROON, 'text-anchor': 'middle', opacity: 0 }, blockG, '+'));
+    minusMarks.push(el('text', { x: 360 + (k % 4) * 22, y: 190 + Math.floor(k / 4) * 22, 'font-size': 19, 'font-weight': 700, fill: FOCUS, 'text-anchor': 'middle', opacity: 0 }, blockG, '−'));
+  }
+})();
+const gPart = el('g', {}, scene);      // ions, electrons
+const gFx = el('g', {}, scene);        // flashes
+// inset zooms (drawn on top)
+(function buildInsets(){
+  function frameInset(title){
+    const g = el('g', { opacity: 0 }, scene);
+    el('rect', { x: INS.x, y: INS.y, width: INS.w, height: INS.h, rx: 6, fill: '#fff', stroke: INK, 'stroke-width': 1.4 }, g);
+    el('text', { x: INS.x + INS.w / 2, y: INS.y + 15, 'font-size': 10.5, 'font-weight': 700, fill: MUTED, 'text-anchor': 'middle' }, g, title);
+    return g;
+  }
+  // zinc surface: metal on the left half of the inset
+  insZn = frameInset('ZOOM: ZINC SURFACE');
+  insZnLead = el('line', { x1: ZX + RW / 2, y1: 250, x2: INS.x, y2: 250, stroke: INK, 'stroke-width': 1, 'stroke-dasharray': '3,3', opacity: 0 }, scene);
+  el('rect', { x: INS.x + 6, y: INS.y + 24, width: 58, height: INS.h - 54, fill: '#dfe3e6' }, insZn);
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 5; j++)
+    if (!(i === 2 && j === 3)) el('circle', { cx: INS.x + 16 + i * 18, cy: INS.y + 34 + j * 17, r: 8, fill: ZNC, stroke: '#4f4840', 'stroke-width': 1 }, insZn);
+  el('rect', { x: INS.x + 66, y: INS.y + 24, width: INS.w - 72, height: INS.h - 54, fill: '#eceff1' }, insZn);
+  insZnAtom = el('circle', { r: 8, fill: ZNC, stroke: '#4f4840', 'stroke-width': 1.2 }, insZn);
+  insZnAtomLab = el('text', { 'font-size': 9, 'font-weight': 700, fill: INK, 'text-anchor': 'middle', opacity: 0 }, insZn, '2+');
+  insZnE = [0, 1].map(() => el('circle', { r: 3.6, fill: FOCUS }, insZn));
+  insZnLab = el('text', { x: INS.x + INS.w / 2, y: INS.y + INS.h - 10, 'font-size': 11.5, 'font-weight': 700, fill: MAROON, 'text-anchor': 'middle' }, insZn, 'Zn → Zn²⁺ + 2e⁻');
+  el('text', { x: INS.x + 35, y: INS.y + INS.h - 34, 'font-size': 9.5, fill: MUTED, 'text-anchor': 'middle' }, insZn, 'zinc metal');
+  el('text', { x: INS.x + 105, y: INS.y + INS.h - 34, 'font-size': 9.5, fill: MUTED, 'text-anchor': 'middle' }, insZn, 'solution');
+  // copper surface: metal on the right half
+  insCu = frameInset('ZOOM: COPPER SURFACE');
+  insCuLead = el('line', { x1: INS.x + INS.w, y1: 250, x2: CUX - RW / 2, y2: 250, stroke: INK, 'stroke-width': 1, 'stroke-dasharray': '3,3', opacity: 0 }, scene);
+  el('rect', { x: INS.x + 6, y: INS.y + 24, width: INS.w - 72, height: INS.h - 54, fill: '#cfe0f0' }, insCu);
+  el('rect', { x: INS.x + INS.w - 64, y: INS.y + 24, width: 58, height: INS.h - 54, fill: '#f1dccd' }, insCu);
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 5; j++)
+    if (!(i === 2 && j === 2)) el('circle', { cx: INS.x + INS.w - 16 - i * 18, cy: INS.y + 34 + j * 17, r: 8, fill: COPPER, stroke: '#5e3a22', 'stroke-width': 1 }, insCu);
+  insCuIon = el('circle', { r: 8, fill: CUC, stroke: '#1d4569', 'stroke-width': 1.2 }, insCu);
+  insCuIonLab = el('text', { 'font-size': 9, 'font-weight': 700, fill: '#fff', 'text-anchor': 'middle' }, insCu, '2+');
+  insCuE = [0, 1].map(() => el('circle', { r: 3.6, fill: FOCUS }, insCu));
+  insCuLab = el('text', { x: INS.x + INS.w / 2, y: INS.y + INS.h - 10, 'font-size': 11.5, 'font-weight': 700, fill: MAROON, 'text-anchor': 'middle' }, insCu, 'Cu²⁺ + 2e⁻ → Cu');
+  el('text', { x: INS.x + 39, y: INS.y + INS.h - 34, 'font-size': 9.5, fill: MUTED, 'text-anchor': 'middle' }, insCu, 'solution');
+  el('text', { x: INS.x + INS.w - 35, y: INS.y + INS.h - 34, 'font-size': 9.5, fill: MUTED, 'text-anchor': 'middle' }, insCu, 'copper metal');
+})();
+// step caption bar
+el('rect', { x: 8, y: 358, width: 544, height: 38, rx: 4, fill: '#faf7f2', stroke: GRID }, scene);
+capNum = el('text', { x: 30, y: 382, 'font-size': 11, 'font-weight': 700, fill: MAROON, 'text-anchor': 'middle' }, scene, '');
+capTxt = el('text', { x: 54, y: 382, 'font-size': 12.5, fill: INK }, scene, '');
+
+// ---------- particles ----------
+let ionsL = [], ionsR = [], wireE = [], bridgeI = [], flashes = [];
+let emitAcc = 0, depAcc = 0, wireOff = 0;
+const rnd = (a, b) => a + Math.random() * (b - a);
+function inLiquid(B, rodX){
+  let x, y, tries = 0;
+  do { x = rnd(B.x0 + 10, B.x1 - 10); y = rnd(LIQ + 10, BBOT - 10); tries++; }
+  while (tries < 30 && (Math.abs(x - rodX) < RW / 2 + 10 || (S.bridge > 0.5 && (Math.abs(x - BRL) < 14 || Math.abs(x - BRR) < 14) && y < BRB + 6)));
+  return { x, y };
+}
+function makeIon(B, type, rodX, pos){
+  const p = pos || inLiquid(B, rodX);
+  const r = type === 'so4' ? 3.4 : 5;
+  const fill = type === 'zn' ? ZNC : type === 'cu' ? CUC : '#fff';
+  const stroke = type === 'zn' ? '#4f4840' : type === 'cu' ? '#1d4569' : MAROON;
+  const c = el('circle', { cx: p.x, cy: p.y, r, fill, stroke, 'stroke-width': type === 'so4' ? 1.6 : 1.1 }, gPart);
+  return { x: p.x, y: p.y, vx: rnd(-8, 8), vy: rnd(-8, 8), type, c, life: 1, dying: false, B, rodX };
+}
+function resetParticles(){
+  gPart.innerHTML = ''; gFx.innerHTML = '';
+  ionsL = []; ionsR = []; wireE = []; bridgeI = []; flashes = [];
+  for (let k = 0; k < 10; k++) ionsL.push(makeIon(LB, 'zn', ZX));
+  for (let k = 0; k < 8; k++) ionsL.push(makeIon(LB, 'so4', ZX));
+  const nCu = Math.round(14 * (1 - S.x));
+  for (let k = 0; k < nCu; k++) ionsR.push(makeIon(RB, 'cu', CUX));
+  for (let k = 0; k < 8; k++) ionsR.push(makeIon(RB, 'so4', CUX));
+  for (let k = 0; k < 16; k++) wireE.push({ u: k / 16, c: el('circle', { r: 3.6, fill: FOCUS, opacity: 0 }, gPart) });
+  for (let k = 0; k < 18; k++){
+    const an = k % 2 === 0;
+    bridgeI.push({ s: (k + 0.5) / 18, an, c: el('circle', { r: 3.4, fill: an ? '#fff' : MUSTARD, stroke: an ? MAROON : '#8a5f14', 'stroke-width': an ? 1.6 : 1, opacity: 0 }, gPart) });
+  }
+}
+// wire path for electrons: Zn top -> up -> across -> Cu top
+const WP = [[ZX, RTOP], [ZX, WY], [CUX, WY], [CUX, RTOP]];
+const WLEN = (RTOP - WY) * 2 + (CUX - ZX);
+function wirePos(u){
+  let d = u * WLEN;
+  for (let i = 0; i < 3; i++){
+    const [x0, y0] = WP[i], [x1, y1] = WP[i + 1], L = Math.hypot(x1 - x0, y1 - y0);
+    if (d <= L){ const f = d / L; return [x0 + (x1 - x0) * f, y0 + (y1 - y0) * f]; }
+    d -= L;
+  }
+  return WP[3];
+}
+// bridge path: left leg bottom -> up -> across -> right leg bottom
+const BLEN = (BRB - BRY) * 2 + (BRR - BRL);
+function bridgePos(s){
+  let d = s * BLEN;
+  if (d < BRB - BRY) return [BRL, BRB - d];
+  d -= BRB - BRY;
+  if (d < BRR - BRL) return [BRL + d, BRY];
+  d -= BRR - BRL;
+  return [BRR, BRY + d];
+}
+function flash(x, y, col){ flashes.push({ x, y, t: 0, c: el('circle', { cx: x, cy: y, r: 4, fill: col, opacity: 0.8 }, gFx) }); }
+
+// =====================================================================================
+// Plot (fixed axes)
+// =====================================================================================
+const plot = $('plot');
+const PF = { l: 50, t: 14, w: 450, h: 168 };
+const PX = q => PF.l + q / 5.5 * PF.w, PY = v => PF.t + PF.h - v / 1.3 * PF.h;
+(function axes(){
+  const g = el('g', {}, plot);
+  for (let q = 0; q <= 5.5 + 1e-9; q += 0.5){
+    const major = Math.abs(q - Math.round(q)) < 1e-9;
+    el('line', { x1: PX(q), y1: PF.t, x2: PX(q), y2: PF.t + PF.h, stroke: GRID, 'stroke-width': major ? 1 : 0.5 }, g);
+    if (major) el('text', { x: PX(q), y: PF.t + PF.h + 15, 'font-size': 11, fill: MUTED, 'text-anchor': 'middle' }, g, q);
+  }
+  for (let v = 0; v <= 1.3 + 1e-9; v += 0.25){
+    if (v > 1.26) break;
+    el('line', { x1: PF.l, y1: PY(v), x2: PF.l + PF.w, y2: PY(v), stroke: GRID, 'stroke-width': 1 }, g);
+    el('text', { x: PF.l - 6, y: PY(v) + 4, 'font-size': 11, fill: MUTED, 'text-anchor': 'end' }, g, v.toFixed(2));
+  }
+  el('line', { x1: PX(QMAX), y1: PF.t, x2: PX(QMAX), y2: PF.t + PF.h, stroke: MUTED, 'stroke-width': 1, 'stroke-dasharray': '2,3' }, g);
+  el('text', { x: PX(QMAX) - 4, y: PF.t + 12, 'font-size': 10, fill: MUTED, 'text-anchor': 'end' }, g, 'all Cu²⁺ used');
+  el('line', { x1: PF.l, y1: PF.t + PF.h, x2: PF.l + PF.w, y2: PF.t + PF.h, stroke: INK, 'stroke-width': 1.3 }, g);
+  el('line', { x1: PF.l, y1: PF.t, x2: PF.l, y2: PF.t + PF.h, stroke: INK, 'stroke-width': 1.3 }, g);
+  el('text', { x: PF.l + PF.w, y: PF.t + PF.h + 31, 'font-size': 11.5, fill: MUTED, 'text-anchor': 'end' }, g, 'charge delivered (Ah) · 100 mL of 1 M CuSO₄ holds 5.36 Ah');
+  el('text', { x: 13, y: PF.t + PF.h / 2, 'font-size': 11.5, fill: MUTED, 'text-anchor': 'middle', transform: `rotate(-90 13 ${PF.t + PF.h / 2})` }, g, 'voltage (V)');
+})();
+const pE = el('path', { fill: 'none', stroke: MAROON, 'stroke-width': 2, 'stroke-dasharray': '6,4' }, plot);
+const pV = el('path', { fill: 'none', stroke: FOCUS, 'stroke-width': 2.8 }, plot);
+const pDot = el('circle', { r: 5.5, fill: FOCUS, stroke: '#fff', 'stroke-width': 1.5 }, plot);
+const pLab = el('text', { 'font-size': 11.5, 'font-weight': 700, fill: FOCUS }, plot, '');
+let lastPlotKey = '';
+function drawPlot(R, bridge, x){
+  const key = R.toFixed(3) + '|' + bridge;
+  if (key !== lastPlotKey){
+    lastPlotKey = key;
+    let dE = '', dV = '';
+    for (let j = 0; j <= 300; j++){
+      const xx = j <= 200 ? 0.99 * j / 200 : 1 - 0.01 * Math.pow(10, -2.7 * (j - 200) / 100);   // dense near empty
+      const c = cell(xx, R, true);
+      dE += (j ? 'L' : 'M') + PX(xx * QMAX).toFixed(1) + ',' + PY(c.E).toFixed(1);
+      dV += (j ? 'L' : 'M') + PX(xx * QMAX).toFixed(1) + ',' + PY(Math.max(0, c.V)).toFixed(1);
+    }
+    pE.setAttribute('d', dE); pV.setAttribute('d', dV);
+  }
+  pV.setAttribute('opacity', bridge ? 1 : 0.25);
+  const c = cell(x, R, bridge);
+  const v = bridge ? c.V : 0;
+  pDot.setAttribute('cx', PX(x * QMAX)); pDot.setAttribute('cy', PY(v));
+  const right = PX(x * QMAX) > PF.l + PF.w - 130;
+  pLab.setAttribute('x', PX(x * QMAX) + (right ? -9 : 9)); pLab.setAttribute('y', PY(v) + (v > 0.6 ? 20 : -9));
+  pLab.setAttribute('text-anchor', right ? 'end' : 'start');
+  pLab.textContent = bridge ? v.toFixed(3) + ' V' : '0 V: no salt bridge';
+}
+
+// =====================================================================================
+// Frame update
+// =====================================================================================
+function current(){
+  // returns { c (cell model), I (A, shown), flow (0..~3, animation speed) }
+  const st = mode === 'explore' ? { wire: 1, bridge: exp.bridge, block: exp.bridge ? 0 : 1, x: xFromSlider(exp.xs), R: exp.R } : S;
+  const c = cell(st.x, st.R, true);
+  let I = st.wire > 0.5 ? c.I * (1 - st.block) : 0;
+  if (mode === 'explore' && !exp.bridge) I = 0;
+  if (mode === 'story' && st.bridge < 0.5 && st.wire > 0.5) I = c.I * (1 - st.block);   // transient without a bridge
+  return { st, c, I, flow: I / 0.02 };
+}
+function step(dt){
+  const { st, c, I, flow } = current();
+  const f = REDUCED ? 0 : clamp(flow, 0, 5);
+  const xNow = st.x;
+  // ----- solutions, rods
+  cuSol.setAttribute('fill', mix('#eef3f6', '#8fb8da', 1 - xNow));
+  const wZn = RW * (1 - 0.5 * xNow);
+  gZnRod.setAttribute('x', ZX - wZn / 2); gZnRod.setAttribute('width', wZn);
+  gZnRod.setAttribute('y', RTOP); gZnRod.setAttribute('height', RBOT - RTOP);
+  const wCu = RW + 14 * xNow;
+  cuDep.setAttribute('x', CUX - wCu / 2); cuDep.setAttribute('width', wCu); cuDep.setAttribute('opacity', xNow > 0.01 ? 1 : 0);
+  // ----- wire, load, bridge, labels
+  const wireOn = mode === 'explore' ? 1 : st.wire;
+  wireG.setAttribute('opacity', wireOn);
+  const bridgeOn = mode === 'explore' ? exp.bridge : st.bridge;
+  bridgeG.setAttribute('opacity', bridgeOn.toFixed(2));
+  labsG.setAttribute('opacity', (mode === 'explore' ? 1 : st.lab).toFixed(2));
+  const P = I * I * st.R;
+  loadGlow.setAttribute('opacity', (0.55 * clamp(P / 0.022, 0, 1)).toFixed(2));
+  loadPath.setAttribute('stroke', mix(INK, '#c2581f', clamp(P / 0.022, 0, 1)));
+  const vShown = wireOn > 0.5 ? I * st.R : 0;
+  readout.textContent = wireOn > 0.5 ? 'V = ' + vShown.toFixed(2) + ' V   ·   I = ' + (I * 1000).toFixed(1) + ' mA' : '';
+  // charge build-up marks (no bridge)
+  const block = mode === 'explore' ? (exp.bridge ? 0 : 1) : st.block * (1 - smooth(st.bridge * 2 - 0.4));
+  plusMarks.forEach((m, k) => m.setAttribute('opacity', clamp(block * 8 - k, 0, 1).toFixed(2)));
+  minusMarks.forEach((m, k) => m.setAttribute('opacity', clamp(block * 8 - k, 0, 1).toFixed(2)));
+  // ----- electrons in the wire
+  wireOff = (wireOff + f * 0.06 * dt) % 1;
+  wireE.forEach(e => {
+    const u = (e.u + wireOff) % 1, [x, y] = wirePos(u);
+    e.c.setAttribute('cx', x.toFixed(1)); e.c.setAttribute('cy', y.toFixed(1));
+    e.c.setAttribute('opacity', wireOn > 0.5 && I > 1e-5 ? 1 : wireOn > 0.5 ? 0.35 : 0);
+  });
+  // ----- bridge ions
+  bridgeI.forEach(b => {
+    if (!REDUCED){ b.s += (b.an ? -1 : 1) * f * 0.035 * dt; b.s = ((b.s % 1) + 1) % 1; }
+    const [x, y] = bridgePos(b.s);
+    const jig = REDUCED ? 0 : 1.5 * Math.sin(clock * 5 + b.s * 40);
+    b.c.setAttribute('cx', (x + (y === BRY ? 0 : jig)).toFixed(1)); b.c.setAttribute('cy', (y + (y === BRY ? jig : 0)).toFixed(1));
+    b.c.setAttribute('opacity', bridgeOn.toFixed(2));
+  });
+  // ----- anode: emit Zn2+ from the rod surface
+  if (!REDUCED && I > 1e-5){
+    emitAcc += f * 0.9 * dt;
+    while (emitAcc >= 1){
+      emitAcc -= 1;
+      const side = Math.random() < 0.6 ? 1 : -1, y = rnd(LIQ + 14, RBOT - 8);
+      const x = ZX + side * (wZn / 2 + 6);
+      const ion = makeIon(LB, 'zn', ZX, { x, y }); ion.vx = side * rnd(18, 30); ionsL.push(ion); flash(x, y, '#e9b04a');
+      // keep the picture bounded: retire the oldest zinc ion
+      const zns = ionsL.filter(q => q.type === 'zn' && !q.dying);
+      if (zns.length > 18) zns[0].dying = true;
+    }
+  }
+  // ----- cathode: Cu2+ drift to the rod and deposit
+  const cuTarget = Math.round(14 * (1 - xNow));
+  ionsR.forEach(q => {
+    if (q.type !== 'cu' || q.dying || REDUCED || I < 1e-5) return;
+    const dx = CUX - q.x; q.vx += Math.sign(dx) * f * 9 * dt;
+    if (Math.abs(dx) < wCu / 2 + 6 && q.y > LIQ && q.y < RBOT){ q.dying = true; q.depo = true; flash(CUX + Math.sign(-dx) * (wCu / 2), q.y, '#e9b04a'); }
+  });
+  const cuAlive = ionsR.filter(q => q.type === 'cu' && !q.dying).length;
+  if (cuAlive < cuTarget && !REDUCED){ depAcc += dt * 1.5; if (depAcc > 1){ depAcc = 0; const p = { x: Math.random() < 0.5 ? rnd(RB.x0 + 10, BRR - 16) : rnd(RB.x1 - 30, RB.x1 - 10), y: rnd(LIQ + 10, BBOT - 10) }; ionsR.push(makeIon(RB, 'cu', CUX, p)); } }
+  if (cuAlive > cuTarget){ const q = ionsR.find(q => q.type === 'cu' && !q.dying); if (q) q.dying = true; }
+  // ----- random walk for all ions
+  [[ionsL, LB, wZn], [ionsR, RB, wCu]].forEach(([arr, B, wRod]) => {
+    arr.forEach(q => {
+      if (!REDUCED){
+        q.vx += rnd(-1, 1) * 60 * dt; q.vy += rnd(-1, 1) * 60 * dt;
+        q.vx *= 0.96; q.vy *= 0.96;
+        q.x += q.vx * dt; q.y += q.vy * dt;
+      }
+      if (q.x < B.x0 + 7){ q.x = B.x0 + 7; q.vx = Math.abs(q.vx); }
+      if (q.x > B.x1 - 7){ q.x = B.x1 - 7; q.vx = -Math.abs(q.vx); }
+      if (q.y < LIQ + 7){ q.y = LIQ + 7; q.vy = Math.abs(q.vy); }
+      if (q.y > BBOT - 7){ q.y = BBOT - 7; q.vy = -Math.abs(q.vy); }
+      const rx = B === LB ? ZX : CUX;
+      if (!q.depo && Math.abs(q.x - rx) < wRod / 2 + 6 && q.y < RBOT + 6){ q.x = rx + Math.sign(q.x - rx || 1) * (wRod / 2 + 6); q.vx = -q.vx; }
+      if (q.dying){ q.life -= dt * (q.depo ? 4 : 1.2); if (REDUCED) q.life = 0; }
+      q.c.setAttribute('cx', q.x.toFixed(1)); q.c.setAttribute('cy', q.y.toFixed(1)); q.c.setAttribute('opacity', clamp(q.life, 0, 1).toFixed(2));
+    });
+  });
+  ionsL = ionsL.filter(q => { if (q.life <= 0){ q.c.remove(); return false; } return true; });
+  ionsR = ionsR.filter(q => { if (q.life <= 0){ q.c.remove(); return false; } return true; });
+  // ----- flashes
+  flashes.forEach(fl => { fl.t += dt; fl.c.setAttribute('r', (4 + 14 * fl.t).toFixed(1)); fl.c.setAttribute('opacity', clamp(0.8 - 1.6 * fl.t, 0, 1).toFixed(2)); });
+  flashes = flashes.filter(fl => { if (fl.t > 0.5){ fl.c.remove(); return false; } return true; });
+  // ----- zoom insets
+  const zz = mode === 'explore' ? 0 : st.zz, zc = mode === 'explore' ? 0 : st.zc;
+  insZn.setAttribute('opacity', zz.toFixed(2)); insZnLead.setAttribute('opacity', zz.toFixed(2));
+  insCu.setAttribute('opacity', zc.toFixed(2)); insCuLead.setAttribute('opacity', zc.toFixed(2));
+  const T = 3.2, p = REDUCED ? 0.75 : ((clock % T) / T);
+  // zinc: an atom at the surface (column 3, row 3) leaves into the solution; two electrons go back into the metal and up
+  {
+    const ax0 = INS.x + 52, ay = INS.y + 34 + 3 * 17, s = smooth((p - 0.15) / 0.45);
+    insZnAtom.setAttribute('cx', (ax0 + 56 * s).toFixed(1)); insZnAtom.setAttribute('cy', (ay + 6 * Math.sin(s * 3)).toFixed(1));
+    insZnAtom.setAttribute('stroke', s > 0.3 ? MAROON : '#4f4840'); insZnAtom.setAttribute('stroke-width', s > 0.3 ? 2 : 1.2);
+    insZnAtomLab.setAttribute('x', (ax0 + 56 * s).toFixed(1)); insZnAtomLab.setAttribute('y', (ay + 3 + 6 * Math.sin(s * 3)).toFixed(1));
+    insZnAtomLab.setAttribute('opacity', s > 0.3 ? 1 : 0);
+    insZnE.forEach((e, k) => {
+      const se = smooth((p - 0.35) / 0.5);
+      const ex = ax0 - 4 + (k ? 6 : -6) - 40 * se, ey = ay + (k ? 5 : -5) - 60 * se;
+      e.setAttribute('cx', ex.toFixed(1)); e.setAttribute('cy', ey.toFixed(1));
+      e.setAttribute('opacity', p < 0.15 ? 0 : clamp(1.6 - 1.8 * se, 0, 1).toFixed(2));
+    });
+  }
+  // copper: a Cu2+ ion drifts in from the solution; two electrons come out of the metal; it becomes a copper atom
+  {
+    const ax1 = INS.x + INS.w - 52, ay = INS.y + 34 + 2 * 17, s = smooth((p - 0.05) / 0.5);
+    const ix = ax1 - 60 * (1 - s);
+    insCuIon.setAttribute('cx', ix.toFixed(1)); insCuIon.setAttribute('cy', (ay + 6 * Math.sin((1 - s) * 3)).toFixed(1));
+    const turned = smooth((p - 0.6) / 0.15);
+    insCuIon.setAttribute('fill', mix(CUC, COPPER, turned)); insCuIon.setAttribute('stroke', turned > 0.5 ? '#5e3a22' : '#1d4569');
+    insCuIonLab.setAttribute('x', ix.toFixed(1)); insCuIonLab.setAttribute('y', (ay + 3 + 6 * Math.sin((1 - s) * 3)).toFixed(1));
+    insCuIonLab.setAttribute('opacity', (1 - turned).toFixed(2));
+    insCuE.forEach((e, k) => {
+      const se = smooth((p - 0.3) / 0.32);
+      const sx = INS.x + INS.w - 12, sy = INS.y + 30 + (k ? 10 : 0);
+      e.setAttribute('cx', (sx + (ax1 + (k ? 4 : -4) - sx) * se).toFixed(1)); e.setAttribute('cy', (sy + (ay + (k ? 4 : -4) - sy) * se).toFixed(1));
+      e.setAttribute('opacity', p < 0.3 ? 0 : (1 - turned).toFixed(2));
+    });
+  }
+  // ----- caption
+  let cap = '', num = '';
+  if (mode === 'story'){
+    const b = CH[ch].beats; let n = 0; b.forEach((x, i) => { if (chT >= x[0]) n = i; });
+    cap = b[n][1]; num = `${n + 1}/${b.length}`;
+  } else {
+    num = '·';
+    cap = !exp.bridge ? 'Salt bridge removed: no ionic path, so no current flows and the voltmeter reads zero'
+      : xNow > 0.995 ? 'Almost no copper ions are left: the cell cannot sustain the current and the voltage collapses'
+      : 'Electrons flow from zinc to copper through the load; ions carry the current through the bridge';
+  }
+  if (capTxt._cap !== cap){ capTxt._cap = cap; setCaption(cap); }
+  if (capNum.textContent !== num) capNum.textContent = num;
+  drawPlot(st.R, mode === 'explore' ? exp.bridge === 1 : st.bridge > 0.5 && st.wire > 0.5, xNow);
+  updateStats(st, c, I, mode === 'explore' ? exp.bridge === 1 : st.bridge > 0.5);
+}
+function setCaption(cap){
+  capTxt.innerHTML = '';
+  const lines = [];
+  if (cap.length <= 78) lines.push(cap);
+  else { const words = cap.split(' '); let a = ''; words.forEach(w => { const t = a ? a + ' ' + w : w; if (t.length > 78 && a){ lines.push(a); a = w; } else a = t; }); lines.push(a); }
+  const fs = lines.length > 1 ? 11.3 : 12.5;
+  capTxt.setAttribute('font-size', fs); capTxt.setAttribute('y', lines.length > 1 ? 374 : 382);
+  lines.forEach((ln, i) => el('tspan', i ? { x: 54, dy: fs * 1.3 } : { x: 54 }, capTxt, ln));
+}
+
+// =====================================================================================
+// UI
+// =====================================================================================
+function fmtR(r){ return r < 10 ? r.toFixed(1) + ' Ω' : r < 1000 ? r.toFixed(0) + ' Ω' : (r / 1000).toFixed(1) + ' kΩ'; }
+function fmtX(x){ const p = 100 * x; return p < 99 ? p.toFixed(0) + '%' : p.toFixed(1) + '%'; }
+function syncControls(){
+  const st = mode === 'explore' ? null : S;
+  if (st){
+    $('sR').value = Math.log10(st.R).toFixed(2);
+    $('sX').value = st.x <= 0 ? 0 : Math.min(3, -Math.log10(1 - st.x)).toFixed(2);
+  }
+  const b = mode === 'explore' ? exp.bridge : (S.bridge > 0.5 ? 1 : 0);
+  $('segBridge').querySelectorAll('button').forEach(btn => btn.setAttribute('aria-pressed', String(+btn.dataset.v === b)));
+}
+function renderStory(){
+  const exploring = mode === 'explore', c = exploring ? EXPLORE : CH[ch];
+  $('chN').textContent = exploring ? 'Explore' : `Chapter ${ch + 1} of ${CH.length}`;
+  $('chTitle').innerHTML = c.title; $('chText').innerHTML = c.text;
+  $('sceneCh').textContent = exploring ? ' · exploring' : ` · chapter ${ch + 1}`;
+  $('dots').querySelectorAll('button').forEach((b, k) => {
+    b.classList.toggle('done', k < ch);
+    if (k === ch && !exploring) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+  });
+  $('btnPlay').textContent = exploring ? 'Back to the story' : playing ? 'Pause' : (chT >= CH[ch].dur ? 'Replay chapter' : 'Play chapter');
+  $('btnBack').disabled = ch === 0 && !exploring; $('btnNext').disabled = ch === CH.length - 1 && !exploring;
+  $('btnNext').classList.toggle('primary', !exploring && !playing && ch < CH.length - 1 && chT >= CH[ch].dur);
+  $('btnPlay').classList.toggle('primary', exploring || playing || chT < CH[ch].dur);
+}
+function showScene(){
+  if (window.matchMedia('(max-width:800px)').matches){
+    const r = document.querySelector('.p-scene').getBoundingClientRect();
+    if (r.top < 0 || r.top > 80) document.querySelector('.p-scene').scrollIntoView({ block: 'start', behavior: REDUCED ? 'auto' : 'smooth' });
+  }
+}
+CH.forEach((c, k) => {
+  const b = document.createElement('button'); b.type = 'button'; b.textContent = k + 1; b.title = c.title.replace(/<[^>]+>/g, '');
+  b.setAttribute('aria-label', 'Chapter ' + (k + 1) + ': ' + b.title);
+  b.addEventListener('click', () => { startChapter(k, true); showScene(); });
+  $('dots').appendChild(b);
+});
+$('btnBack').addEventListener('click', () => { startChapter(Math.max(0, mode === 'explore' ? ch : ch - 1), true); showScene(); });
+$('btnNext').addEventListener('click', () => { startChapter(Math.min(CH.length - 1, mode === 'explore' ? ch : ch + 1), true); showScene(); });
+$('btnPlay').addEventListener('click', () => {
+  if (mode === 'explore' || (!playing && chT >= CH[ch].dur)){ startChapter(ch, true); showScene(); return; }
+  playing = !playing && !REDUCED; renderStory(); if (playing) showScene();
+});
+function enterExplore(){
+  if (mode === 'explore') return;
+  exp = { R: S.R, xs: +$('sX').value, bridge: 1 };
+  mode = 'explore'; playing = false;
+  if (ionsR.length === 0) resetParticles();
+  renderStory(); syncControls();
+}
+$('sR').addEventListener('input', e => { enterExplore(); exp.R = Math.pow(10, +e.target.value); });
+$('sX').addEventListener('input', e => { enterExplore(); exp.xs = +e.target.value; });
+$('segBridge').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { enterExplore(); exp.bridge = +b.dataset.v; syncControls(); }));
+$('btnReset').addEventListener('click', () => { $('autoNext').checked = false; $('sR').value = Math.log10(RDEF); $('sX').value = 0; startChapter(0, false); });
+
+function updateStats(st, c, I, bridge){
+  $('valR').textContent = fmtR(st.R);
+  $('valX').textContent = fmtX(st.x);
+  $('stE').textContent = c.E.toFixed(3) + ' V';
+  $('stESub').textContent = 'Zn²⁺ ' + c.zn.toFixed(2) + ' M · Cu²⁺ ' + (c.cu < 0.01 ? c.cu.toFixed(3) : c.cu.toFixed(2)) + ' M';
+  const V = bridge && I > 0 ? I * st.R : (bridge ? c.E : 0);
+  $('stV').textContent = V.toFixed(3) + ' V';
+  $('stVSub').textContent = 'internal resistance ' + c.r.toFixed(1) + ' Ω';
+  $('stI').textContent = (I * 1000).toFixed(1) + ' mA';
+  $('stISub').textContent = 'power in load ' + (I * I * st.R * 1000).toFixed(1) + ' mW';
+  $('stZ').textContent = (st.x * 0.1 * 65.38).toFixed(2) + ' g';
+  $('stZSub').textContent = 'copper deposited ' + (st.x * 0.1 * 63.55).toFixed(2) + ' g';
+}
+
+startChapter(0, false);
+let last = null;
+function frame(ts){
+  const dt = last === null ? 0 : Math.min(0.05, (ts - last) / 1000); last = ts;
+  clock += REDUCED ? 0 : dt;
+  tickStory(dt);
+  step(dt);
+  requestAnimationFrame(frame);
+}
+motionNote();
+requestAnimationFrame(frame);
+window.__dan = { cell, xFromSlider, QMAX, KN, startChapter, get state(){ return { S, mode, ch, chT, playing, exp, nL: ionsL.length, nR: ionsR.length }; } };
+})();
+</script>
+</body>
+</html>
