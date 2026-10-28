@@ -306,7 +306,7 @@ const LB = { x0: 40, x1: 230 }, RB = { x0: 330, x1: 520 }, BTOP = 150, BBOT = 33
 const ZX = 100, CUX = 460, RTOP = 88, RBOT = 305, RW = 26, WY = 46;
 const BRL = 198, BRR = 362, BRY = 118, BRB = 296;                 // salt bridge centre-line
 const INS = { x: 208, y: 140, w: 144, h: 162 };                    // zoom inset
-let gZnRod, gCuRod, cuDep, cuSol, znSol, wireG, wirePath, loadPath, loadGlow, readout, bridgeG, labsG, capTxt, capNum, blockG;
+let gZnRod, znSub, gCuRod, cuDep, cuSol, znSol, wireG, wirePath, loadPath, loadGlow, readout, bridgeG, labsG, capTxt, capNum, blockG;
 let insZn, insCu, insZnAtom, insZnE, insCuIon, insCuE, insZnLead, insCuLead, insZnLab, insCuLab, insZnAtomLab, insCuIonLab;
 let plusMarks = [], minusMarks = [];
 
@@ -324,7 +324,9 @@ let plusMarks = [], minusMarks = [];
   el('path', { d: bp, fill: '#f3ead8', stroke: INK, 'stroke-width': 1.3 }, bridgeG);
   el('text', { x: (BRL + BRR) / 2, y: BRY - 13, 'font-size': 11, fill: MUTED, 'text-anchor': 'middle' }, bridgeG, 'salt bridge');
   // electrodes
-  gZnRod = el('rect', { x: ZX - RW / 2, y: RTOP, width: RW, height: RBOT - RTOP, fill: ZNC, stroke: INK, 'stroke-width': 1.3 }, scene);
+  // zinc rod: the part above the liquid keeps its width; only the submerged part (znSub) dissolves
+  gZnRod = el('rect', { x: ZX - RW / 2, y: RTOP, width: RW, height: LIQ - RTOP, fill: ZNC, stroke: INK, 'stroke-width': 1.3 }, scene);
+  znSub = el('rect', { x: ZX - RW / 2, y: LIQ, width: RW, height: RBOT - LIQ, fill: ZNC, stroke: INK, 'stroke-width': 1.3 }, scene);
   gCuRod = el('rect', { x: CUX - RW / 2, y: RTOP, width: RW, height: RBOT - RTOP, fill: COPPER, stroke: INK, 'stroke-width': 1.3 }, scene);
   cuDep = el('rect', { x: CUX - RW / 2, y: LIQ, width: RW, height: RBOT - LIQ, fill: '#d58a58', stroke: INK, 'stroke-width': 1.3, opacity: 0 }, scene);
   el('text', { x: ZX - RW / 2 - 6, y: 128, 'font-size': 13, 'font-weight': 700, fill: INK, 'text-anchor': 'end' }, scene, 'Zn');
@@ -520,8 +522,7 @@ function step(dt){
   // ----- solutions, rods
   cuSol.setAttribute('fill', mix('#eef3f6', '#8fb8da', 1 - xNow));
   const wZn = RW * (1 - 0.5 * xNow);
-  gZnRod.setAttribute('x', ZX - wZn / 2); gZnRod.setAttribute('width', wZn);
-  gZnRod.setAttribute('y', RTOP); gZnRod.setAttribute('height', RBOT - RTOP);
+  znSub.setAttribute('x', ZX - wZn / 2); znSub.setAttribute('width', wZn);
   const wCu = RW + 14 * xNow;
   cuDep.setAttribute('x', CUX - wCu / 2); cuDep.setAttribute('width', wCu); cuDep.setAttribute('opacity', xNow > 0.01 ? 1 : 0);
   // ----- wire, load, bridge, labels
