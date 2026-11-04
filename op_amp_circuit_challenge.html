@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Op-Amp Circuit Challenge</title>
+<style>
+:root{
+  --deep:#76232F; --red:#A6192E; --charcoal:#373A36; --sand:#D6D2C4; --sand2:#EDEBE5;
+  --paper:#FBFAF7; --ok:#2E7D32; --okbg:#E8F3E9; --badbg:#FBEAEC; --line:#E2DED3;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--sand2);color:var(--charcoal);line-height:1.45}
+header{background:linear-gradient(115deg,var(--deep) 0%,var(--red) 100%);color:#fff;padding:16px 28px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+header .logo{width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,.14);display:grid;place-items:center;flex:none}
+header h1{margin:0;font-size:1.35rem;font-weight:700;letter-spacing:.2px}
+header p{margin:2px 0 0;opacity:.88;font-size:.9rem}
+header .streak{margin-left:auto;background:rgba(255,255,255,.14);border-radius:999px;padding:6px 14px;font-size:.85rem;font-weight:600}
+main{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:20px;padding:20px 28px 40px;max-width:1300px;margin:0 auto}
+@media (max-width:980px){main{grid-template-columns:1fr;padding:14px 14px 30px}header{padding:14px 16px}}
+.card{background:#fff;border-radius:14px;border:1px solid var(--line);box-shadow:0 1px 3px rgba(55,58,54,.08)}
+.toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+.btn{font:inherit;font-weight:600;border:none;border-radius:10px;padding:10px 18px;cursor:pointer;transition:transform .08s,background .15s,box-shadow .15s}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--red);color:#fff;box-shadow:0 2px 0 var(--deep)}
+.btn-primary:hover{background:#B91F36}
+.btn-dark{background:var(--charcoal);color:#fff}
+.btn-dark:hover{background:#4a4e48}
+.btn-ghost{background:transparent;color:var(--red);padding:6px 4px;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+select{font:inherit;padding:9px 12px;border-radius:10px;border:1px solid #cfc9bb;background:var(--paper);color:var(--charcoal)}
+.qcount{margin-left:auto;font-size:.85rem;color:#6b6e69}
+.circuit{background:var(--paper);margin:16px 18px 0;border-radius:12px;border:1px dashed #d9d3c4;min-height:300px;display:grid;place-items:center;overflow:hidden}
+.circuit svg{width:100%;height:auto;display:block;max-height:440px}
+.empty{text-align:center;padding:40px 20px;color:#7a7d77}
+.empty h2{color:var(--deep);margin:10px 0 6px;font-size:1.2rem}
+.w{fill:none;stroke:var(--charcoal);stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}
+.oa{fill:#fff;stroke:var(--charcoal);stroke-width:2.4;stroke-linejoin:round}
+.rl{font-size:13px;fill:var(--charcoal);font-weight:600}
+.tl{font-size:13.5px;fill:var(--deep);font-weight:700}
+.hl{font-size:14px;fill:var(--red);font-weight:800}
+.arr{stroke:var(--red);stroke-width:2.4}
+.sym{font-size:20px;font-weight:700;fill:var(--charcoal)}
+.qbox{padding:16px 18px 6px}
+.tag{display:inline-block;background:var(--sand2);color:var(--deep);font-weight:700;font-size:.78rem;letter-spacing:.4px;text-transform:uppercase;padding:4px 10px;border-radius:999px}
+.prompt{font-size:1.12rem;margin:10px 0 4px}
+.assume{font-size:.85rem;color:#6b6e69;margin:0}
+.answer{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 18px 6px}
+.answer label{font-weight:700}
+.inwrap{display:flex;align-items:stretch;border:2px solid #cfc9bb;border-radius:10px;overflow:hidden;background:#fff}
+.inwrap:focus-within{border-color:var(--red)}
+.inwrap input{font:inherit;font-size:1.05rem;border:none;outline:none;padding:9px 12px;width:160px}
+.inwrap .unit{background:var(--sand2);padding:9px 12px;font-weight:700;color:var(--deep);border-left:1px solid #e0dacd}
+.feedback{margin:8px 18px 0;padding:0;border-radius:10px;font-weight:600;min-height:0}
+.feedback.ok{background:var(--okbg);color:var(--ok);padding:10px 14px}
+.feedback.bad{background:var(--badbg);color:var(--red);padding:10px 14px}
+.feedback.info{background:var(--sand2);color:var(--charcoal);padding:10px 14px}
+.foot{display:flex;justify-content:space-between;align-items:center;padding:8px 18px 16px;font-size:.85rem;color:#7a7d77;gap:10px;flex-wrap:wrap}
+aside{display:flex;flex-direction:column;gap:20px}
+.panel-h{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.panel-h h2{margin:0;font-size:1.05rem;color:var(--deep)}
+.award-now{display:flex;align-items:center;gap:12px;padding:12px 18px;background:linear-gradient(90deg,#fff,var(--paper));border-bottom:1px solid var(--line)}
+.award-now .lbl{font-size:.8rem;color:#7a7d77;text-transform:uppercase;letter-spacing:.4px;font-weight:700}
+.award-now .tier{font-size:1.15rem;font-weight:800;color:var(--deep)}
+.hints{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.hint{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--paper);transition:background .2s}
+.hint.open{background:#fff;border-left:4px solid var(--red)}
+.hint.locked{opacity:.65}
+.hhead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.hnum{font-weight:800;color:var(--deep);font-size:.92rem}
+.hcost{font-size:.8rem;color:#7a7d77;margin-top:4px}
+.hbody{margin-top:6px;font-size:.92rem}
+.reveal{font:inherit;font-size:.82rem;font-weight:700;background:#fff;border:1.5px solid var(--red);color:var(--red);border-radius:8px;padding:5px 10px;cursor:pointer}
+.reveal:hover:not(:disabled){background:var(--red);color:#fff}
+.reveal:disabled{border-color:#bdb7a8;color:#9a968b;cursor:not-allowed}
+.ladder{display:flex;justify-content:space-between;padding:6px 14px 14px;gap:4px}
+.rung{display:flex;flex-direction:column;align-items:center;font-size:.72rem;font-weight:700;color:#6b6e69;flex:1;transition:opacity .25s,filter .25s}
+.rung.lost{opacity:.3;filter:grayscale(1)}
+.rung.cur{color:var(--red)}
+.rung.cur svg{filter:drop-shadow(0 0 6px rgba(166,25,46,.45))}
+.cab{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:14px}
+.cab .slot{display:flex;flex-direction:column;align-items:center;font-size:.72rem;color:#6b6e69;font-weight:700}
+.cab .n{font-size:1.05rem;color:var(--charcoal)}
+.cab-foot{display:flex;justify-content:space-between;align-items:center;padding:0 18px 14px;font-size:.82rem;color:#7a7d77}
+.placeholder{padding:22px 18px;color:#7a7d77;font-size:.92rem}
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(40,20,24,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.overlay.show{display:flex}
+.modal{background:#fff;border-radius:18px;max-width:420px;width:100%;text-align:center;padding:24px 24px 20px;box-shadow:0 20px 60px rgba(0,0,0,.35);animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.modal h2{margin:4px 0 2px;font-size:1.9rem;color:var(--deep)}
+.modal .kicker{font-size:.78rem;letter-spacing:1.5px;text-transform:uppercase;color:#7a7d77;font-weight:700}
+.modal p{margin:6px 0}
+.modal .meta{font-size:.85rem;color:#7a7d77}
+.modal .acts{display:flex;gap:10px;justify-content:center;margin-top:16px}
+.shine{background:linear-gradient(90deg,var(--deep),var(--red),#D4A017,var(--red),var(--deep));background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent!important;animation:shine 2.4s linear infinite}
+@keyframes shine{to{background-position:300% 0}}
+.medal-bounce{animation:bounce 1.6s ease-in-out infinite}
+@keyframes bounce{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-6px) rotate(3deg)}}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
+.cert-btn{margin:0 14px 14px;width:calc(100% - 28px);display:flex;align-items:center;justify-content:center;gap:8px}
+.modal.wide{max-width:820px;text-align:left;padding:22px}
+.modal.wide h2{font-size:1.4rem;margin:0 0 4px}
+.cert-form{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+@media (max-width:640px){.cert-form{grid-template-columns:1fr}}
+.cert-form label{display:flex;flex-direction:column;gap:4px;font-size:.82rem;font-weight:700;color:var(--deep)}
+.cert-form input,.cert-form select{font:inherit;font-weight:400;padding:9px 12px;border-radius:10px;border:1.5px solid #cfc9bb;background:#fff;color:var(--charcoal)}
+.cert-form input:focus,.cert-form select:focus{outline:none;border-color:var(--red)}
+#certPreview{width:100%;height:auto;border-radius:8px;border:1px solid var(--line);display:block;box-shadow:0 4px 18px rgba(55,58,54,.15)}
+.cert-acts{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;margin-top:14px;align-items:center}
+.cert-note{font-size:.8rem;color:#7a7d77;margin-right:auto}
+sub{font-size:.72em}
+/* ================= Tabs ================= */
+body{overflow-x:hidden}
+main{padding-top:14px}
+.tabbar{max-width:1300px;margin:0 auto;padding:18px 28px 0}
+.tabs{display:inline-flex;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px;gap:4px;box-shadow:0 1px 3px rgba(55,58,54,.08)}
+.tab{font:inherit;font-weight:700;font-size:.92rem;border:none;background:transparent;color:var(--charcoal);padding:9px 18px;border-radius:999px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .2s,color .2s}
+.tab:hover{background:var(--sand2)}
+.tab.active{background:var(--red);color:#fff;box-shadow:0 2px 0 var(--deep)}
+.tab svg{flex:none}
+@media (max-width:980px){.tabbar{padding:14px 14px 0}}
+
+/* ================= Learn card ================= */
+.learn{padding:16px 18px 18px;overflow:hidden}
+.learn-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.learn-top h2{margin:0;color:var(--deep);font-size:1.2rem}
+.learn-top .lt-s{font-size:.85rem;color:#6b6e69}
+.snd{margin-left:auto;font:inherit;font-size:.8rem;font-weight:700;border:1.5px solid #cfc9bb;background:var(--paper);color:var(--charcoal);border-radius:999px;padding:6px 12px;cursor:pointer;display:flex;gap:6px;align-items:center}
+.snd[aria-pressed="false"]{opacity:.6}
+
+/* Book */
+.book{max-width:920px;margin:0 auto}
+.bk-wrap{position:relative;padding:14px 16px;border-radius:14px;background:linear-gradient(135deg,#5b1922 0%,#7d2633 48%,#5a1822 100%);box-shadow:0 22px 40px -14px rgba(60,20,25,.55),inset 0 0 0 1px rgba(255,255,255,.08)}
+.bk-wrap::after{content:'';position:absolute;inset:5px;border:1px solid rgba(212,160,23,.35);border-radius:10px;pointer-events:none}
+.spread{position:relative;display:flex;height:680px;perspective:2400px;z-index:1}
+.spread::before{content:'';position:absolute;top:-6px;bottom:-6px;left:50%;width:6px;transform:translateX(-50%);background:linear-gradient(to right,rgba(0,0,0,.35),rgba(0,0,0,.05),rgba(0,0,0,.35));border-radius:3px;z-index:3;pointer-events:none}
+.pg{position:relative;flex:1;height:100%;background:#FFFDF7;min-width:0}
+.pg.left{border-radius:6px 0 0 6px;box-shadow:-2px 1px 0 #efe7d4,-4px 2px 0 #fbf7ec,-5px 2px 0 #ddd2bb,-7px 3px 0 #f8f3e7,-8px 3px 0 #d3c7ad}
+.pg.right{border-radius:0 6px 6px 0;box-shadow:2px 1px 0 #efe7d4,4px 2px 0 #fbf7ec,5px 2px 0 #ddd2bb,7px 3px 0 #f8f3e7,8px 3px 0 #d3c7ad}
+.pg.left::after,.face.back::before{content:'';position:absolute;top:0;bottom:0;right:0;width:44px;background:linear-gradient(to left,rgba(90,65,30,.20),rgba(90,65,30,0));pointer-events:none;z-index:2}
+.pg.right::after,.face.front::before{content:'';position:absolute;top:0;bottom:0;left:0;width:44px;background:linear-gradient(to right,rgba(90,65,30,.20),rgba(90,65,30,0));pointer-events:none;z-index:2}
+
+/* Turning leaf */
+.leaf{position:absolute;top:0;bottom:0;right:0;width:50%;transform-origin:left center;transform-style:preserve-3d;z-index:6;display:none;pointer-events:none}
+.leaf.show{display:block}
+.face{position:absolute;inset:0;background:#FFFDF7;overflow:hidden;-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.face.front{border-radius:0 6px 6px 0}
+.face.back{transform:rotateY(180deg);border-radius:6px 0 0 6px}
+.face::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:0;z-index:3}
+.face.front::after{background:linear-gradient(to left,rgba(40,25,10,.32),rgba(40,25,10,.04) 70%)}
+.face.back::after{background:linear-gradient(to right,rgba(40,25,10,.32),rgba(40,25,10,.04) 70%)}
+.leaf.show .face{box-shadow:0 0 24px rgba(40,20,10,.22)}
+.leaf.fwd{animation:bkFwd .95s cubic-bezier(.55,.08,.3,1) forwards}
+.leaf.bwd{animation:bkBwd .95s cubic-bezier(.55,.08,.3,1) forwards}
+.leaf.fwd .face::after,.leaf.bwd .face::after{animation:bkShade .95s ease-in-out forwards}
+@keyframes bkFwd{from{transform:rotateY(0)}to{transform:rotateY(-180deg)}}
+@keyframes bkBwd{from{transform:rotateY(-180deg)}to{transform:rotateY(0)}}
+@keyframes bkShade{0%{opacity:0}50%{opacity:1}100%{opacity:0}}
+
+/* Single-page mode (narrow screens) */
+.book.single .pg.left,.book.single .spread::before{display:none}
+.book.single .pg.right{border-radius:6px}
+.book.single .spread{height:clamp(520px,76vh,680px)}
+.book.single .leaf{width:100%}
+.book.single .face.front{border-radius:6px}
+.book.single .leaf.fwd{animation:bkFwdS .95s cubic-bezier(.55,.08,.3,1) forwards}
+.book.single .leaf.bwd{animation:bkBwdS .95s cubic-bezier(.55,.08,.3,1) forwards}
+@keyframes bkFwdS{0%{transform:rotateY(0);opacity:1}70%{opacity:1}100%{transform:rotateY(-180deg);opacity:0}}
+@keyframes bkBwdS{0%{transform:rotateY(-180deg);opacity:0}30%{opacity:1}100%{transform:rotateY(0);opacity:1}}
+
+/* Page corners (click to turn) */
+.corner{position:absolute;bottom:0;width:54px;height:54px;z-index:5;border:none;padding:0;background:transparent;cursor:pointer}
+.corner.r{right:0}.corner.l{left:0}
+.corner::before{content:'';position:absolute;bottom:0;width:20px;height:20px;transition:width .25s,height .25s;box-shadow:-2px -2px 5px rgba(0,0,0,.12)}
+.corner.r::before{right:0;border-radius:0 0 6px 0;background:linear-gradient(to top left,#6a1f2a 50%,#e2d6bc 50%,#fbf6ea 100%)}
+.corner.l::before{left:0;border-radius:0 0 0 6px;background:linear-gradient(to top right,#6a1f2a 50%,#e2d6bc 50%,#fbf6ea 100%);box-shadow:2px -2px 5px rgba(0,0,0,.12)}
+.corner:hover::before,.corner:focus-visible::before{width:38px;height:38px}
+.corner:focus-visible{outline:none}
+
+/* Navigation */
+.bk-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:16px auto 0;max-width:920px}
+.bk-nav .btn{min-width:108px}
+.bk-mid{display:flex;flex-direction:column;align-items:center;gap:7px;flex:1;min-width:0}
+.bk-dots{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}
+.bk-dot{width:9px;height:9px;border-radius:50%;background:#d6cfbf;border:none;padding:0;cursor:pointer;transition:transform .2s,background .2s}
+.bk-dot.on{background:var(--red);transform:scale(1.4)}
+.bk-pos{font-size:.82rem;color:#6b6e69;font-weight:600}
+
+/* ================= Page typography ================= */
+.pin{position:absolute;top:0;left:0;right:0;bottom:30px;padding:24px 28px 8px 34px;overflow-y:auto;font-size:.88rem;line-height:1.5;color:#2f312d;scrollbar-width:thin;scrollbar-color:#d8ccb0 transparent}
+.pg.left .pin,.face.back .pin{padding:24px 34px 8px 28px}
+.pno{position:absolute;bottom:9px;left:0;right:0;text-align:center;font-family:Georgia,"Times New Roman",serif;font-size:.8rem;color:#9a8f78;letter-spacing:1px}
+.rh{display:flex;justify-content:space-between;gap:8px;font-size:.66rem;letter-spacing:1.3px;text-transform:uppercase;color:#a3967b;border-bottom:1px solid #ece4d2;padding-bottom:6px;margin-bottom:10px}
+.pin h2{font-family:Georgia,"Times New Roman",serif;color:var(--deep);font-size:1.4rem;line-height:1.2;margin:2px 0 8px}
+.pin p{margin:6px 0}
+.pin .lead::first-letter{float:left;font:700 2.7em/.85 Georgia,"Times New Roman",serif;color:var(--red);margin:4px 6px 0 0}
+.pin sub{font-size:.72em}
+.eq{font-family:Georgia,"Times New Roman",serif;font-style:italic;text-align:center;font-size:1.02rem;background:#F5EFE1;border-radius:8px;padding:7px 10px;margin:8px 0;color:#3a2a20}
+.note{border-left:4px solid var(--red);background:#FBEFF0;padding:7px 10px;border-radius:0 8px 8px 0;font-size:.83rem;margin:8px 0}
+.ex{border:1px dashed #cdbf9f;background:#FFFBF0;padding:7px 10px;border-radius:8px;font-size:.83rem;margin:8px 0}
+.ex>b:first-child{color:var(--deep)}
+.lst,.steps{margin:6px 0;padding-left:20px}
+.lst li,.steps li{margin:3px 0}
+.tbl{width:100%;border-collapse:collapse;font-size:.8rem;margin:6px 0}
+.tbl th{background:#F3EEE1;color:var(--deep);text-align:left;padding:4px 7px}
+.tbl td{border-bottom:1px solid #eee5d2;padding:4px 7px}
+.rules{border:2px solid var(--red);border-radius:10px;padding:8px 10px;background:#fff;margin-top:8px}
+.rules .rt{font-family:Georgia,serif;font-weight:700;color:var(--red);margin-bottom:4px}
+.rule{display:flex;gap:8px;align-items:flex-start;margin:5px 0;font-size:.86rem;opacity:0;animation:lslide .5s ease forwards}
+.rule:nth-of-type(2){animation-delay:.3s}.rule:nth-of-type(3){animation-delay:.7s}
+.rule>span{flex:none;width:21px;height:21px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-weight:700;font-size:.75rem}
+.recipe{list-style:none;padding:0;margin:8px 0;counter-reset:r}
+.recipe li{counter-increment:r;position:relative;padding:4px 0 4px 34px;margin:2px 0;opacity:0;animation:lslide .5s ease forwards}
+.recipe li:nth-child(2){animation-delay:.15s}.recipe li:nth-child(3){animation-delay:.3s}.recipe li:nth-child(4){animation-delay:.45s}.recipe li:nth-child(5){animation-delay:.6s}
+.recipe li::before{content:counter(r);position:absolute;left:0;top:4px;width:24px;height:24px;border-radius:50%;background:var(--red);color:#fff;font-weight:700;display:grid;place-items:center;font-size:.8rem}
+@keyframes lslide{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+.end{text-align:center;margin:12px 0 4px}
+.orn{font-family:Georgia,serif;font-style:italic;color:#9a8f78;margin-bottom:8px}
+
+/* Title page */
+.pin.title{display:flex;flex-direction:column}
+.tp{margin:auto 0;text-align:center}
+.tp-k{font-size:.72rem;letter-spacing:2.2px;text-transform:uppercase;color:var(--red);font-weight:800}
+.tp h1{font-family:Georgia,"Times New Roman",serif;color:var(--deep);font-size:2.15rem;line-height:1.08;margin:10px 0 6px}
+.tp-sub{font-style:italic;font-family:Georgia,serif;color:#6b6e69}
+.tp-orn{width:60%;height:1px;background:linear-gradient(90deg,transparent,#C9971C,transparent);margin:14px auto}
+.tp-p{font-size:.85rem;color:#55584f;max-width:300px;margin:8px auto}
+.tp-turn{margin-top:10px;font-weight:800;color:var(--red);font-size:.85rem}
+.nudge{display:inline-block;animation:nudge 1.2s ease-in-out infinite}
+@keyframes nudge{50%{transform:translateX(7px)}}
+.blank{display:grid;place-items:center}
+.endp{font-size:2rem;color:#e0d6c0}
+
+/* Contents page */
+.chap{font-size:.68rem;letter-spacing:1.2px;text-transform:uppercase;color:#a3967b;margin:10px 0 2px;font-weight:800}
+.trow{display:flex;align-items:baseline;gap:8px;width:100%;background:none;border:none;font:inherit;font-size:.9rem;padding:4px 2px;cursor:pointer;color:inherit;text-align:left;border-radius:6px}
+.trow .tl{flex:1;border-bottom:1.5px dotted #cbbfa5;transform:translateY(-4px);min-width:12px}
+.trow .tpn{font-family:Georgia,serif;color:var(--deep);font-weight:700}
+.trow:hover .tt{color:var(--red)}
+.howto{margin-top:12px;font-size:.8rem;background:#F5EFE1;border-radius:8px;padding:8px 10px;color:#55584f}
+
+/* Figures */
+.fig{margin:8px 0;background:#FBF8F0;border:1px solid #EAE3D3;border-radius:10px;padding:6px}
+.fig>svg{display:block;width:100%;height:auto}
+.fig figcaption{font-size:.74rem;color:#7a7d77;text-align:center;font-style:italic;margin:2px 4px 2px}
+.lw{fill:none;stroke:#373A36;stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
+.lo{fill:#fff;stroke:#373A36;stroke-width:2;stroke-linejoin:round}
+.ls{font-size:15px;font-weight:700;fill:#373A36}
+.lt{font-size:11px;font-weight:600;fill:#373A36}
+.lr{font-size:11px;font-weight:700;fill:#A6192E}
+.lsm{font-size:9.5px;fill:#6b6e69}
+.scr{fill:#FFF7E6;stroke:#e0d1ae;stroke-width:1.2}
+.dash{fill:none;stroke:#b9ad92;stroke-width:1.5;stroke-dasharray:6 5}
+.rail{stroke:#9a958a;stroke-dasharray:5 5;stroke-width:1.4}
+.curve{fill:none;stroke:#A6192E;stroke-width:3;stroke-linejoin:round}
+.flow{fill:none;stroke:#A6192E;stroke-width:2;stroke-dasharray:3 6;stroke-linecap:round;animation:lflow .8s linear infinite}
+@keyframes lflow{to{stroke-dashoffset:-9}}
+.wv{fill:none;stroke:#A6192E;stroke-width:2.2;animation:lwv 1.6s linear infinite}
+.wv.in{stroke:#373A36;stroke-width:1.8}
+.wv.ghost{stroke:#a9a397;stroke-dasharray:4 4;stroke-width:1.5}
+@keyframes lwv{to{transform:translateX(-40px)}}
+.ring{fill:none;stroke:#A6192E;stroke-width:2;transform-box:fill-box;transform-origin:center;animation:lring 1.6s ease-out infinite}
+@keyframes lring{from{transform:scale(.6);opacity:1}to{transform:scale(2.6);opacity:0}}
+.lpop{opacity:0;animation:lpopIn .6s ease forwards}
+@keyframes lpopIn{to{opacity:1}}
+
+/* Mini calculators */
+.calc{background:#F3EEE1;border-radius:10px;padding:8px 10px;margin:8px 0;font-size:.8rem}
+.calc .ct{font-weight:800;color:var(--deep);margin-bottom:4px}
+.calc label{display:grid;grid-template-columns:30px 1fr 62px;align-items:center;gap:8px}
+.calc input[type=range]{width:100%;accent-color:var(--red)}
+.calc label b{text-align:right}
+.meter{position:relative;height:10px;background:#e3dccb;border-radius:6px;margin:6px 0 2px;overflow:hidden}
+.meter i{position:absolute;top:0;bottom:0;background:var(--red);border-radius:6px;transition:left .2s,width .2s,background .2s}
+.meter .z{position:absolute;left:50%;top:0;bottom:0;width:2px;margin-left:-1px;background:#373A36}
+.mscale{display:flex;justify-content:space-between;font-size:.68rem;color:#8a8d86}
+.cres{margin-top:3px}
+.calc.sat .meter i{background:#D4A017}
+.calc.sat [data-o=vo]{color:#B8860B}
+
+/* Contents panel in sidebar */
+.toc{padding:8px 12px 4px;display:flex;flex-direction:column;max-height:430px;overflow-y:auto}
+.toc .chap{margin:8px 6px 2px}
+.toc .trow{font-size:.86rem;padding:5px 8px}
+.toc .trow.on{background:var(--badbg)}
+.toc .trow.on .tt{color:var(--red);font-weight:700}
+.prog{margin:8px 18px 4px;height:8px;border-radius:6px;background:var(--sand2);overflow:hidden}
+.prog-bar{height:100%;width:0;background:linear-gradient(90deg,var(--deep),var(--red));transition:width .5s}
+.prog-l{font-size:.8rem;color:#7a7d77;padding:0 18px 14px}
+
+@media (prefers-reduced-motion: reduce){
+  .flow,.wv,.ring,.nudge{animation:none}
+}
+
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <svg width="30" height="30" viewBox="0 0 30 30"><polygon points="5,4 5,26 27,15" fill="none" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"></polygon><text x="8" y="12.5" fill="#fff" font-size="8" font-weight="700">−</text><text x="8" y="23" fill="#fff" font-size="8" font-weight="700">+</text></svg>
+  </div>
+  <div>
+    <h1>Op-Amp Circuit Challenge</h1>
+    <p>Mechatronics · Learn and practise ideal op-amp analysis</p>
+  </div>
+  <div class="streak" id="streak">Genius streak: 0</div>
+</header>
+
+<nav class="tabbar">
+  <div class="tabs" role="tablist">
+    <button class="tab active" id="tabPractice" role="tab" aria-selected="true" data-tab="practice">
+      <svg width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="14" r="6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 3l4 5 4-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      Practice challenge</button>
+    <button class="tab" id="tabLearn" role="tab" aria-selected="false" data-tab="learn">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path d="M12 6c-2-1.5-5-2-8-1.5v14c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5v-14c-3-.5-6 0-8 1.5zM12 6v14" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      Learn Op-Amp circuits</button>
+  </div>
+</nav>
+
+<main>
+  <section class="card" id="practiceCard">
+    <div class="toolbar">
+      <button class="btn btn-primary" id="create">Create question</button>
+      <select id="ctype" aria-label="Circuit type">
+        <option value="any">Any circuit</option>
+        <option value="inverting">Inverting amplifier</option>
+        <option value="noninverting">Non-inverting amplifier</option>
+        <option value="noninv_div">Non-inverting with input divider</option>
+        <option value="summing">Summing amplifier</option>
+        <option value="difference">Difference amplifier</option>
+        <option value="follower">Voltage follower with load</option>
+        <option value="inverting_load">Inverting amplifier with load</option>
+      </select>
+      <span class="qcount" id="qcount">No questions yet</span>
+    </div>
+
+    <div class="circuit" id="circuit"><div class="empty"><svg width="64" height="64" viewBox="0 0 30 30"><polygon points="5,4 5,26 27,15" fill="none" stroke="#A6192E" stroke-width="2" stroke-linejoin="round"/><text x="8" y="12.5" fill="#A6192E" font-size="8" font-weight="700">−</text><text x="8" y="23" fill="#A6192E" font-size="8" font-weight="700">+</text></svg><h2>Ready for a challenge?</h2><p>Choose a circuit type and press <b>Create question</b>.<br>New to op-amps? Read the <b>Learn Op-Amp Circuits</b> book first.</p></div></div>
+
+    <div class="qbox" id="qbox" hidden>
+      <span class="tag" id="qtag">Question 17 · Inverting amplifier with load</span>
+      <p class="prompt" id="qprompt">Find the op-amp output current <b>I<sub>o</sub></b> in the direction of the arrow.</p>
+      <p class="assume">Assume an ideal op-amp on ±15 V supplies (it does not saturate). All voltages are measured with respect to ground. Give your answer to 3 significant figures.</p>
+    </div>
+
+    <div class="answer" id="answer" hidden>
+      <label for="ans" id="anslabel">Answer</label>
+      <div class="inwrap">
+        <input id="ans" type="text" inputmode="decimal" autocomplete="off" placeholder="e.g. -4.70">
+        <span class="unit" id="unit">mA</span>
+      </div>
+      <button class="btn btn-dark" id="check">Check answer</button>
+    </div>
+    <div class="feedback " id="feedback" aria-live="polite"></div>
+    <div class="foot" id="foot" hidden>
+      <span id="attempts">Attempts: 0</span>
+      <button class="btn btn-ghost" id="giveup" data-armed="">Reveal answer (no medal)</button>
+    </div>
+  </section>
+
+  <section class="card learn" id="learnCard" hidden>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+      <marker id="lbA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#A6192E"/></marker>
+      <marker id="lbC" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#373A36"/></marker>
+    </defs></svg>
+    <div class="learn-top">
+      <div><h2>Learn Op-Amp Circuits</h2><div class="lt-s">Read it like a real book: use the buttons, click a page corner, press ← →, or swipe.</div></div>
+      <button class="snd" id="bkSound" aria-pressed="true"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Page sound on</span></button>
+    </div>
+    <div class="book" id="book">
+      <div class="bk-wrap">
+        <div class="spread" id="spread">
+          <div class="pg left" id="pgL"></div>
+          <div class="pg right" id="pgR"></div>
+          <div class="leaf" id="leaf"><div class="face front" id="faceF"></div><div class="face back" id="faceB"></div></div>
+          <button class="corner l" id="cnL" aria-label="Previous page"></button>
+          <button class="corner r" id="cnR" aria-label="Next page"></button>
+        </div>
+      </div>
+    </div>
+    <div class="bk-nav">
+      <button class="btn btn-dark" id="bkPrev">‹ Back</button>
+      <div class="bk-mid"><div class="bk-dots" id="bkDots"></div><div class="bk-pos" id="bkPos"></div></div>
+      <button class="btn btn-primary" id="bkNext">Next ›</button>
+    </div>
+  </section>
+
+  <aside>
+    <section class="card" id="tocCard" hidden>
+      <div class="panel-h">
+        <svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 6c-2-1.5-5-2-8-1.5v14c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5v-14c-3-.5-6 0-8 1.5zM12 6v14" fill="none" stroke="#A6192E" stroke-width="2" stroke-linejoin="round"/></svg>
+        <h2>Contents</h2>
+      </div>
+      <div class="toc" id="toc"></div>
+      <div class="prog"><div class="prog-bar" id="progBar"></div></div>
+      <div class="prog-l" id="progL"></div>
+    </section>
+    <section class="card" id="hintsCard">
+      <div class="panel-h">
+        <svg width="20" height="20" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.4 1 1.1 1 1.9V16h5v-.2c0-.8.4-1.5 1-1.9A6 6 0 0 0 12 3z" fill="none" stroke="#A6192E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        <h2>Hints</h2>
+      </div>
+      <div class="award-now" id="awardnow" hidden>
+        <span id="awardicon"></span>
+        <div><div class="lbl">Solve now to earn</div><div class="tier" id="awardtier">Genius</div></div>
+      </div>
+      <div id="hints"><div class="placeholder">Create a question to unlock its hints. Each hint you reveal lowers the medal you can earn, so try without them first!</div></div>
+      <div class="ladder" id="ladder"></div>
+    </section>
+
+    <section class="card">
+      <div class="panel-h">
+        <svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="14" r="6" fill="none" stroke="#A6192E" stroke-width="2"></circle><path d="M8 3l4 5 4-5" fill="none" stroke="#A6192E" stroke-width="2" stroke-linejoin="round"></path></svg>
+        <h2>Medal cabinet</h2>
+      </div>
+      <div class="cab" id="cab"></div>
+      <div class="cab-foot"><span id="cabsum">1 medal · 1 answer revealed</span><button class="btn btn-ghost" id="reset" style="font-size:.82rem">Reset</button></div>
+      <button class="btn btn-primary cert-btn" id="certOpen">
+        <svg width="18" height="18" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2" fill="none" stroke="#fff" stroke-width="2"></rect><circle cx="12" cy="17" r="3" fill="#fff"></circle><path d="M10 19l-1 3 3-1 3 1-1-3" fill="#fff"></path></svg>
+        Get certificate
+      </button>
+    </section>
+  </aside>
+</main>
+
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="mtitle">
+  <div class="modal">
+    <div id="mmedal" class="medal-bounce"></div>
+    <div class="kicker">You earned</div>
+    <h2 id="mtitle">Genius</h2>
+    <p id="mmsg"></p>
+    <p class="meta" id="mmeta"></p>
+    <div class="acts">
+      <button class="btn btn-primary" id="mnext">Next question</button>
+      <button class="btn btn-dark" id="mclose">Review circuit</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="certOverlay" role="dialog" aria-modal="true" aria-labelledby="certTitle">
+  <div class="modal wide">
+    <h2 id="certTitle">Your certificate</h2>
+    <div style="font-size:.9rem;color:#6b6e69">Add your name, choose which achievement to celebrate, then download it as a JPG to keep or share.</div>
+    <div class="cert-form">
+      <label>Your name<input id="certName" type="text" maxlength="40" placeholder="Your Name"></label>
+      <label>Achievement<select id="certTier"></select></label>
+    </div>
+    <img id="certPreview" alt="Certificate preview">
+    <div class="cert-acts">
+      <span class="cert-note" id="certNote"></span>
+      <button class="btn btn-ghost" id="certQuote">New quote</button>
+      <button class="btn btn-dark" id="certClose">Close</button>
+      <button class="btn btn-primary" id="certDownload">Download JPG</button>
+    </div>
+  </div>
+</div>
+<canvas id="certCanvas" width="2000" height="1414" hidden=""></canvas>
+<canvas id="confetti"></canvas>
+
+<script>
+/* ---------------- Utilities ---------------- */
+const rand = n => Math.floor(Math.random()*n);
+const pick = a => a[rand(a.length)];
+const E12 = [1.0,1.2,1.5,1.8,2.2,2.7,3.3,3.9,4.7,5.6,6.8,8.2];
+function rVal(dmin=3,dmax=4){ return Math.round(pick(E12)*Math.pow(10,dmin+rand(dmax-dmin+1))); }
+function vVal(neg=true){ let v=(2+rand(24))/10; if(neg && Math.random()<0.3) v=-v; return v; }
+function trim(x){ return parseFloat(x.toPrecision(3)).toString(); }
+function fmtR(r){ if(r>=1e6) return trim(r/1e6)+' MΩ'; if(r>=1e3) return trim(r/1e3)+' kΩ'; return trim(r)+' Ω'; }
+function fmtV(v){ return (v<0?'−':'')+trim(Math.abs(v))+' V'; }
+function P(v){ return v<0 ? '('+fmtV(v)+')' : fmtV(v); }
+function sig(x){ const s=parseFloat(x.toPrecision(3)); return (s<0?'−':'')+Math.abs(s).toString(); }
+const within = (x,lo,hi) => Math.abs(x)>=lo && Math.abs(x)<=hi;
+const mA = i => i*1000;
+
+const H = {R1:'R<sub>1</sub>',R2:'R<sub>2</sub>',R3:'R<sub>3</sub>',R4:'R<sub>4</sub>',RL:'R<sub>L</sub>',
+  Vin:'V<sub>in</sub>',Vout:'V<sub>out</sub>',Vm:'V<sub>−</sub>',Vp:'V<sub>+</sub>',Vs:'V<sub>s</sub>',
+  V1:'V<sub>1</sub>',V2:'V<sub>2</sub>',IL:'I<sub>L</sub>',Io:'I<sub>o</sub>'};
+const GOLDEN = `<b>Ideal op-amp golden rules.</b> (1) No current flows into either input terminal. (2) With negative feedback, the output adjusts itself so that ${H.Vm} = ${H.Vp}.`;
+const VG = `The + input is tied to ground, so ${H.Vp} = 0 V. With negative feedback, ${H.Vm} = ${H.Vp} = 0 V: the inverting input is a <b>virtual ground</b>.`;
+const SIGN = ` A negative result means the current actually flows opposite to the arrow.`;
+const TOMA = ` Convert amps to milliamps (× 1000).`;
+
+/* ---------------- Question generators ---------------- */
+function mk(type,name,r,v,id,prompt,unit,value,hints){ return {type,name,r,v,ask:{id,prompt,unit,value},hints}; }
+
+const GEN = {
+  inverting(){
+    const R1=rVal(),R2=rVal(),Vin=vVal(); const Vout=-R2/R1*Vin, I=Vin/R1;
+    if(!within(Vout,0.3,12)||!within(mA(I),0.01,20)) return null;
+    const id=pick(['vout','vout','iR1','iR2']), r={R1,R2}, v={Vin}, n='Inverting amplifier';
+    if(id==='vout') return mk('inverting',n,r,v,id,`Find the output voltage <b>${H.Vout}</b>.`,'V',Vout,[GOLDEN,VG,
+      `Ohm's law on ${H.R1}: I = (${H.Vin} − ${H.Vm}) / ${H.R1}. No current enters the op-amp, so this same current flows on through ${H.R2} towards the output.`,
+      `Across ${H.R2}: ${H.Vm} − ${H.Vout} = I·${H.R2}, so ${H.Vout} = −(${H.R2}/${H.R1})·${H.Vin} = −(${fmtR(R2)} / ${fmtR(R1)}) × ${P(Vin)}.`]);
+    if(id==='iR1') return mk('inverting',n,r,v,id,`Find the current <b>I</b> through ${H.R1} in the direction of the arrow.`,'mA',mA(I),[GOLDEN,VG,
+      `The left end of ${H.R1} is at ${H.Vin}; the right end is at the virtual ground. Apply Ohm's law across it.`,
+      `I = (${H.Vin} − 0) / ${H.R1} = ${P(Vin)} / ${fmtR(R1)}.`+TOMA+SIGN]);
+    return mk('inverting',n,r,v,id,`Find the current <b>I</b> through ${H.R2} in the direction of the arrow.`,'mA',mA(I),[GOLDEN,VG,
+      `KCL at the inverting node: no current enters the op-amp, so the current leaving through ${H.R2} equals the current arriving through ${H.R1}.`,
+      `I = (${H.Vin} − 0) / ${H.R1} = ${P(Vin)} / ${fmtR(R1)}.`+TOMA+SIGN]);
+  },
+  inverting_load(){
+    const R1=rVal(),R2=rVal(),RL=rVal(3,3),Vin=vVal(); const Vout=-R2/R1*Vin;
+    const IL=Vout/RL, Io=Vout/RL+Vout/R2;
+    if(!within(Vout,0.3,12)||!within(mA(IL),0.05,20)||Math.abs(mA(Io))>25) return null;
+    const id=pick(['io','il','vout']), r={R1,R2,RL}, v={Vin}, n='Inverting amplifier with load';
+    const vo = `${H.Vout} = −(${H.R2}/${H.R1})·${H.Vin} = −(${fmtR(R2)} / ${fmtR(R1)}) × ${P(Vin)}`;
+    if(id==='vout') return mk('inverting_load',n,r,v,id,`Find the output voltage <b>${H.Vout}</b>.`,'V',Vout,[GOLDEN,VG,
+      `The current through ${H.R1} is ${H.Vin}/${H.R1}, and it all continues through ${H.R2}. Does the load ${H.RL} change this? An ideal op-amp can supply any output current, so no.`,
+      `${vo}.`]);
+    if(id==='il') return mk('inverting_load',n,r,v,id,`Find the load current <b>${H.IL}</b> through ${H.RL} in the direction of the arrow.`,'mA',mA(IL),[GOLDEN,VG,
+      `First find ${H.Vout}. The load does not affect the gain of an ideal op-amp: ${H.Vout} = −(${H.R2}/${H.R1})·${H.Vin}.`,
+      `${H.IL} = ${H.Vout} / ${H.RL}, with ${vo}, and ${H.RL} = ${fmtR(RL)}.`+TOMA+SIGN]);
+    return mk('inverting_load',n,r,v,id,`Find the op-amp output current <b>${H.Io}</b> in the direction of the arrow.`,'mA',mA(Io),[GOLDEN,VG+` Use this to find ${H.Vout} = −(${H.R2}/${H.R1})·${H.Vin}.`,
+      `KCL at the output node: the op-amp supplies the load current ${H.Vout}/${H.RL} <i>and</i> the feedback current (${H.Vout} − ${H.Vm})/${H.R2} flowing back through ${H.R2}.`,
+      `${H.Io} = ${H.Vout}/${H.RL} + ${H.Vout}/${H.R2}, with ${vo}, ${H.RL} = ${fmtR(RL)}, ${H.R2} = ${fmtR(R2)}.`+TOMA+SIGN]);
+  },
+  noninverting(){
+    const R1=rVal(),R2=rVal(),Vin=vVal(); const Vout=Vin*(1+R2/R1), I1=Vin/R1, I2=(Vin-Vout)/R2;
+    if(!within(Vout,0.5,12)||!within(mA(I1),0.01,20)||R2/R1<0.3) return null;
+    const id=pick(['vout','vout','vminus','iR1','iR2']), r={R1,R2}, v={Vin}, n='Non-inverting amplifier';
+    const h2=`${H.Vin} connects directly to the + input, so ${H.Vp} = ${H.Vin}. With negative feedback, ${H.Vm} = ${H.Vp}.`;
+    if(id==='vout') return mk('noninverting',n,r,v,id,`Find the output voltage <b>${H.Vout}</b>.`,'V',Vout,[GOLDEN,h2,
+      `${H.R1} and ${H.R2} form a voltage divider from ${H.Vout} down to ground, tapped at the inverting input: ${H.Vm} = ${H.Vout}·${H.R1}/(${H.R1}+${H.R2}).`,
+      `Rearranging: ${H.Vout} = ${H.Vm}(1 + ${H.R2}/${H.R1}) = ${P(Vin)} × (1 + ${fmtR(R2)} / ${fmtR(R1)}).`]);
+    if(id==='vminus') return mk('noninverting',n,r,v,id,`Find the voltage <b>${H.Vm}</b> at the inverting input node.`,'V',Vin,[GOLDEN,
+      `Where does ${H.Vin} connect? Look at which input it drives.`, h2,
+      `So ${H.Vm} = ${H.Vin}. The resistor values aren't needed for this one!`]);
+    if(id==='iR1') return mk('noninverting',n,r,v,id,`Find the current <b>I</b> through ${H.R1} in the direction of the arrow.`,'mA',mA(I1),[GOLDEN,h2,
+      `The top of ${H.R1} is at ${H.Vm} and the bottom is at ground. Apply Ohm's law.`,
+      `I = ${H.Vm} / ${H.R1} = ${P(Vin)} / ${fmtR(R1)}.`+TOMA+SIGN]);
+    return mk('noninverting',n,r,v,id,`Find the current <b>I</b> through ${H.R2} in the direction of the arrow (left to right).`,'mA',mA(I2),[GOLDEN,h2,
+      `First find ${H.Vout} = ${H.Vin}(1 + ${H.R2}/${H.R1}). The left end of ${H.R2} is at ${H.Vm}; the right end is at ${H.Vout}.`,
+      `I = (${H.Vm} − ${H.Vout}) / ${H.R2}, with ${H.Vm} = ${P(Vin)}, ${H.Vout} = ${P(Vin)} × (1 + ${fmtR(R2)}/${fmtR(R1)}), ${H.R2} = ${fmtR(R2)}.`+TOMA+SIGN]);
+  },
+  noninv_div(){
+    const R1=rVal(),R2=rVal(),R3=rVal(),R4=rVal(),Vs=vVal(); const Vp=Vs*R4/(R3+R4), Vout=Vp*(1+R2/R1), I1=Vp/R1;
+    if(!within(Vout,0.5,12)||!within(Vp,0.1,12)||!within(mA(I1),0.01,20)) return null;
+    const id=pick(['vout','vout','vplus','iR1']), r={R1,R2,R3,R4}, v={Vs}, n='Non-inverting amplifier with input divider';
+    const div=`No current flows into the + input, so ${H.R3} and ${H.R4} form an <i>unloaded</i> voltage divider: ${H.Vp} = ${H.Vs}·${H.R4}/(${H.R3}+${H.R4}).`;
+    const vpNum=`${P(Vs)} × ${fmtR(R4)} / (${fmtR(R3)} + ${fmtR(R4)})`;
+    if(id==='vout') return mk('noninv_div',n,r,v,id,`Find the output voltage <b>${H.Vout}</b>.`,'V',Vout,[GOLDEN,div,
+      `With negative feedback, ${H.Vm} = ${H.Vp}. ${H.R1} and ${H.R2} then set a non-inverting gain: ${H.Vout} = ${H.Vp}(1 + ${H.R2}/${H.R1}).`,
+      `${H.Vp} = ${vpNum}, then ${H.Vout} = ${H.Vp} × (1 + ${fmtR(R2)} / ${fmtR(R1)}).`]);
+    if(id==='vplus') return mk('noninv_div',n,r,v,id,`Find the voltage <b>${H.Vp}</b> at the marked node.`,'V',Vp,[GOLDEN,
+      `Which resistors actually carry current between ${H.Vs} and ground? Remember rule (1).`, div,
+      `${H.Vp} = ${vpNum}. ${H.R1} and ${H.R2} play no part here.`]);
+    return mk('noninv_div',n,r,v,id,`Find the current <b>I</b> through ${H.R1} in the direction of the arrow.`,'mA',mA(I1),[GOLDEN,div,
+      `With negative feedback, ${H.Vm} = ${H.Vp}. The top of ${H.R1} is at ${H.Vm} and the bottom at ground.`,
+      `I = ${H.Vp} / ${H.R1}, with ${H.Vp} = ${vpNum} and ${H.R1} = ${fmtR(R1)}.`+TOMA+SIGN]);
+  },
+  summing(){
+    const R1=rVal(),R2=rVal(),R3=rVal(),V1=vVal(),V2=vVal(); const I=V1/R1+V2/R2, Vout=-R3*I;
+    if(!within(Vout,0.3,12)||!within(mA(I),0.01,20)) return null;
+    const id=pick(['vout','vout','iR3']), r={R1,R2,R3}, v={V1,V2}, n='Inverting summing amplifier';
+    const h3=`Each input pushes its own current into the virtual ground: I<sub>1</sub> = ${H.V1}/${H.R1} and I<sub>2</sub> = ${H.V2}/${H.R2}. By KCL, their sum must leave through ${H.R3}.`;
+    if(id==='vout') return mk('summing',n,r,v,id,`Find the output voltage <b>${H.Vout}</b>.`,'V',Vout,[GOLDEN,VG,h3,
+      `${H.Vout} = −${H.R3}(${H.V1}/${H.R1} + ${H.V2}/${H.R2}) = −${fmtR(R3)} × (${P(V1)}/${fmtR(R1)} + ${P(V2)}/${fmtR(R2)}).`]);
+    return mk('summing',n,r,v,id,`Find the current <b>I</b> through ${H.R3} in the direction of the arrow.`,'mA',mA(I),[GOLDEN,VG,h3,
+      `I = ${H.V1}/${H.R1} + ${H.V2}/${H.R2} = ${P(V1)}/${fmtR(R1)} + ${P(V2)}/${fmtR(R2)}.`+TOMA+SIGN]);
+  },
+  difference(){
+    let R1=rVal(),R2=rVal(),R3,R4; if(Math.random()<0.5){R3=R1;R4=R2;}else{R3=rVal();R4=rVal();}
+    const V1=vVal(),V2=vVal(); const Vp=V2*R4/(R3+R4), Vout=Vp*(1+R2/R1)-V1*R2/R1, I1=(V1-Vp)/R1;
+    if(!within(Vout,0.3,12)||!within(Vp,0.05,12)||!within(mA(I1),0.01,20)) return null;
+    const id=pick(['vout','vout','vplus','iR1']), r={R1,R2,R3,R4}, v={V1,V2}, n='Difference amplifier';
+    const div=`No current flows into the + input, so ${H.R3} and ${H.R4} divide ${H.V2}: ${H.Vp} = ${H.V2}·${H.R4}/(${H.R3}+${H.R4}).`;
+    const vpNum=`${P(V2)} × ${fmtR(R4)} / (${fmtR(R3)} + ${fmtR(R4)})`;
+    if(id==='vout') return mk('difference',n,r,v,id,`Find the output voltage <b>${H.Vout}</b>.`,'V',Vout,[GOLDEN,div,
+      `${H.Vm} = ${H.Vp}. Now KCL at the inverting node: (${H.V1} − ${H.Vm})/${H.R1} = (${H.Vm} − ${H.Vout})/${H.R2}.`,
+      `Solving: ${H.Vout} = ${H.Vp}(1 + ${H.R2}/${H.R1}) − ${H.V1}·${H.R2}/${H.R1}, with ${H.Vp} = ${vpNum}, ${H.V1} = ${P(V1)}, ${H.R1} = ${fmtR(R1)}, ${H.R2} = ${fmtR(R2)}.`]);
+    if(id==='vplus') return mk('difference',n,r,v,id,`Find the voltage <b>${H.Vp}</b> at the marked node.`,'V',Vp,[GOLDEN,
+      `Only ${H.V2}, ${H.R3} and ${H.R4} matter for this node. Why don't the others?`, div,
+      `${H.Vp} = ${vpNum}.`]);
+    return mk('difference',n,r,v,id,`Find the current <b>I</b> through ${H.R1} in the direction of the arrow.`,'mA',mA(I1),[GOLDEN,div,
+      `With negative feedback, ${H.Vm} = ${H.Vp}. The left end of ${H.R1} is at ${H.V1}, the right end at ${H.Vm}.`,
+      `I = (${H.V1} − ${H.Vp}) / ${H.R1}, with ${H.V1} = ${P(V1)}, ${H.Vp} = ${vpNum}, ${H.R1} = ${fmtR(R1)}.`+TOMA+SIGN]);
+  },
+  follower(){
+    const R1=rVal(),R2=rVal(),RL=rVal(3,3),Vs=vVal(); const Vp=Vs*R2/(R1+R2), IL=Vp/RL;
+    if(!within(Vp,0.1,12)||!within(mA(IL),0.02,20)) return null;
+    const id=pick(['vout','il']), r={R1,R2,RL}, v={Vs}, n='Voltage follower with divider and load';
+    const div=`No current flows into the + input, so the ${H.R1}–${H.R2} divider is unloaded: ${H.Vp} = ${H.Vs}·${H.R2}/(${H.R1}+${H.R2}).`;
+    const fol=`The output is wired straight back to the − input, so ${H.Vout} = ${H.Vm} = ${H.Vp}. This is a unity-gain buffer: the op-amp, not the divider, supplies the load current.`;
+    const vpNum=`${P(Vs)} × ${fmtR(R2)} / (${fmtR(R1)} + ${fmtR(R2)})`;
+    if(id==='vout') return mk('follower',n,r,v,id,`Find the output voltage <b>${H.Vout}</b>.`,'V',Vp,[GOLDEN,div,fol,
+      `${H.Vout} = ${H.Vp} = ${vpNum}. ${H.RL} does not affect it.`]);
+    return mk('follower',n,r,v,id,`Find the load current <b>${H.IL}</b> through ${H.RL} in the direction of the arrow.`,'mA',mA(IL),[GOLDEN,div,fol,
+      `${H.IL} = ${H.Vout} / ${H.RL}, with ${H.Vout} = ${vpNum} and ${H.RL} = ${fmtR(RL)}.`+TOMA+SIGN]);
+  }
+};
+function generate(type){
+  const keys=Object.keys(GEN);
+  for(let k=0;k<2000;k++){ const t = type==='any'? pick(keys) : type; const q=GEN[t](); if(q) return q; }
+  return null;
+}
+
+/* ---------------- Schematic drawing ---------------- */
+function lab(name,rest=''){ if(name.length>1) return `${name[0]}<tspan dy="3" font-size="10">${name.slice(1)}</tspan><tspan dy="-3">${rest}</tspan>`; return name+rest; }
+const pl = pts => `<polyline class="w" points="${pts.map(p=>p.join(',')).join(' ')}"/>`;
+const W = (...pts) => pl(pts);
+function resH(x1,y,x2,name,val){
+  const m=(x1+x2)/2,a=m-24,b=m+24,pts=[[x1,y],[a,y]];
+  for(let i=0;i<6;i++) pts.push([a+(i+0.5)*8, y+(i%2?7:-7)]);
+  pts.push([b,y],[x2,y]);
+  return pl(pts)+`<text class="rl" x="${m}" y="${y-15}" text-anchor="middle">${lab(name,' = '+fmtR(val))}</text>`;
+}
+function resV(x,y1,y2,name,val){
+  const m=(y1+y2)/2,a=m-24,b=m+24,pts=[[x,y1],[x,a]];
+  for(let i=0;i<6;i++) pts.push([x+(i%2?7:-7), a+(i+0.5)*8]);
+  pts.push([x,b],[x,y2]);
+  return pl(pts)+`<text class="rl" x="${x+14}" y="${m-3}">${lab(name)}</text><text class="rl" x="${x+14}" y="${m+13}">${fmtR(val)}</text>`;
+}
+const gnd = (x,y) => `<line class="w" x1="${x-12}" y1="${y}" x2="${x+12}" y2="${y}"/><line class="w" x1="${x-7}" y1="${y+5}" x2="${x+7}" y2="${y+5}"/><line class="w" x1="${x-2.5}" y1="${y+10}" x2="${x+2.5}" y2="${y+10}"/>`;
+const dot = (x,y) => `<circle cx="${x}" cy="${y}" r="4" fill="#373A36"/>`;
+const term = (x,y,name,v) => `<circle cx="${x}" cy="${y}" r="5" fill="#fff" stroke="#373A36" stroke-width="2.2"/><text class="tl" x="${x-11}" y="${y+5}" text-anchor="end">${lab(name,' = '+fmtV(v))}</text>`;
+const pulse = (x,y) => `<circle cx="${x}" cy="${y}" r="6" fill="none" stroke="#A6192E" stroke-width="2"><animate attributeName="r" values="6;18" dur="1.4s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0" dur="1.4s" repeatCount="indefinite"/></circle>`;
+function hlNode(x,y,name,lx,ly,anchor){ return pulse(x,y)+`<circle cx="${x}" cy="${y}" r="5.5" fill="#A6192E"/><text class="hl" x="${lx}" y="${ly}" text-anchor="${anchor}">${lab(name,' = ?')}</text>`; }
+function voutTerm(ask){
+  return (ask?pulse(620,200):'')+`<circle cx="620" cy="200" r="5" fill="#fff" stroke="${ask?'#A6192E':'#373A36'}" stroke-width="2.4"/><text class="${ask?'hl':'tl'}" x="620" y="184" text-anchor="middle">${lab('Vout',ask?' = ?':'')}</text>`;
+}
+const arrowH = (x1,x2,y,name,ly) => `<line class="arr" x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" marker-end="url(#ah)"/><text class="hl" x="${(x1+x2)/2}" y="${ly}" text-anchor="middle">${lab(name,' = ?')}</text>`;
+const arrowV = (x,y1,y2,name) => `<line class="arr" x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" marker-end="url(#ah)"/><text class="hl" x="${x-9}" y="${(y1+y2)/2+5}" text-anchor="end">${lab(name,' = ?')}</text>`;
+const opamp = () => `<polygon class="oa" points="330,140 330,260 430,200"/><text class="sym" x="338" y="177">−</text><text class="sym" x="337" y="238">+</text>`;
+const outWire = () => W([430,200],[620,200])+dot(490,200);
+const fbTop = (x,name,val) => W([x,170],[x,90],[340,90])+resH(340,90,420,name,val)+W([420,90],[490,90],[490,200])+dot(x,170);
+const loadR = (val) => dot(550,200)+resV(550,200,290,'RL',val)+gnd(550,290);
+
+function drawCircuit(q){
+  const r=q.r, v=q.v, a=q.ask.id; let s='', top='', h=320;
+  switch(q.type){
+    case 'inverting': case 'inverting_load':
+      s+=W([100,170],[130,170])+resH(130,170,210,'R1',r.R1)+W([210,170],[330,170])+fbTop(270,'R2',r.R2);
+      s+=W([330,230],[300,230],[300,250])+gnd(300,250)+outWire();
+      if(r.RL) s+=loadR(r.RL);
+      top+=term(100,170,'Vin',v.Vin);
+      if(a==='iR1') top+=arrowH(150,192,192,'I',210);
+      if(a==='iR2') top+=arrowH(360,402,110,'I',128);
+      if(a==='io') top+=arrowH(440,480,186,'Io',176);
+      if(a==='il') top+=arrowV(533,222,268,'IL');
+      h=320; break;
+    case 'noninverting': case 'noninv_div':
+      s+=W([330,170],[200,170])+resV(200,170,262,'R1',r.R1)+gnd(200,262)+fbTop(270,'R2',r.R2)+outWire();
+      if(q.type==='noninverting'){
+        s+=W([100,310],[300,310],[300,230],[330,230]); top+=term(100,310,'Vin',v.Vin); h=350;
+      } else {
+        s+=W([100,330],[130,330])+resH(130,330,210,'R3',r.R3)+W([210,330],[300,330],[300,230],[330,230]);
+        s+=dot(250,330)+resV(250,330,410,'R4',r.R4)+gnd(250,410);
+        top+=term(100,330,'Vs',v.Vs); h=440;
+        if(a==='vplus') top+=hlNode(250,330,'V+',250,314,'middle');
+      }
+      if(a==='vminus') top+=hlNode(270,170,'V−',279,157,'start');
+      if(a==='iR1') top+=arrowV(184,196,238,'I');
+      if(a==='iR2') top+=arrowH(360,402,110,'I',128);
+      break;
+    case 'summing':
+      s+=W([100,130],[130,130])+resH(130,130,210,'R1',r.R1)+W([210,130],[240,130],[240,210],[210,210]);
+      s+=resH(130,210,210,'R2',r.R2)+W([100,210],[130,210])+dot(240,170)+W([240,170],[330,170]);
+      s+=fbTop(285,'R3',r.R3)+W([330,230],[305,230],[305,250])+gnd(305,250)+outWire();
+      top+=term(100,130,'V1',v.V1)+term(100,210,'V2',v.V2);
+      if(a==='iR3') top+=arrowH(360,402,110,'I',128);
+      h=310; break;
+    case 'difference':
+      s+=W([100,170],[130,170])+resH(130,170,210,'R1',r.R1)+W([210,170],[330,170])+fbTop(270,'R2',r.R2);
+      s+=W([100,310],[130,310])+resH(130,310,210,'R3',r.R3)+W([210,310],[300,310],[300,230],[330,230]);
+      s+=dot(250,310)+resV(250,310,390,'R4',r.R4)+gnd(250,390)+outWire();
+      top+=term(100,170,'V1',v.V1)+term(100,310,'V2',v.V2);
+      if(a==='vplus') top+=hlNode(250,310,'V+',250,294,'middle');
+      if(a==='iR1') top+=arrowH(150,192,192,'I',210);
+      h=420; break;
+    case 'follower':
+      s+=W([100,310],[130,310])+resH(130,310,210,'R1',r.R1)+W([210,310],[300,310],[300,230],[330,230]);
+      s+=dot(250,310)+resV(250,310,390,'R2',r.R2)+gnd(250,390);
+      s+=W([330,170],[300,170],[300,110],[490,110],[490,200])+outWire()+loadR(r.RL);
+      top+=term(100,310,'Vs',v.Vs);
+      if(a==='il') top+=arrowV(533,222,268,'IL');
+      h=420; break;
+  }
+  top+=voutTerm(a==='vout');
+  return `<svg viewBox="0 55 680 ${h-55}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${q.name} schematic">
+    <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#A6192E"/></marker></defs>
+    ${s}${opamp()}${top}</svg>`;
+}
+
+/* ---------------- Medals ---------------- */
+const TIERS=[
+  {key:'genius',  name:'Genius',  c1:'#FFF6C2',c2:'#C9971C',ic:'#A6192E',icon:'star', msg:'Solved without a single hint. Outstanding engineering intuition!',conf:260},
+  {key:'gold',    name:'Gold',    c1:'#FBE7A1',c2:'#B8860B',ic:'#fff',   icon:'star', msg:'Just one hint needed. Excellent work.',conf:90},
+  {key:'silver',  name:'Silver',  c1:'#F6F7F8',c2:'#8E959B',ic:'#fff',   icon:'star', msg:'Two hints. Solid reasoning; go for Gold next time.',conf:40},
+  {key:'bronze',  name:'Bronze',  c1:'#F3C9A3',c2:'#8C4A1E',ic:'#fff',   icon:'star', msg:'Three hints. You got there! Try relying on fewer next time.',conf:18},
+  {key:'finisher',name:'Finisher',c1:'#F1EEE6',c2:'#8F8A7E',ic:'#373A36',icon:'check',msg:'All hints used. Now try the next one on your own.',conf:0}
+];
+let mid=0;
+function starPath(cx,cy,R,r){ let d=''; for(let i=0;i<10;i++){ const a=-Math.PI/2+i*Math.PI/5, rr=i%2?r:R; d+=(i?'L':'M')+(cx+rr*Math.cos(a)).toFixed(1)+','+(cy+rr*Math.sin(a)).toFixed(1); } return d+'Z'; }
+function medalSVG(t,w){
+  const T=TIERS[t], id='g'+(mid++), cx=60, cy=100;
+  let rays='';
+  if(t===0){
+    let p=''; for(let i=0;i<16;i++){ const a=i*Math.PI/8, b=a+Math.PI/16; p+=`<polygon points="${cx},${cy} ${cx+60*Math.cos(a)},${cy+60*Math.sin(a)} ${cx+60*Math.cos(b)},${cy+60*Math.sin(b)}" fill="#F2C94C" opacity=".55"/>`; }
+    rays=`<g>${p}<animateTransform attributeName="transform" type="rotate" from="0 ${cx} ${cy}" to="360 ${cx} ${cy}" dur="14s" repeatCount="indefinite"/></g>`;
+  }
+  const icon = T.icon==='star' ? `<path d="${starPath(cx,cy,17,7.5)}" fill="${T.ic}" stroke="${t===0?'#76232F':T.c2}" stroke-width="1.2"/>`
+    : `<path d="M${cx-11},${cy} l8,8 l15,-17" fill="none" stroke="${T.ic}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`;
+  const spark = t===0 ? [[18,48],[104,58],[100,150],[14,140]].map(([x,y],i)=>`<path d="${starPath(x,y,7,2.2)}" fill="#fff" stroke="#D4A017" stroke-width="1"><animate attributeName="opacity" values="0;1;0" dur="1.6s" begin="${i*0.4}s" repeatCount="indefinite"/></path>`).join('') : '';
+  return `<svg width="${w}" height="${w*1.33}" viewBox="0 0 120 160" xmlns="http://www.w3.org/2000/svg">
+   <defs><radialGradient id="${id}" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="${T.c1}"/><stop offset="1" stop-color="${T.c2}"/></radialGradient></defs>
+   ${rays}
+   <path d="M36 0 L58 0 L72 68 L50 68Z" fill="#76232F"/><path d="M84 0 L62 0 L48 68 L70 68Z" fill="#A6192E"/>
+   <circle cx="${cx}" cy="${cy}" r="37" fill="url(#${id})" stroke="${T.c2}" stroke-width="3"/>
+   <circle cx="${cx}" cy="${cy}" r="29" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.5" stroke-dasharray="2 3"/>
+   ${icon}${spark}</svg>`;
+}
+
+/* ---------------- Confetti ---------------- */
+const cv=document.getElementById('confetti'), cx2=cv.getContext('2d'); let parts=[], raf=null;
+function sizeCv(){ cv.width=innerWidth*devicePixelRatio; cv.height=innerHeight*devicePixelRatio; }
+addEventListener('resize',sizeCv); sizeCv();
+function confetti(n){
+  if(!n) return;
+  const cols=['#A6192E','#76232F','#D6D2C4','#F2C94C','#ffffff','#373A36','#D4A017'];
+  const W0=cv.width, H0=cv.height;
+  for(let i=0;i<n;i++){
+    const a=-Math.PI/2+(Math.random()-.5)*Math.PI*1.1, sp=(8+Math.random()*14)*devicePixelRatio;
+    parts.push({x:W0/2+(Math.random()-.5)*80,y:H0*0.45,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,w:(6+Math.random()*7)*devicePixelRatio,h:(3+Math.random()*5)*devicePixelRatio,rot:Math.random()*6,vr:(Math.random()-.5)*.4,c:pick(cols),life:0});
+  }
+  if(!raf) loop();
+}
+function loop(){
+  cx2.clearRect(0,0,cv.width,cv.height);
+  parts.forEach(p=>{ p.vy+=0.38*devicePixelRatio; p.vx*=0.985; p.vy*=0.985; p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr; p.life++;
+    cx2.save(); cx2.translate(p.x,p.y); cx2.rotate(p.rot); cx2.fillStyle=p.c; cx2.fillRect(-p.w/2,-p.h/2,p.w,p.h); cx2.restore(); });
+  parts=parts.filter(p=>p.y<cv.height+40 && p.life<400);
+  if(parts.length) raf=requestAnimationFrame(loop); else { raf=null; cx2.clearRect(0,0,cv.width,cv.height); }
+}
+
+/* ---------------- State & UI ---------------- */
+const $=id=>document.getElementById(id);
+let q=null, st={hints:0,solved:false,attempts:0,done:false}, qn=0;
+let cab={genius:0,gold:0,silver:0,bronze:0,finisher:0,revealed:0,streak:0};
+try{ const s=JSON.parse(localStorage.getItem('opampCabinet')||'null'); if(s) cab=Object.assign(cab,s); }catch(e){}
+function saveCab(){ try{ localStorage.setItem('opampCabinet',JSON.stringify(cab)); }catch(e){} }
+
+function renderCab(){
+  $('cab').innerHTML=TIERS.map(T=>`<div class="slot">${medalSVG(TIERS.indexOf(T),34).replace('<animateTransform','<animateTransform begin="indefinite"')}<span class="n">${cab[T.key]}</span>${T.name}</div>`).join('');
+  const total=TIERS.reduce((s,T)=>s+cab[T.key],0);
+  $('cabsum').textContent=`${total} medal${total===1?'':'s'} · ${cab.revealed} answer${cab.revealed===1?'':'s'} revealed`;
+  $('streak').textContent=`Genius streak: ${cab.streak}`;
+}
+function renderLadder(){
+  if(!q){ $('ladder').innerHTML=''; return; }
+  $('ladder').innerHTML=TIERS.map((T,i)=>`<div class="rung ${i<st.hints?'lost':''} ${i===st.hints&&!st.done?'cur':''}">${medalSVG(i,30).replace('<animateTransform','<animateTransform begin="indefinite"')}${T.name}</div>`).join('');
+  $('awardnow').hidden = st.done;
+  $('awardicon').innerHTML = medalSVG(st.hints,34);
+  $('awardtier').textContent = TIERS[st.hints].name;
+}
+function renderHints(){
+  if(!q) return;
+  $('hints').innerHTML='<div class="hints">'+q.hints.map((h,i)=>{
+    const open = i<st.hints || st.done, next = i===st.hints && !st.done;
+    return `<div class="hint ${open?'open':(next?'':'locked')}">
+      <div class="hhead"><span class="hnum">Hint ${i+1}</span>${open?'':`<button class="reveal" data-i="${i}" ${next?'':'disabled'}>${next?'Reveal':'Locked'}</button>`}</div>
+      ${open?`<div class="hbody">${h}</div>`:`<div class="hcost">${next?`Revealing drops your award to <b>${TIERS[i+1].name}</b>`:'Reveal the previous hint first'}</div>`}
+    </div>`;}).join('')+'</div>';
+  document.querySelectorAll('.reveal').forEach(b=>b.onclick=()=>{ st.hints=+b.dataset.i+1; renderHints(); renderLadder(); });
+}
+function setFeedback(cls,html){ const f=$('feedback'); f.className='feedback '+(cls||''); f.innerHTML=html||''; }
+
+function newQuestion(){
+  q=generate($('ctype').value); qn++;
+  st={hints:0,solved:false,attempts:0,done:false};
+  $('circuit').innerHTML=drawCircuit(q);
+  $('qtag').textContent=`Question ${qn} · ${q.name}`;
+  $('qprompt').innerHTML=q.ask.prompt;
+  $('unit').textContent=q.ask.unit;
+  $('anslabel').innerHTML = q.ask.unit==='V' ? 'Answer' : 'Answer';
+  $('ans').value=''; $('ans').disabled=false; $('check').disabled=false; $('giveup').disabled=false;
+  $('qbox').hidden=$('answer').hidden=$('foot').hidden=false;
+  if($('giveup').disarm) $('giveup').disarm();
+  $('attempts').textContent='Attempts: 0';
+  $('qcount').textContent=`${qn} question${qn===1?'':'s'} this session`;
+  setFeedback('','');
+  renderHints(); renderLadder();
+  $('ans').focus({preventScroll:true});
+}
+function finish(){ st.done=true; $('ans').disabled=true; $('check').disabled=true; $('giveup').disabled=true; renderHints(); renderLadder(); }
+
+function check(){
+  if(!q||st.done) return;
+  const raw=$('ans').value.trim().replace(/[−–]/g,'-').replace(',','.');
+  const x=parseFloat(raw);
+  if(raw===''||isNaN(x)){ setFeedback('info','Enter a number first (e.g. <b>-4.7</b>).'); return; }
+  st.attempts++; $('attempts').textContent=`Attempts: ${st.attempts}`;
+  const c=q.ask.value, tol=Math.max(Math.abs(c)*0.02,1e-4), u=q.ask.unit;
+  if(Math.abs(x-c)<=tol){
+    st.solved=true; const t=st.hints; finish();
+    setFeedback('ok',`Correct! The answer is <b>${sig(c)} ${u}</b>. All hints are now open as a worked solution.`);
+    cab[TIERS[t].key]++; cab.streak = t===0 ? cab.streak+1 : 0; saveCab(); renderCab();
+    showMedal(t); return;
+  }
+  let tip='Not quite. Check your working and try again.';
+  if(Math.abs(x+c)<=tol) tip='The magnitude is right but the <b>sign</b> is wrong. Check your current direction / polarity.';
+  else if(Math.abs(x/1000-c)<=tol||Math.abs(x*1000-c)<=tol) tip=`Looks like a <b>units</b> slip. The answer is required in <b>${u}</b>.`;
+  else if(c!==0 && Math.abs(x/c-1)<0.1) tip='Very close! Check your rounding and arithmetic.';
+  setFeedback('bad',tip);
+}
+function showMedal(t){
+  const T=TIERS[t];
+  $('mmedal').innerHTML=medalSVG(t,130);
+  const tt=$('mtitle'); tt.textContent=T.name+(t===0?'!':''); tt.className = t===0?'shine':'';
+  $('mmsg').textContent=T.msg;
+  $('mmeta').textContent=`${st.hints} hint${st.hints===1?'':'s'} used · solved in ${st.attempts} attempt${st.attempts===1?'':'s'}`+(t===0&&cab.streak>1?` · Genius streak ×${cab.streak}`:'');
+  $('overlay').classList.add('show');
+  confetti(T.conf); if(t===0) setTimeout(()=>confetti(160),550);
+}
+function closeModal(){ $('overlay').classList.remove('show'); }
+
+$('create').onclick=newQuestion;
+$('check').onclick=check;
+$('ans').addEventListener('keydown',e=>{ if(e.key==='Enter') check(); });
+/* Inline two-click confirmation (browser confirm() pop-ups are often blocked in LMS embeds and previews) */
+function armButton(btn,armedText,action){
+  const idle=btn.textContent; let timer=null;
+  btn.onclick=()=>{
+    if(btn.dataset.armed==='1'){ clearTimeout(timer); btn.dataset.armed=''; btn.textContent=idle; action(); return; }
+    btn.dataset.armed='1'; btn.textContent=armedText;
+    timer=setTimeout(()=>{ btn.dataset.armed=''; btn.textContent=idle; },4000);
+  };
+  btn.disarm=()=>{ clearTimeout(timer); btn.dataset.armed=''; btn.textContent=idle; };
+}
+armButton($('giveup'),'Click again to reveal (no medal)',()=>{
+  if(!q||st.done) return;
+  const a=q.ask.value;
+  $('ans').value=parseFloat(a.toPrecision(3)).toString();
+  finish(); cab.revealed++; cab.streak=0; saveCab(); renderCab();
+  setFeedback('info',`Answer revealed: <b>${sig(a)} ${q.ask.unit}</b>. No medal for this one. Work through the hints for the full solution, then try a new question.`);
+});
+$('mnext').onclick=()=>{ closeModal(); newQuestion(); };
+$('mclose').onclick=closeModal;
+$('overlay').addEventListener('click',e=>{ if(e.target.id==='overlay') closeModal(); });
+addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+/* ---------------- Certificate ---------------- */
+const QUOTES=[
+  'Virtual ground, real progress.',
+  'Feedback makes amplifiers stable, and engineers unstoppable.',
+  'Hints are bridges. Genius is learning to build your own.',
+  'The output follows the input. Your results follow your effort.',
+  'Small signals, amplified by persistence, become great achievements.',
+  'Master the fundamentals and every circuit becomes a conversation.',
+  'Like an ideal op-amp: give everything, draw no excuses.',
+  'Every great design starts with one node and the courage to analyse it.',
+  'Gain is earned one solved circuit at a time.',
+  'Curiosity is the best amplifier there is.'
+];
+let quoteIdx=rand(QUOTES.length);
+const SERIF='Georgia,"Times New Roman",serif', SANS='system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
+
+function cMedal(c,t,cx,cy,r){
+  const T=TIERS[t];
+  c.save();
+  if(t===0){ c.fillStyle='rgba(242,201,76,.45)';
+    for(let i=0;i<16;i++){ const a=i*Math.PI/8,b=a+Math.PI/16; c.beginPath(); c.moveTo(cx,cy); c.lineTo(cx+r*1.62*Math.cos(a),cy+r*1.62*Math.sin(a)); c.lineTo(cx+r*1.62*Math.cos(b),cy+r*1.62*Math.sin(b)); c.closePath(); c.fill(); } }
+  const k=r/37;
+  c.fillStyle='#76232F'; c.beginPath(); c.moveTo(cx-24*k,cy-100*k); c.lineTo(cx-2*k,cy-100*k); c.lineTo(cx+12*k,cy-32*k); c.lineTo(cx-10*k,cy-32*k); c.closePath(); c.fill();
+  c.fillStyle='#A6192E'; c.beginPath(); c.moveTo(cx+24*k,cy-100*k); c.lineTo(cx+2*k,cy-100*k); c.lineTo(cx-12*k,cy-32*k); c.lineTo(cx+10*k,cy-32*k); c.closePath(); c.fill();
+  const g=c.createRadialGradient(cx-r*.3,cy-r*.4,r*.1,cx,cy,r*1.1); g.addColorStop(0,T.c1); g.addColorStop(1,T.c2);
+  c.fillStyle=g; c.strokeStyle=T.c2; c.lineWidth=3*k; c.beginPath(); c.arc(cx,cy,r,0,7); c.fill(); c.stroke();
+  c.setLineDash([2*k,3*k]); c.strokeStyle='rgba(255,255,255,.75)'; c.lineWidth=1.5*k; c.beginPath(); c.arc(cx,cy,29*k,0,7); c.stroke(); c.setLineDash([]);
+  if(T.icon==='star'){ c.fillStyle=T.ic; c.strokeStyle=t===0?'#76232F':T.c2; c.lineWidth=1.2*k; c.beginPath();
+    for(let i=0;i<10;i++){ const a=-Math.PI/2+i*Math.PI/5, rr=(i%2?7.5:17)*k; i?c.lineTo(cx+rr*Math.cos(a),cy+rr*Math.sin(a)):c.moveTo(cx+rr*Math.cos(a),cy+rr*Math.sin(a)); }
+    c.closePath(); c.fill(); c.stroke(); }
+  else { c.strokeStyle=T.ic; c.lineWidth=5*k; c.lineCap='round'; c.lineJoin='round'; c.beginPath(); c.moveTo(cx-11*k,cy); c.lineTo(cx-3*k,cy+8*k); c.lineTo(cx+12*k,cy-9*k); c.stroke(); }
+  c.restore();
+}
+function wrap(c,text,x,y,maxW,lh){
+  const words=text.split(' '); let line='', lines=[];
+  for(const w of words){ const t=line?line+' '+w:w; if(c.measureText(t).width>maxW&&line){ lines.push(line); line=w; } else line=t; }
+  lines.push(line); lines.forEach((l,i)=>c.fillText(l,x,y+i*lh)); return lines.length;
+}
+function certOptions(){
+  const opts=TIERS.map((T,i)=>({v:String(i),n:cab[T.key],t:i})).filter(o=>o.n>0);
+  const total=TIERS.reduce((s,T)=>s+cab[T.key],0);
+  if(total>0) opts.push({v:'all',n:total,t:TIERS.findIndex(T=>cab[T.key]>0)});
+  if(cab.streak>=3) opts.unshift({v:'streak',n:cab.streak,t:0});
+  return opts;
+}
+function optLabel(o){
+  if(o.v==='streak') return `Genius streak of ${o.n} in a row`;
+  if(o.v==='all') return `${o.n} medal${o.n===1?'':'s'} in total`;
+  return `${o.n} ${TIERS[o.t].name} medal${o.n===1?'':'s'}`;
+}
+function drawCert(){
+  const c=$('certCanvas').getContext('2d'), W=2000, Hh=1414, cx=W/2;
+  const o=certOptions().find(o=>o.v===$('certTier').value)||certOptions()[0];
+  const name=($('certName').value.trim()||'Your Name');
+  // background & borders
+  c.fillStyle='#FBFAF7'; c.fillRect(0,0,W,Hh);
+  const bg=c.createRadialGradient(cx,Hh*.45,100,cx,Hh*.45,1200); bg.addColorStop(0,'rgba(214,210,196,0)'); bg.addColorStop(1,'rgba(214,210,196,.45)');
+  c.fillStyle=bg; c.fillRect(0,0,W,Hh);
+  c.fillStyle='#76232F'; c.fillRect(0,0,W,34); c.fillRect(0,Hh-34,W,34); c.fillRect(0,0,34,Hh); c.fillRect(W-34,0,34,Hh);
+  c.strokeStyle='#A6192E'; c.lineWidth=6; c.strokeRect(62,62,W-124,Hh-124);
+  c.strokeStyle='#C9971C'; c.lineWidth=2; c.strokeRect(82,82,W-164,Hh-164);
+  // corner op-amp ornaments
+  [[130,130,1],[W-130,130,-1],[130,Hh-130,1],[W-130,Hh-130,-1]].forEach(([x,y,s])=>{
+    c.save(); c.translate(x,y); c.scale(s,1); c.strokeStyle='#A6192E'; c.lineWidth=4; c.lineJoin='round';
+    c.beginPath(); c.moveTo(-22,-26); c.lineTo(-22,26); c.lineTo(26,0); c.closePath(); c.stroke(); c.restore(); });
+  // medal
+  cMedal(c,o.t,cx,265,92);
+  // text
+  c.textAlign='center'; c.textBaseline='alphabetic';
+  c.fillStyle='#A6192E'; c.font=`700 64px ${SANS}`;
+  c.letterSpacing='14px'; c.fillText('CERTIFICATE',cx+7,480); c.letterSpacing='0px';
+  c.fillStyle='#76232F'; c.font=`italic 44px ${SERIF}`; c.fillText('of Achievement',cx,540);
+  c.fillStyle='#6b6e69'; c.font=`500 34px ${SANS}`; c.letterSpacing='4px'; c.fillText('THIS CERTIFIES THAT',cx+2,625); c.letterSpacing='0px';
+  let fs=120; do{ c.font=`700 ${fs}px ${SERIF}`; fs-=4; } while(c.measureText(name).width>1450 && fs>50);
+  c.fillStyle='#373A36'; c.fillText(name,cx,760);
+  c.strokeStyle='#C9971C'; c.lineWidth=3; c.beginPath(); c.moveTo(cx-560,795); c.lineTo(cx+560,795); c.stroke();
+  c.fillStyle='#6b6e69'; c.font=`400 38px ${SANS}`; c.fillText(o.v==='streak'?'achieved an unbroken':'has achieved',cx,865);
+  c.fillStyle='#A6192E'; c.font=`700 84px ${SERIF}`;
+  const headline = o.v==='streak' ? `Genius Streak of ${o.n}` : o.v==='all' ? `${o.n} Medal${o.n===1?'':'s'}` : `${o.n} ${TIERS[o.t].name} Medal${o.n===1?'':'s'}`;
+  c.fillText(headline,cx,965);
+  c.fillStyle='#373A36'; c.font=`500 38px ${SANS}`;
+  c.fillText(o.v==='streak'?'in a row, solving without hints, in the Op-Amp Circuit Challenge':'in the Op-Amp Circuit Challenge',cx,1030);
+  c.fillStyle='#76232F'; c.font=`700 30px ${SANS}`; c.letterSpacing='3px'; c.fillText('MTRN2060 · MECHATRONICS',cx+1,1080); c.letterSpacing='0px';
+  // quote
+  c.fillStyle='#373A36'; c.font=`italic 40px ${SERIF}`;
+  wrap(c,'“'+QUOTES[quoteIdx]+'”',cx,1170,1300,52);
+  // footer
+  const d=new Date().toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
+  c.font=`600 28px ${SANS}`; c.fillStyle='#373A36';
+  c.textAlign='left'; c.fillText(d,180,1290);
+  c.fillStyle='#8F8A7E'; c.font=`400 22px ${SANS}`; c.fillText('DATE',180,1322);
+  c.textAlign='right'; c.fillStyle='#373A36'; c.font=`600 28px ${SANS}`;
+  c.fillText(TIERS.map(T=>`${T.name} ${cab[T.key]}`).join('  ·  '),W-180,1290);
+  c.fillStyle='#8F8A7E'; c.font=`400 22px ${SANS}`; c.fillText('MEDAL CABINET',W-180,1322);
+  $('certPreview').src=$('certCanvas').toDataURL('image/jpeg',0.92);
+}
+function openCert(){
+  const opts=certOptions();
+  if(!opts.length){ setFeedback('info','Earn your first medal to unlock a certificate!'); return; }
+  const sel=$('certTier'), prev=sel.value;
+  sel.innerHTML=opts.map(o=>`<option value="${o.v}">${optLabel(o)}</option>`).join('');
+  const best = opts.find(o=>o.v==='0') || opts[0];
+  sel.value = opts.some(o=>o.v===prev) ? prev : best.v;
+  try{ $('certName').value=localStorage.getItem('opampName')||$('certName').value; }catch(e){}
+  $('certNote').textContent='Tip: if the download is blocked, right-click the preview and choose “Save image as…”.';
+  drawCert(); $('certOverlay').classList.add('show');
+}
+$('certOpen').onclick=openCert;
+$('certName').addEventListener('input',()=>{ try{ localStorage.setItem('opampName',$('certName').value); }catch(e){} drawCert(); });
+$('certTier').onchange=drawCert;
+$('certQuote').onclick=()=>{ quoteIdx=(quoteIdx+1+rand(QUOTES.length-1))%QUOTES.length; drawCert(); };
+$('certClose').onclick=()=>$('certOverlay').classList.remove('show');
+$('certOverlay').addEventListener('click',e=>{ if(e.target.id==='certOverlay') $('certOverlay').classList.remove('show'); });
+$('certDownload').onclick=()=>{
+  drawCert();
+  const nm=($('certName').value.trim()||'Student').replace(/[^\w\- ]+/g,'').replace(/\s+/g,'_');
+  $('certCanvas').toBlob(b=>{
+    const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=`OpAmp_Certificate_${nm}.jpg`;
+    document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1000);
+  },'image/jpeg',0.92);
+};
+addEventListener('keydown',e=>{ if(e.key==='Escape') $('certOverlay').classList.remove('show'); });
+
+armButton($('reset'),'Click again to reset',()=>{ cab={genius:0,gold:0,silver:0,bronze:0,finisher:0,revealed:0,streak:0}; saveCab(); renderCab(); });
+renderCab();
+</script>
+
+
+<script>
+/* ================= Learn Op-Amp Circuits: flip-book ================= */
+(()=>{
+const G=id=>document.getElementById(id);
+
+/* ---- tiny SVG kit ---- */
+const T=(b,x,r='')=>`${b}<tspan dy="3" font-size="8">${x}</tspan><tspan dy="-3">${r}</tspan>`;
+const ln=(...p)=>`<polyline class="lw" points="${p.map(q=>q.join(',')).join(' ')}"/>`;
+function rH(x1,y,x2,lb){const m=(x1+x2)/2,a=m-15,b=m+15,p=[[x1,y],[a,y]];for(let i=0;i<6;i++)p.push([a+(i+.5)*5,y+(i%2?5:-5)]);p.push([b,y],[x2,y]);return ln(...p)+(lb?`<text class="lt" x="${m}" y="${y-10}" text-anchor="middle">${lb}</text>`:'');}
+function rV(x,y1,y2,lb){const m=(y1+y2)/2,a=m-15,b=m+15,p=[[x,y1],[x,a]];for(let i=0;i<6;i++)p.push([x+(i%2?5:-5),a+(i+.5)*5]);p.push([x,b],[x,y2]);return ln(...p)+(lb?`<text class="lt" x="${x+10}" y="${m+4}">${lb}</text>`:'');}
+const gd=(x,y)=>`<path class="lw" d="M${x-9},${y}h18M${x-5.5},${y+4}h11M${x-2},${y+8}h4"/>`;
+const dt=(x,y)=>`<circle cx="${x}" cy="${y}" r="3" fill="#373A36"/>`;
+const tm=(x,y)=>`<circle cx="${x}" cy="${y}" r="4" fill="#fff" stroke="#373A36" stroke-width="1.8"/>`;
+const oa=(x,y)=>`<polygon class="lo" points="${x},${y-32} ${x},${y+32} ${x+56},${y}"/><text class="ls" x="${x+4}" y="${y-11}">−</text><text class="ls" x="${x+4}" y="${y+21}">+</text>`;
+const fl=d=>`<path class="flow" d="${d}" marker-end="url(#lbA)"/>`;
+const tx=(x,y,s,c='lt',a='start',st='')=>`<text class="${c}" x="${x}" y="${y}" text-anchor="${a}"${st?` style="${st}"`:''}>${s}</text>`;
+const ring=(x,y)=>`<circle class="ring" cx="${x}" cy="${y}" r="6"/>`;
+const arrowL=(pts,col='lbC')=>`<polyline class="lw" points="${pts.map(q=>q.join(',')).join(' ')}" marker-end="url(#${col})"/>`;
+function wp(w,amp,clip){let d='';for(let x=0;x<=w+40;x+=2){let y=-amp*Math.sin(Math.PI*x/20);if(clip!=null)y=Math.max(-clip,Math.min(clip,y));d+=(x?'L':'M')+x+','+y.toFixed(1);}return d;}
+const scope=(x,y,w,h,ws)=>`<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="0 ${-h/2} ${w} ${h}">${ws.map(o=>`<path class="wv ${o.c||''}" d="${wp(w,o.a,o.k)}"/>`).join('')}</svg>`;
+const fig=(vb,inner,cap='')=>`<figure class="fig"><svg viewBox="0 0 ${vb}" role="img" aria-hidden="true">${inner}</svg>${cap?`<figcaption>${cap}</figcaption>`:''}</figure>`;
+const pop=(d,s)=>`<g class="lpop" style="animation-delay:${d}s">${s}</g>`;
+
+/* ---- HTML symbols ---- */
+const S=(b,x)=>`${b}<sub>${x}</sub>`;
+const Vo=S('V','out'),Vi=S('V','in'),Vp=S('V','+'),Vm=S('V','−'),R1=S('R','1'),R2=S('R','2'),R3=S('R','3'),R4=S('R','4'),RL=S('R','L'),
+      V1=S('V','1'),V2=S('V','2'),IL=S('I','L'),Io=S('I','o'),If=S('I','f'),vd=S('<i>v</i>','d');
+
+/* ---- Figures ---- */
+const F={};
+F.title=fig('360 140',
+  `<rect x="6" y="30" width="70" height="48" rx="7" class="scr"/>`+scope(6,30,70,48,[{a:7,c:'in'}])+
+  ln([76,54],[84,54])+rH(84,54,128,T('R','1'))+ln([128,54],[152,54])+dt(138,54)+
+  ln([138,54],[138,20],[152,20])+rH(152,20,214,T('R','2'))+ln([214,20],[232,20],[232,70])+
+  ln([152,86],[140,86],[140,100])+gd(140,100)+oa(152,70)+ln([208,70],[250,70])+dt(232,70)+
+  `<rect x="250" y="26" width="104" height="88" rx="7" class="scr"/>`+scope(250,26,104,88,[{a:-30}])+
+  tx(41,94,'small in','lsm','middle')+tx(302,128,'big out (inverted)','lsm','middle'));
+
+F.what=fig('360 175',
+  `<polygon class="lo" points="135,40 135,140 225,90"/>`+tx(141,72,'−','ls')+tx(141,123,'+','ls')+
+  tx(172,96,'A','lr','middle','font-size:17px;font-style:italic')+
+  ln([84,65],[135,65])+ln([84,115],[135,115])+ln([225,90],[281,90])+ln([180,65],[180,26])+ln([180,115],[180,154])+
+  tm(80,65)+tm(80,115)+tm(285,90)+
+  pop(.2,tx(70,63,T('V','−'),'lr','end')+tx(70,77,'inverting','lsm','end'))+
+  pop(.6,tx(70,113,T('V','+'),'lr','end')+tx(70,127,'non-inverting','lsm','end'))+
+  pop(1.0,tx(293,88,T('V','out'),'lr')+tx(293,102,'output','lsm'))+
+  pop(1.4,tx(188,30,T('+V','CC',' = +15 V'),'lt')+tx(188,158,T('−V','EE',' = −15 V'),'lt'))+
+  ring(285,90));
+
+F.gain=fig('360 180',
+  `<rect x="165" y="14" width="30" height="152" fill="rgba(166,25,46,.08)"/>`+
+  `<line class="lw" x1="24" y1="90" x2="338" y2="90" marker-end="url(#lbC)"/><line class="lw" x1="180" y1="170" x2="180" y2="10" marker-end="url(#lbC)"/>`+
+  `<line class="rail" x1="24" y1="30" x2="330" y2="30"/><line class="rail" x1="24" y1="150" x2="330" y2="150"/>`+
+  `<polyline class="curve" points="24,150 165,150 195,30 330,30"/>`+
+  tx(186,18,T('V','out'))+tx(336,104,T('V','+',' − ')+T('V','−'),'lt','end')+
+  tx(28,25,'+15 V','lsm')+tx(28,164,'−15 V','lsm')+
+  tx(262,24,'positive saturation','lr','middle')+tx(95,144,'negative saturation','lr','middle')+
+  tx(200,126,'linear region ≈ ±0.15 mV','lsm')+
+  `<circle r="5" fill="#A6192E" stroke="#fff" stroke-width="1.5"><animateMotion dur="6s" repeatCount="indefinite" path="M24,150 L165,150 L195,30 L330,30 L195,30 L165,150 Z"/></circle>`);
+
+F.ideal=fig('360 165',
+  `<rect x="88" y="16" width="208" height="136" rx="10" class="dash"/>`+tx(290,146,'inside the ideal op-amp','lsm','end')+
+  tm(40,50)+tm(40,120)+ln([44,50],[120,50])+ln([44,120],[120,120])+rV(120,50,120,'')+tx(132,89,T('R','in',' = ∞'),'lt')+
+  tx(108,89,T('<tspan font-style="italic">v</tspan>','d'),'lr','end')+
+  tx(30,54,T('V','+'),'lt','end')+tx(30,124,T('V','−'),'lt','end')+
+  pop(.3,tx(64,42,'I = 0','lr','middle')+tx(64,112,'I = 0','lr','middle'))+
+  `<polygon class="lo" points="230,58 257,85 230,112 203,85"/>`+tx(230,80,'+','lsm','middle')+tx(230,102,'−','lsm','middle')+
+  ln([230,58],[230,36],[318,36])+tm(322,36)+tx(322,25,T('V','out'),'lt','middle')+tx(266,30,T('R','out',' = 0'),'lsm','middle')+
+  ln([230,112],[230,128])+gd(230,128)+tx(262,89,T('A·v','d'),'lr'));
+
+F.fb=fig('360 160',
+  `<circle cx="70" cy="60" r="14" class="lo"/>`+tx(52,52,'+','lt','middle')+tx(81,92,'−','lt','middle')+
+  `<line class="lw" x1="14" y1="60" x2="54" y2="60" marker-end="url(#lbC)"/>`+tx(16,50,T('V','in'))+
+  `<line class="lw" x1="84" y1="60" x2="126" y2="60" marker-end="url(#lbC)"/>`+tx(105,52,T('v','d'),'lr','middle')+
+  `<rect x="128" y="40" width="64" height="40" rx="6" class="lo"/>`+tx(160,66,'A','lt','middle','font-size:17px;font-style:italic')+tx(160,33,'huge gain','lsm','middle')+
+  `<line class="lw" x1="192" y1="60" x2="338" y2="60" marker-end="url(#lbC)"/>`+dt(262,60)+tx(336,50,T('V','out'),'lt','end')+
+  arrowL([[262,60],[262,120],[202,120]])+`<rect x="140" y="102" width="60" height="36" rx="6" class="lo"/>`+tx(170,125,'β','lt','middle','font-size:16px;font-style:italic')+tx(170,152,'feedback network','lsm','middle')+
+  arrowL([[140,120],[70,120],[70,76]])+
+  `<circle r="4.5" fill="#A6192E"><animateMotion dur="3.2s" repeatCount="indefinite" path="M84,60 L262,60 L262,120 L70,120 L70,74"/></circle>`+
+  `<circle r="4.5" fill="#A6192E" opacity=".55"><animateMotion dur="3.2s" begin="1.6s" repeatCount="indefinite" path="M84,60 L262,60 L262,120 L70,120 L70,74"/></circle>`);
+
+F.inv=fig('360 160',
+  tm(30,89)+tx(30,78,T('V','in'),'lt','middle')+ln([34,89],[50,89])+rH(50,89,120,T('R','1'))+ln([120,89],[200,89])+dt(150,89)+ring(150,89)+
+  ln([150,89],[150,40],[170,40])+rH(170,40,250,T('R','2'))+ln([250,40],[290,40],[290,105])+
+  ln([200,121],[180,121],[180,138])+gd(180,138)+oa(200,105)+ln([256,105],[330,105])+dt(290,105)+tm(334,105)+tx(334,93,T('V','out'),'lt','middle')+
+  tx(168,66,'virtual ground: 0 V','lr')+fl('M58,100 L114,100')+fl('M160,80 L160,52 L280,52 L280,97')+tx(86,116,'I','lr','middle'));
+
+F.ni=fig('360 175',
+  tm(40,160)+tx(40,148,T('V','in'),'lt','middle')+ln([44,160],[180,160],[180,96],[200,96])+
+  ln([200,64],[130,64])+rV(130,64,128,T('R','1'))+gd(130,128)+dt(150,64)+
+  ln([150,64],[150,25],[170,25])+rH(170,25,250,T('R','2'))+ln([250,25],[290,25],[290,80])+
+  oa(200,80)+ln([256,80],[330,80])+dt(290,80)+tm(334,80)+tx(334,68,T('V','out'),'lt','middle')+
+  fl('M118,74 L118,118')+fl('M280,72 L280,35 L160,35 L160,56')+
+  tx(190,140,T('V','−',' = ')+T('V','+',' = ')+T('V','in'),'lr'));
+
+F.fol=fig('360 170',
+  tm(22,106)+tx(22,94,'10 V','lt','middle')+ln([26,106],[34,106])+rH(34,106,100,'10 kΩ')+ln([100,106],[190,106])+dt(125,106)+rV(125,106,152,'10 kΩ')+gd(125,152)+
+  ln([190,74],[170,74],[170,40],[270,40],[270,90])+oa(190,90)+ln([246,90],[338,90])+dt(270,90)+dt(305,90)+rV(305,90,140,'1 kΩ')+gd(305,140)+tm(342,90)+
+  tx(342,78,T('V','out',' = 5 V'),'lt','end')+tx(112,136,T('V','+',' = 5 V'),'lr','end')+ring(125,106)+
+  fl('M294,98 L294,132')+tx(287,120,'5 mA','lr','end'));
+
+F.sum=fig('360 165',
+  tm(22,50)+tx(22,38,T('V','1'),'lt','middle')+ln([26,50],[36,50])+rH(36,50,108,T('R','1'))+ln([108,50],[140,50],[140,94])+
+  tm(22,94)+tx(22,82,T('V','2'),'lt','middle')+ln([26,94],[36,94])+rH(36,94,108,T('R','2'))+ln([108,94],[220,94])+dt(140,94)+dt(170,94)+
+  ln([170,94],[170,30],[190,30])+rH(190,30,265,T('R','3'))+ln([265,30],[305,30],[305,110])+
+  oa(220,110)+ln([276,110],[338,110])+dt(305,110)+tm(342,110)+tx(332,97,T('V','out'),'lt','middle')+
+  ln([220,126],[200,126],[200,146])+gd(200,146)+
+  fl('M44,60 L130,60 L130,86')+fl('M44,104 L160,104')+fl('M180,86 L180,40 L295,40 L295,102')+
+  tx(80,74,T('I','1'),'lr','middle')+tx(80,118,T('I','2'),'lr','middle')+tx(238,54,T('I','1','+I')+T('','2'),'lr','middle'));
+
+F.diff=fig('360 200',
+  tm(22,79)+tx(22,67,T('V','1'),'lt','middle')+ln([26,79],[36,79])+rH(36,79,108,T('R','1'))+ln([108,79],[220,79])+dt(160,79)+
+  ln([160,79],[160,30],[185,30])+rH(185,30,262,T('R','2'))+ln([262,30],[300,30],[300,95])+
+  oa(220,95)+ln([276,95],[338,95])+dt(300,95)+tm(342,95)+tx(330,82,T('V','out'),'lt','middle')+
+  tm(22,140)+tx(22,128,T('V','2'),'lt','middle')+ln([26,140],[36,140])+rH(36,140,108,T('R','3'))+ln([108,140],[200,140],[200,111],[220,111])+
+  dt(150,140)+ring(150,140)+rV(150,140,184,T('R','4'))+gd(150,184)+tx(158,133,T('V','+'),'lr')+
+  fl('M44,89 L150,89'));
+
+F.load=fig('360 175',
+  tm(22,84)+tx(22,72,T('V','in'),'lt','middle')+ln([26,84],[34,84])+rH(34,84,94,T('R','1'))+ln([94,84],[150,84])+dt(110,84)+
+  ln([110,84],[110,35],[125,35])+rH(125,35,205,T('R','2'))+ln([205,35],[240,35],[240,100])+
+  oa(150,100)+ln([206,100],[338,100])+dt(240,100)+dt(290,100)+rV(290,100,160,T('R','L'))+gd(290,160)+tm(342,100)+tx(330,87,T('V','out'),'lt','middle')+
+  ln([150,116],[130,116],[130,136])+gd(130,136)+
+  fl('M210,110 L234,110')+tx(222,126,T('I','o'),'lr','middle')+
+  fl('M279,108 L279,150')+tx(271,134,T('I','L'),'lr','end')+
+  fl('M232,92 L232,45 L120,45 L120,76')+tx(176,60,T('I','f'),'lr','middle'));
+
+F.sat=fig('360 150',
+  `<rect x="10" y="8" width="340" height="134" rx="8" class="scr"/>`+
+  `<line class="rail" x1="60" y1="35" x2="342" y2="35"/><line class="rail" x1="60" y1="115" x2="342" y2="115"/><line x1="60" y1="75" x2="342" y2="75" stroke="#e0d1ae"/>`+
+  tx(54,38,'+15 V','lsm','end')+tx(54,118,'−15 V','lsm','end')+tx(54,78,'0','lsm','end')+
+  scope(62,10,280,130,[{a:62,c:'ghost'},{a:62,k:40},{a:6,c:'in'}]),
+  'Gain of 10, input too large. Black: input. Dashed: what the equation predicts. Red: the real, clipped output.');
+
+/* ---- Interactive calculators ---- */
+const calc=(k,r2)=>`<div class="calc" data-calc="${k}"><div class="ct">Try it · ${R1} = 10 kΩ, supplies ±15 V</div>
+<label><span>${R2}</span><input type="range" min="1" max="100" value="${r2}" data-k="r2" aria-label="R2 in kilohms"><b data-o="r2"></b></label>
+<label><span>${Vi}</span><input type="range" min="-20" max="20" value="5" data-k="vin" aria-label="Input voltage"><b data-o="vin"></b></label>
+<div class="meter"><i></i><span class="z"></span></div><div class="mscale"><span>−15 V</span><span>0 V</span><span>+15 V</span></div>
+<div class="cres">Gain <b data-o="g"></b> · ${Vo} = <b data-o="vo"></b></div></div>`;
+const fmt=(v,d=2)=>(v<-1e-9?'−':'')+Math.abs(v).toFixed(d);
+function updCalc(c){
+  const k=c.dataset.calc, r2=+c.querySelector('[data-k=r2]').value, vin=+c.querySelector('[data-k=vin]').value/10;
+  const g=k==='inv'?-r2/10:1+r2/10, vo=g*vin, sat=Math.abs(vo)>15, v=Math.max(-15,Math.min(15,vo));
+  const o=n=>c.querySelector(`[data-o=${n}]`);
+  o('r2').textContent=r2+' kΩ'; o('vin').textContent=fmt(vin,1)+' V'; o('g').textContent=fmt(g,1);
+  o('vo').textContent=fmt(v)+' V'+(sat?' (saturated!)':'');
+  const w=Math.abs(v)/15*50, bar=c.querySelector('.meter i');
+  bar.style.left=(v<0?50-w:50)+'%'; bar.style.width=w+'%';
+  c.classList.toggle('sat',sat);
+}
+
+/* ---- Pages ---- */
+const C1='Chapter 1 · The device',C2='Chapter 2 · The ideal model',C3='Chapter 3 · Core amplifiers',
+      C4='Chapter 4 · Combining signals',C5='Chapter 5 · Real-world effects',C6='Chapter 6 · Putting it together';
+const PAGES=[
+{t:'Title page',ch:'',cls:'title',html:`<div class="tp"><div class="tp-k">MTRN2060 · Mechatronics</div><h1>Learn<br>Op-Amp Circuits</h1><div class="tp-sub">A pocket guide to ideal op-amp analysis</div><div class="tp-orn"></div>${F.title}<p class="tp-p">Fourteen short pages, from the symbol to full circuit analysis. Read it front to back, then test yourself in the Practice tab.</p><div class="tp-turn">Turn the page <span class="nudge">→</span></div></div>`},
+{t:'Contents',ch:'Contents',html:''},
+{t:'What is an op-amp?',ch:C1,html:`<h2>What is an op-amp?</h2><p class="lead">An <b>operational amplifier</b> is an integrated circuit that amplifies the <i>difference</i> between the voltages on its two inputs. Inside are dozens of transistors, but for analysis we treat it as a single block.</p>${F.what}<ul class="lst"><li><b>${Vp}</b>, the non-inverting input: raising it pushes the output <b>up</b>.</li><li><b>${Vm}</b>, the inverting input: raising it pushes the output <b>down</b>.</li><li><b>${Vo}</b>, the output, measured to ground.</li><li><b>Supply rails</b> (e.g. ±15 V). Often left off schematics, but always there, and they set how far ${Vo} can swing.</li></ul><div class="note">Familiar parts: µA741, TL071, LM358, OPA2134.</div>`},
+{t:'Open-loop gain',ch:C1,html:`<h2>Open-loop gain</h2><p class="lead">With nothing connected around it, the op-amp multiplies the input difference by its <b>open-loop gain</b> <i>A</i>:</p><div class="eq">${Vo} = A (${Vp} − ${Vm})</div><p><i>A</i> is enormous, typically 10<sup>5</sup> to 10<sup>6</sup>. A difference of just 1 mV would ask for 100 V or more!</p>${F.gain}<p>The output can't go past the supply rails, so it <b>saturates</b>. The linear region is only a fraction of a millivolt wide.</p><div class="note">Used open-loop, an op-amp is basically a <b>comparator</b>. To build a precise amplifier we need <b>feedback</b> (page 6).</div>`},
+{t:'The ideal op-amp',ch:C2,html:`<h2>The ideal op-amp</h2><p class="lead">For hand analysis we use an <b>ideal</b> model. Real op-amps come remarkably close.</p><table class="tbl"><tr><th>Property</th><th>Ideal</th><th>Typical real</th></tr><tr><td>Input resistance</td><td>∞</td><td>1 MΩ – 1 TΩ</td></tr><tr><td>Output resistance</td><td>0</td><td>10 – 100 Ω</td></tr><tr><td>Open-loop gain <i>A</i></td><td>∞</td><td>10<sup>5</sup> – 10<sup>6</sup></td></tr></table>${F.ideal}<div class="rules"><div class="rt">The two golden rules</div><div class="rule"><span>1</span><div>No current flows into either input.</div></div><div class="rule"><span>2</span><div>With negative feedback, the output adjusts so that ${Vm} = ${Vp}.</div></div></div>`},
+{t:'Negative feedback',ch:C2,html:`<h2>Negative feedback</h2><p class="lead">Negative feedback means routing part of the output back to the <b>inverting (−)</b> input.</p>${F.fb}<p>Why does golden rule 2 hold? Rearrange the gain equation:</p><div class="eq">${vd} = ${Vo} / A ≈ 0</div><p>${Vo} is at most 15 V and <i>A</i> is huge, so the difference is only microvolts: ${Vm} ≈ ${Vp}.</p><p>It is self-correcting: if ${Vo} overshoots, ${Vm} rises, ${vd} shrinks and ${Vo} is pulled back. The loop settles exactly where ${Vm} = ${Vp}.</p><div class="note"><b>Check first!</b> Feedback to the <b>+</b> input is positive feedback: the output races to a rail and rule 2 no longer applies.</div>`},
+{t:'Inverting amplifier',ch:C3,html:`<h2>Inverting amplifier</h2><p class="lead">The input drives ${R1} into the − input, ${R2} feeds the output back, and the + input is grounded.</p>${F.inv}<ol class="steps"><li>${Vp} = 0, so ${Vm} = 0: a <b>virtual ground</b>.</li><li>Current in ${R1}: I = ${Vi} / ${R1}.</li><li>No current enters the op-amp, so the same I flows through ${R2}.</li><li>${Vo} = 0 − I·${R2}, giving:</li></ol><div class="eq">${Vo} = −(${R2} / ${R1}) ${Vi}</div>${calc('inv',47)}<div class="note">The minus sign means the output is upside-down. The source sees an input resistance of just ${R1}.</div>`},
+{t:'Non-inverting amplifier',ch:C3,html:`<h2>Non-inverting amplifier</h2><p class="lead">The signal goes straight into the + input; ${R1} and ${R2} form a divider from the output back to the − input.</p>${F.ni}<p>Rule 2 gives ${Vm} = ${Vp} = ${Vi}. No current enters the − input, so the divider is unloaded:</p><div class="eq">${Vm} = ${Vo} · ${R1} / (${R1} + ${R2})</div><p>Solve for the output:</p><div class="eq">${Vo} = ${Vi} (1 + ${R2} / ${R1})</div>${calc('ni',22)}<div class="note">Gain is always positive and at least 1. The input draws no current, so the source is not loaded.</div>`},
+{t:'Voltage follower',ch:C3,html:`<h2>Voltage follower</h2><p class="lead">Wire the output straight back to the − input. Now ${Vm} = ${Vo}, and rule 2 gives:</p><div class="eq">${Vo} = ${Vp} &nbsp;(gain = 1)</div><p>Why bother? <b>Buffering.</b> The 10 kΩ / 10 kΩ divider below makes 5 V, but a 1 kΩ load connected to it directly would drag it down to just 0.83 V.</p>${F.fol}<div class="ex"><b>With the buffer:</b> no current is drawn from the divider (rule 1), so ${Vp} stays at 5 V and ${Vo} = 5 V. The op-amp, not the divider, supplies the 5 mA load current.</div><div class="note">Use a follower whenever a weak source (a sensor, a divider, a filter) has to drive a heavy load.</div>`},
+{t:'Summing amplifier',ch:C4,html:`<h2>Summing amplifier</h2><p class="lead">Several inputs, each through its own resistor, meet at the virtual ground.</p>${F.sum}<p>Each input pushes its own current into the 0 V node: I<sub>1</sub> = ${V1}/${R1}, I<sub>2</sub> = ${V2}/${R2}. By KCL, the total flows on through ${R3}:</p><div class="eq">${Vo} = −${R3} (${V1}/${R1} + ${V2}/${R2})</div><div class="ex"><b>Example.</b> ${V1} = 1 V, ${R1} = 10 kΩ, ${V2} = 0.5 V, ${R2} = 5 kΩ, ${R3} = 10 kΩ. I = 0.1 + 0.1 = 0.2 mA, so ${Vo} = −2 V.</div><div class="note">The inputs don't disturb each other because the node is held at 0 V. Used in audio mixers and simple DACs.</div>`},
+{t:'Difference amplifier',ch:C4,html:`<h2>Difference amplifier</h2><p class="lead">Feed one signal to each input and the circuit amplifies their <b>difference</b>.</p>${F.diff}<ol class="steps"><li>${R3} and ${R4} form an unloaded divider: ${Vp} = ${V2}·${R4} / (${R3} + ${R4}).</li><li>Set ${Vm} = ${Vp}, then KCL at the − node: (${V1} − ${Vm})/${R1} = (${Vm} − ${Vo})/${R2}.</li></ol><div class="eq">${Vo} = ${Vp}(1 + ${R2}/${R1}) − ${V1}·${R2}/${R1}</div><p>With matched pairs (${R3} = ${R1}, ${R4} = ${R2}) this collapses to:</p><div class="eq">${Vo} = (${R2}/${R1}) (${V2} − ${V1})</div><div class="note">Noise common to both wires cancels out, which makes it perfect for bridge sensors and current-sense resistors.</div>`},
+{t:'Loads & output current',ch:C5,html:`<h2>Loads &amp; output current</h2><p class="lead">Add a load ${RL}. For an ideal op-amp ${Vo} does not change: with zero output resistance it supplies whatever current is needed.</p>${F.load}<p>The output now feeds two paths. KCL at the output node:</p><div class="eq">${Io} = ${IL} + ${If} = ${Vo}/${RL} + (${Vo} − ${Vm})/${R2}</div><div class="ex"><b>Example.</b> ${Vi} = −0.5 V, ${R1} = 10 kΩ, ${R2} = 47 kΩ, ${RL} = 1 kΩ. ${Vo} = +2.35 V, ${IL} = 2.35 mA, ${If} = 0.05 mA, so ${Io} = 2.40 mA.</div><div class="note">If ${Vo} is negative every current reverses and the op-amp <i>sinks</i> current. A negative answer simply means flow opposite to the arrow.</div>`},
+{t:'Saturation & real limits',ch:C5,html:`<h2>Saturation &amp; real limits</h2><p class="lead">Ideal equations know no limits, but real outputs do: ${Vo} can never go beyond the supply rails.</p>${F.sat}<p>Always sanity-check that |${Vo}| is below the supply. Many op-amps stop 1–2 V short of the rails unless they are <i>rail-to-rail</i> parts.</p><ul class="lst"><li><b>Output current:</b> usually limited to about 20–40 mA.</li><li><b>Gain–bandwidth:</b> gain × frequency is roughly constant (≈ 1 MHz for a 741).</li><li><b>Slew rate:</b> ${Vo} can only change so fast (≈ 0.5 V/µs for a 741).</li><li><b>Offsets &amp; bias currents:</b> tiny errors that grow with high gain.</li></ul>`},
+{t:'A recipe for any circuit',ch:C6,html:`<h2>A recipe for any circuit</h2><p class="lead">Every question in the Practice tab falls to the same five steps.</p><ol class="recipe"><li><b>Check the feedback</b> goes to the − input.</li><li><b>Find ${Vp}.</b> No input current, so any divider feeding it is unloaded.</li><li><b>Set ${Vm} = ${Vp}.</b></li><li><b>Write KCL at the − node</b> using only resistor currents.</li><li><b>Solve for ${Vo}</b>, then use Ohm's law or KCL for any current. Mind the arrow and the rails.</li></ol><table class="tbl"><tr><th>Circuit</th><th>${Vo}</th></tr><tr><td>Inverting</td><td>−(${R2}/${R1}) ${Vi}</td></tr><tr><td>Non-inverting</td><td>(1 + ${R2}/${R1}) ${Vi}</td></tr><tr><td>Follower</td><td>${Vi}</td></tr><tr><td>Summing</td><td>−${R3}(${V1}/${R1} + ${V2}/${R2})</td></tr><tr><td>Difference (matched)</td><td>(${R2}/${R1})(${V2} − ${V1})</td></tr></table><div class="end"><div class="orn">✦ The End ✦</div><button class="btn btn-primary" data-tab="practice">Start the challenge →</button></div>`}
+];
+function tocRows(from){ let h='',last=''; PAGES.forEach((p,i)=>{ if(i<from) return; const ch=i<2?'Front matter':p.ch; if(ch!==last){ h+=`<div class="chap">${ch}</div>`; last=ch; } h+=`<button class="trow" data-go="${i}"><span class="tt">${p.t.replace('&','&amp;')}</span><span class="tl"></span><span class="tpn">${i+1}</span></button>`; }); return h; }
+PAGES[1].html=`<h2>Contents</h2>${tocRows(2)}<div class="howto"><b>How to read this book:</b> use the Next and Back buttons, click a page corner, press the ← → keys, or swipe on a touch screen.</div>`;
+const N=PAGES.length;
+
+/* ---- Book engine ---- */
+const book=G('book'),spread=G('spread'),pL=G('pgL'),pR=G('pgR'),leaf=G('leaf'),fF=G('faceF'),fB=G('faceB');
+let cur=0,busy=false,tok=0;
+try{ cur=Math.max(0,Math.min(N-1,+localStorage.getItem('opampBookPage')||0)); }catch(e){}
+const single=()=>book.classList.contains('single');
+const step=()=>single()?1:2;
+function pageHTML(n){
+  if(n<0||n>=N) return `<div class="pin blank"><div class="endp">✦</div></div>`;
+  const p=PAGES[n];
+  return `<div class="pin ${p.cls||''}">${n?`<div class="rh"><span>${p.ch}</span><span>Op-Amp Circuits</span></div>`:''}${p.html}</div>${n?`<div class="pno">— ${n+1} —</div>`:''}`;
+}
+function fill(el,n){ el.innerHTML=pageHTML(n); el.querySelectorAll('.calc').forEach(updCalc); }
+function render(){ if(single()) fill(pR,cur); else { fill(pL,cur); fill(pR,cur+1); } updNav(cur); }
+function layout(){
+  if(G('learnCard').hidden) return;
+  const s=book.clientWidth<700; book.classList.toggle('single',s);
+  if(!s) cur-=cur%2; render();
+}
+function updNav(at){
+  const st=step(), first=at, last=Math.min(N-1,at+st-1);
+  G('bkPrev').disabled=at<=0; G('bkNext').disabled=at+st>=N;
+  G('cnL').hidden=at<=0; G('cnR').hidden=at+st>=N;
+  G('bkPos').textContent= st===2 ? `Pages ${first+1}–${last+1} of ${N}` : `Page ${first+1} of ${N}`;
+  const nd=Math.ceil(N/st), on=Math.floor(at/st);
+  G('bkDots').innerHTML=Array.from({length:nd},(_,i)=>`<button class="bk-dot ${i===on?'on':''}" data-go="${i*st}" aria-label="Go to page ${i*st+1}"></button>`).join('');
+  document.querySelectorAll('#toc .trow').forEach(r=>{ const g=+r.dataset.go; r.classList.toggle('on',g>=first&&g<=last); });
+  G('progBar').style.width=((last+1)/N*100)+'%';
+  G('progL').textContent= last+1>=N ? 'Finished! Time to practise.' : `Read ${last+1} of ${N} pages`;
+  try{ localStorage.setItem('opampBookPage',at); }catch(e){}
+}
+
+/* paper rustle */
+let snd=true, actx=null;
+try{ snd=localStorage.getItem('opampBookSound')!=='0'; }catch(e){}
+function rustle(){
+  if(!snd) return;
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    const d=.42,n=Math.floor(actx.sampleRate*d),b=actx.createBuffer(1,n,actx.sampleRate),ch=b.getChannelData(0);
+    for(let i=0;i<n;i++){ const t=i/n; ch[i]=(Math.random()*2-1)*Math.pow(Math.sin(Math.PI*t),1.6)*(.55+.45*Math.random()); }
+    const src=actx.createBufferSource(); src.buffer=b;
+    const f=actx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=2600; f.Q.value=.7;
+    const g=actx.createGain(); g.gain.value=.16;
+    src.connect(f).connect(g).connect(actx.destination); src.start();
+  }catch(e){}
+}
+function setSnd(){ const b=G('bkSound'); b.setAttribute('aria-pressed',snd); b.querySelector('span').textContent=snd?'Page sound on':'Page sound off'; }
+
+function go(target){
+  if(busy) return;
+  target=Math.max(0,Math.min(N-1,target));
+  if(!single()) target-=target%2;
+  if(target===cur) return;
+  const fwd=target>cur;
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){ cur=target; render(); return; }
+  busy=true; const my=++tok;
+  if(single()){
+    if(fwd){ fF.innerHTML=pageHTML(cur); fill(pR,target); } else { fF.innerHTML=pageHTML(target); }
+    fB.innerHTML='';
+  } else if(fwd){ fF.innerHTML=pageHTML(cur+1); fB.innerHTML=pageHTML(target); fill(pR,target+1); }
+  else { fF.innerHTML=pageHTML(target+1); fB.innerHTML=pageHTML(cur); fill(pL,target); }
+  [fF,fB].forEach(f=>f.querySelectorAll('.calc').forEach(updCalc));
+  leaf.className='leaf'; void leaf.offsetWidth; leaf.className='leaf show '+(fwd?'fwd':'bwd');
+  updNav(target); rustle();
+  const done=()=>{ if(my!==tok||!busy) return; busy=false; cur=target; render(); leaf.className='leaf'; fF.innerHTML=fB.innerHTML=''; };
+  leaf.onanimationend=e=>{ if(e.target===leaf) done(); };
+  setTimeout(done,1400);
+}
+const next=()=>go(cur+step()), prev=()=>go(cur-step());
+
+/* ---- Wiring ---- */
+G('bkNext').onclick=next; G('bkPrev').onclick=prev; G('cnR').onclick=next; G('cnL').onclick=prev;
+G('bkSound').onclick=()=>{ snd=!snd; try{ localStorage.setItem('opampBookSound',snd?'1':'0'); }catch(e){} setSnd(); if(snd) rustle(); };
+G('toc').innerHTML=tocRows(0);
+document.addEventListener('click',e=>{
+  const g=e.target.closest('[data-go]'); if(g && (g.closest('#learnCard')||g.closest('#tocCard'))){ go(+g.dataset.go); return; }
+  const t=e.target.closest('[data-tab]'); if(t) showTab(t.dataset.tab);
+});
+spread.addEventListener('input',e=>{ const c=e.target.closest('.calc'); if(c) updCalc(c); });
+addEventListener('keydown',e=>{
+  if(G('learnCard').hidden||e.target.closest('input,select,textarea')) return;
+  if(document.querySelector('.overlay.show')) return;
+  if(e.key==='ArrowRight'){ e.preventDefault(); next(); } else if(e.key==='ArrowLeft'){ e.preventDefault(); prev(); }
+});
+let tx0=null,ty0=0;
+spread.addEventListener('touchstart',e=>{ if(e.target.closest('input')) return; tx0=e.touches[0].clientX; ty0=e.touches[0].clientY; },{passive:true});
+spread.addEventListener('touchend',e=>{ if(tx0===null) return; const dx=e.changedTouches[0].clientX-tx0, dy=e.changedTouches[0].clientY-ty0; tx0=null; if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5){ dx<0?next():prev(); } });
+if(window.ResizeObserver) new ResizeObserver(()=>{ if(busy||G('learnCard').hidden) return; const s=book.clientWidth<700; if(s!==single()) layout(); }).observe(book);
+else addEventListener('resize',()=>{ if(!busy) layout(); });
+
+function showTab(t){
+  const learn=t==='learn';
+  G('practiceCard').hidden=learn; G('hintsCard').hidden=learn;
+  G('learnCard').hidden=!learn; G('tocCard').hidden=!learn;
+  G('tabPractice').classList.toggle('active',!learn); G('tabLearn').classList.toggle('active',learn);
+  G('tabPractice').setAttribute('aria-selected',!learn); G('tabLearn').setAttribute('aria-selected',learn);
+  try{ localStorage.setItem('opampTab',t); }catch(e){}
+  if(learn) layout();
+  scrollTo({top:0,behavior:'smooth'});
+}
+setSnd();
+let startTab='practice'; try{ startTab=localStorage.getItem('opampTab')||'practice'; }catch(e){}
+showTab(startTab);
+})();
+
+</script>
+</body></html>

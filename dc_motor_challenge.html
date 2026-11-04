@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DC Motor Challenge</title>
+<style>
+:root{
+  --deep:#76232F; --red:#A6192E; --charcoal:#373A36; --sand:#D6D2C4; --sand2:#EDEBE5;
+  --paper:#FBFAF7; --ok:#2E7D32; --okbg:#E8F3E9; --badbg:#FBEAEC; --line:#E2DED3;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--sand2);color:var(--charcoal);line-height:1.45}
+header{background:linear-gradient(115deg,var(--deep) 0%,var(--red) 100%);color:#fff;padding:16px 28px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+header .logo{width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,.14);display:grid;place-items:center;flex:none}
+header h1{margin:0;font-size:1.35rem;font-weight:700;letter-spacing:.2px}
+header p{margin:2px 0 0;opacity:.88;font-size:.9rem}
+header .streak{margin-left:auto;background:rgba(255,255,255,.14);border-radius:999px;padding:6px 14px;font-size:.85rem;font-weight:600}
+main{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:20px;padding:20px 28px 40px;max-width:1300px;margin:0 auto}
+@media (max-width:980px){main{grid-template-columns:1fr;padding:14px 14px 30px}header{padding:14px 16px}}
+.card{background:#fff;border-radius:14px;border:1px solid var(--line);box-shadow:0 1px 3px rgba(55,58,54,.08)}
+.toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+.btn{font:inherit;font-weight:600;border:none;border-radius:10px;padding:10px 18px;cursor:pointer;transition:transform .08s,background .15s,box-shadow .15s}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--red);color:#fff;box-shadow:0 2px 0 var(--deep)}
+.btn-primary:hover{background:#B91F36}
+.btn-dark{background:var(--charcoal);color:#fff}
+.btn-dark:hover{background:#4a4e48}
+.btn-ghost{background:transparent;color:var(--red);padding:6px 4px;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+select{font:inherit;padding:9px 12px;border-radius:10px;border:1px solid #cfc9bb;background:var(--paper);color:var(--charcoal)}
+.qcount{margin-left:auto;font-size:.85rem;color:#6b6e69}
+.circuit{background:var(--paper);margin:16px 18px 0;border-radius:12px;border:1px dashed #d9d3c4;min-height:300px;display:grid;place-items:center;overflow:hidden}
+.circuit svg{width:100%;height:auto;display:block;max-height:440px}
+.empty{text-align:center;padding:40px 20px;color:#7a7d77}
+.empty h2{color:var(--deep);margin:10px 0 6px;font-size:1.2rem}
+.w{fill:none;stroke:var(--charcoal);stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}
+.oa{fill:#fff;stroke:var(--charcoal);stroke-width:2.4;stroke-linejoin:round}
+.rl{font-size:13px;fill:var(--charcoal);font-weight:600}
+.tl{font-size:13.5px;fill:var(--deep);font-weight:700}
+.hl{font-size:14px;fill:var(--red);font-weight:800}
+.arr{stroke:var(--red);stroke-width:2.4}
+.sym{font-size:20px;font-weight:700;fill:var(--charcoal)}
+.qbox{padding:16px 18px 6px}
+.tag{display:inline-block;background:var(--sand2);color:var(--deep);font-weight:700;font-size:.78rem;letter-spacing:.4px;text-transform:uppercase;padding:4px 10px;border-radius:999px}
+.prompt{font-size:1.12rem;margin:10px 0 4px}
+.assume{font-size:.85rem;color:#6b6e69;margin:0}
+.answer{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 18px 6px}
+.answer label{font-weight:700}
+.inwrap{display:flex;align-items:stretch;border:2px solid #cfc9bb;border-radius:10px;overflow:hidden;background:#fff}
+.inwrap:focus-within{border-color:var(--red)}
+.inwrap input{font:inherit;font-size:1.05rem;border:none;outline:none;padding:9px 12px;width:160px}
+.inwrap .unit{background:var(--sand2);padding:9px 12px;font-weight:700;color:var(--deep);border-left:1px solid #e0dacd}
+.feedback{margin:8px 18px 0;padding:0;border-radius:10px;font-weight:600;min-height:0}
+.feedback.ok{background:var(--okbg);color:var(--ok);padding:10px 14px}
+.feedback.bad{background:var(--badbg);color:var(--red);padding:10px 14px}
+.feedback.info{background:var(--sand2);color:var(--charcoal);padding:10px 14px}
+.foot{display:flex;justify-content:space-between;align-items:center;padding:8px 18px 16px;font-size:.85rem;color:#7a7d77;gap:10px;flex-wrap:wrap}
+aside{display:flex;flex-direction:column;gap:20px}
+.panel-h{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.panel-h h2{margin:0;font-size:1.05rem;color:var(--deep)}
+.award-now{display:flex;align-items:center;gap:12px;padding:12px 18px;background:linear-gradient(90deg,#fff,var(--paper));border-bottom:1px solid var(--line)}
+.award-now .lbl{font-size:.8rem;color:#7a7d77;text-transform:uppercase;letter-spacing:.4px;font-weight:700}
+.award-now .tier{font-size:1.15rem;font-weight:800;color:var(--deep)}
+.hints{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.hint{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--paper);transition:background .2s}
+.hint.open{background:#fff;border-left:4px solid var(--red)}
+.hint.locked{opacity:.65}
+.hhead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.hnum{font-weight:800;color:var(--deep);font-size:.92rem}
+.hcost{font-size:.8rem;color:#7a7d77;margin-top:4px}
+.hbody{margin-top:6px;font-size:.92rem}
+.reveal{font:inherit;font-size:.82rem;font-weight:700;background:#fff;border:1.5px solid var(--red);color:var(--red);border-radius:8px;padding:5px 10px;cursor:pointer}
+.reveal:hover:not(:disabled){background:var(--red);color:#fff}
+.reveal:disabled{border-color:#bdb7a8;color:#9a968b;cursor:not-allowed}
+.ladder{display:flex;justify-content:space-between;padding:6px 14px 14px;gap:4px}
+.rung{display:flex;flex-direction:column;align-items:center;font-size:.72rem;font-weight:700;color:#6b6e69;flex:1;transition:opacity .25s,filter .25s}
+.rung.lost{opacity:.3;filter:grayscale(1)}
+.rung.cur{color:var(--red)}
+.rung.cur svg{filter:drop-shadow(0 0 6px rgba(166,25,46,.45))}
+.cab{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:14px}
+.cab .slot{display:flex;flex-direction:column;align-items:center;font-size:.72rem;color:#6b6e69;font-weight:700}
+.cab .n{font-size:1.05rem;color:var(--charcoal)}
+.cab-foot{display:flex;justify-content:space-between;align-items:center;padding:0 18px 14px;font-size:.82rem;color:#7a7d77}
+.placeholder{padding:22px 18px;color:#7a7d77;font-size:.92rem}
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(40,20,24,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.overlay.show{display:flex}
+.modal{background:#fff;border-radius:18px;max-width:420px;width:100%;text-align:center;padding:24px 24px 20px;box-shadow:0 20px 60px rgba(0,0,0,.35);animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.modal h2{margin:4px 0 2px;font-size:1.9rem;color:var(--deep)}
+.modal .kicker{font-size:.78rem;letter-spacing:1.5px;text-transform:uppercase;color:#7a7d77;font-weight:700}
+.modal p{margin:6px 0}
+.modal .meta{font-size:.85rem;color:#7a7d77}
+.modal .acts{display:flex;gap:10px;justify-content:center;margin-top:16px}
+.shine{background:linear-gradient(90deg,var(--deep),var(--red),#D4A017,var(--red),var(--deep));background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent!important;animation:shine 2.4s linear infinite}
+@keyframes shine{to{background-position:300% 0}}
+.medal-bounce{animation:bounce 1.6s ease-in-out infinite}
+@keyframes bounce{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-6px) rotate(3deg)}}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
+.cert-btn{margin:0 14px 14px;width:calc(100% - 28px);display:flex;align-items:center;justify-content:center;gap:8px}
+.modal.wide{max-width:820px;text-align:left;padding:22px}
+.modal.wide h2{font-size:1.4rem;margin:0 0 4px}
+.cert-form{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+@media (max-width:640px){.cert-form{grid-template-columns:1fr}}
+.cert-form label{display:flex;flex-direction:column;gap:4px;font-size:.82rem;font-weight:700;color:var(--deep)}
+.cert-form input,.cert-form select{font:inherit;font-weight:400;padding:9px 12px;border-radius:10px;border:1.5px solid #cfc9bb;background:#fff;color:var(--charcoal)}
+.cert-form input:focus,.cert-form select:focus{outline:none;border-color:var(--red)}
+#certPreview{width:100%;height:auto;border-radius:8px;border:1px solid var(--line);display:block;box-shadow:0 4px 18px rgba(55,58,54,.15)}
+.cert-acts{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;margin-top:14px;align-items:center}
+.cert-note{font-size:.8rem;color:#7a7d77;margin-right:auto}
+sub{font-size:.72em}
+/* ================= Tabs ================= */
+body{overflow-x:hidden}
+main{padding-top:14px}
+.tabbar{max-width:1300px;margin:0 auto;padding:18px 28px 0}
+.tabs{display:inline-flex;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px;gap:4px;box-shadow:0 1px 3px rgba(55,58,54,.08)}
+.tab{font:inherit;font-weight:700;font-size:.92rem;border:none;background:transparent;color:var(--charcoal);padding:9px 18px;border-radius:999px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .2s,color .2s}
+.tab:hover{background:var(--sand2)}
+.tab.active{background:var(--red);color:#fff;box-shadow:0 2px 0 var(--deep)}
+.tab svg{flex:none}
+@media (max-width:980px){.tabbar{padding:14px 14px 0}}
+
+/* ================= Learn card ================= */
+.learn{padding:16px 18px 18px;overflow:hidden}
+.learn-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.learn-top h2{margin:0;color:var(--deep);font-size:1.2rem}
+.learn-top .lt-s{font-size:.85rem;color:#6b6e69}
+.snd{margin-left:auto;font:inherit;font-size:.8rem;font-weight:700;border:1.5px solid #cfc9bb;background:var(--paper);color:var(--charcoal);border-radius:999px;padding:6px 12px;cursor:pointer;display:flex;gap:6px;align-items:center}
+.snd[aria-pressed="false"]{opacity:.6}
+
+/* Book */
+.book{max-width:920px;margin:0 auto}
+.bk-wrap{position:relative;padding:14px 16px;border-radius:14px;background:linear-gradient(135deg,#5b1922 0%,#7d2633 48%,#5a1822 100%);box-shadow:0 22px 40px -14px rgba(60,20,25,.55),inset 0 0 0 1px rgba(255,255,255,.08)}
+.bk-wrap::after{content:'';position:absolute;inset:5px;border:1px solid rgba(212,160,23,.35);border-radius:10px;pointer-events:none}
+.spread{position:relative;display:flex;height:680px;perspective:2400px;z-index:1}
+.spread::before{content:'';position:absolute;top:-6px;bottom:-6px;left:50%;width:6px;transform:translateX(-50%);background:linear-gradient(to right,rgba(0,0,0,.35),rgba(0,0,0,.05),rgba(0,0,0,.35));border-radius:3px;z-index:3;pointer-events:none}
+.pg{position:relative;flex:1;height:100%;background:#FFFDF7;min-width:0}
+.pg.left{border-radius:6px 0 0 6px;box-shadow:-2px 1px 0 #efe7d4,-4px 2px 0 #fbf7ec,-5px 2px 0 #ddd2bb,-7px 3px 0 #f8f3e7,-8px 3px 0 #d3c7ad}
+.pg.right{border-radius:0 6px 6px 0;box-shadow:2px 1px 0 #efe7d4,4px 2px 0 #fbf7ec,5px 2px 0 #ddd2bb,7px 3px 0 #f8f3e7,8px 3px 0 #d3c7ad}
+.pg.left::after,.face.back::before{content:'';position:absolute;top:0;bottom:0;right:0;width:44px;background:linear-gradient(to left,rgba(90,65,30,.20),rgba(90,65,30,0));pointer-events:none;z-index:2}
+.pg.right::after,.face.front::before{content:'';position:absolute;top:0;bottom:0;left:0;width:44px;background:linear-gradient(to right,rgba(90,65,30,.20),rgba(90,65,30,0));pointer-events:none;z-index:2}
+
+/* Turning leaf */
+.leaf{position:absolute;top:0;bottom:0;right:0;width:50%;transform-origin:left center;transform-style:preserve-3d;z-index:6;display:none;pointer-events:none}
+.leaf.show{display:block}
+.face{position:absolute;inset:0;background:#FFFDF7;overflow:hidden;-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.face.front{border-radius:0 6px 6px 0}
+.face.back{transform:rotateY(180deg);border-radius:6px 0 0 6px}
+.face::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:0;z-index:3}
+.face.front::after{background:linear-gradient(to left,rgba(40,25,10,.32),rgba(40,25,10,.04) 70%)}
+.face.back::after{background:linear-gradient(to right,rgba(40,25,10,.32),rgba(40,25,10,.04) 70%)}
+.leaf.show .face{box-shadow:0 0 24px rgba(40,20,10,.22)}
+.leaf.fwd{animation:bkFwd .95s cubic-bezier(.55,.08,.3,1) forwards}
+.leaf.bwd{animation:bkBwd .95s cubic-bezier(.55,.08,.3,1) forwards}
+.leaf.fwd .face::after,.leaf.bwd .face::after{animation:bkShade .95s ease-in-out forwards}
+@keyframes bkFwd{from{transform:rotateY(0)}to{transform:rotateY(-180deg)}}
+@keyframes bkBwd{from{transform:rotateY(-180deg)}to{transform:rotateY(0)}}
+@keyframes bkShade{0%{opacity:0}50%{opacity:1}100%{opacity:0}}
+
+/* Single-page mode (narrow screens) */
+.book.single .pg.left,.book.single .spread::before{display:none}
+.book.single .pg.right{border-radius:6px}
+.book.single .spread{height:clamp(520px,76vh,680px)}
+.book.single .leaf{width:100%}
+.book.single .face.front{border-radius:6px}
+.book.single .leaf.fwd{animation:bkFwdS .95s cubic-bezier(.55,.08,.3,1) forwards}
+.book.single .leaf.bwd{animation:bkBwdS .95s cubic-bezier(.55,.08,.3,1) forwards}
+@keyframes bkFwdS{0%{transform:rotateY(0);opacity:1}70%{opacity:1}100%{transform:rotateY(-180deg);opacity:0}}
+@keyframes bkBwdS{0%{transform:rotateY(-180deg);opacity:0}30%{opacity:1}100%{transform:rotateY(0);opacity:1}}
+
+/* Page corners (click to turn) */
+.corner{position:absolute;bottom:0;width:54px;height:54px;z-index:5;border:none;padding:0;background:transparent;cursor:pointer}
+.corner.r{right:0}.corner.l{left:0}
+.corner::before{content:'';position:absolute;bottom:0;width:20px;height:20px;transition:width .25s,height .25s;box-shadow:-2px -2px 5px rgba(0,0,0,.12)}
+.corner.r::before{right:0;border-radius:0 0 6px 0;background:linear-gradient(to top left,#6a1f2a 50%,#e2d6bc 50%,#fbf6ea 100%)}
+.corner.l::before{left:0;border-radius:0 0 0 6px;background:linear-gradient(to top right,#6a1f2a 50%,#e2d6bc 50%,#fbf6ea 100%);box-shadow:2px -2px 5px rgba(0,0,0,.12)}
+.corner:hover::before,.corner:focus-visible::before{width:38px;height:38px}
+.corner:focus-visible{outline:none}
+
+/* Navigation */
+.bk-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:16px auto 0;max-width:920px}
+.bk-nav .btn{min-width:108px}
+.bk-mid{display:flex;flex-direction:column;align-items:center;gap:7px;flex:1;min-width:0}
+.bk-dots{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}
+.bk-dot{width:9px;height:9px;border-radius:50%;background:#d6cfbf;border:none;padding:0;cursor:pointer;transition:transform .2s,background .2s}
+.bk-dot.on{background:var(--red);transform:scale(1.4)}
+.bk-pos{font-size:.82rem;color:#6b6e69;font-weight:600}
+
+/* ================= Page typography ================= */
+.pin{position:absolute;top:0;left:0;right:0;bottom:30px;padding:24px 28px 8px 34px;overflow-y:auto;font-size:.88rem;line-height:1.5;color:#2f312d;scrollbar-width:thin;scrollbar-color:#d8ccb0 transparent}
+.pg.left .pin,.face.back .pin{padding:24px 34px 8px 28px}
+.pno{position:absolute;bottom:9px;left:0;right:0;text-align:center;font-family:Georgia,"Times New Roman",serif;font-size:.8rem;color:#9a8f78;letter-spacing:1px}
+.rh{display:flex;justify-content:space-between;gap:8px;font-size:.66rem;letter-spacing:1.3px;text-transform:uppercase;color:#a3967b;border-bottom:1px solid #ece4d2;padding-bottom:6px;margin-bottom:10px}
+.pin h2{font-family:Georgia,"Times New Roman",serif;color:var(--deep);font-size:1.4rem;line-height:1.2;margin:2px 0 8px}
+.pin p{margin:6px 0}
+.pin .lead::first-letter{float:left;font:700 2.7em/.85 Georgia,"Times New Roman",serif;color:var(--red);margin:4px 6px 0 0}
+.pin sub{font-size:.72em}
+.eq{font-family:Georgia,"Times New Roman",serif;font-style:italic;text-align:center;font-size:1.02rem;background:#F5EFE1;border-radius:8px;padding:7px 10px;margin:8px 0;color:#3a2a20}
+.note{border-left:4px solid var(--red);background:#FBEFF0;padding:7px 10px;border-radius:0 8px 8px 0;font-size:.83rem;margin:8px 0}
+.ex{border:1px dashed #cdbf9f;background:#FFFBF0;padding:7px 10px;border-radius:8px;font-size:.83rem;margin:8px 0}
+.ex>b:first-child{color:var(--deep)}
+.lst,.steps{margin:6px 0;padding-left:20px}
+.lst li,.steps li{margin:3px 0}
+.tbl{width:100%;border-collapse:collapse;font-size:.8rem;margin:6px 0}
+.tbl th{background:#F3EEE1;color:var(--deep);text-align:left;padding:4px 7px}
+.tbl td{border-bottom:1px solid #eee5d2;padding:4px 7px}
+.rules{border:2px solid var(--red);border-radius:10px;padding:8px 10px;background:#fff;margin-top:8px}
+.rules .rt{font-family:Georgia,serif;font-weight:700;color:var(--red);margin-bottom:4px}
+.rule{display:flex;gap:8px;align-items:flex-start;margin:5px 0;font-size:.86rem;opacity:0;animation:lslide .5s ease forwards}
+.rule:nth-of-type(2){animation-delay:.3s}.rule:nth-of-type(3){animation-delay:.7s}
+.rule>span{flex:none;width:21px;height:21px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-weight:700;font-size:.75rem}
+.recipe{list-style:none;padding:0;margin:8px 0;counter-reset:r}
+.recipe li{counter-increment:r;position:relative;padding:4px 0 4px 34px;margin:2px 0;opacity:0;animation:lslide .5s ease forwards}
+.recipe li:nth-child(2){animation-delay:.15s}.recipe li:nth-child(3){animation-delay:.3s}.recipe li:nth-child(4){animation-delay:.45s}.recipe li:nth-child(5){animation-delay:.6s}
+.recipe li::before{content:counter(r);position:absolute;left:0;top:4px;width:24px;height:24px;border-radius:50%;background:var(--red);color:#fff;font-weight:700;display:grid;place-items:center;font-size:.8rem}
+@keyframes lslide{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+.end{text-align:center;margin:12px 0 4px}
+.orn{font-family:Georgia,serif;font-style:italic;color:#9a8f78;margin-bottom:8px}
+
+/* Title page */
+.pin.title{display:flex;flex-direction:column}
+.tp{margin:auto 0;text-align:center}
+.tp-k{font-size:.72rem;letter-spacing:2.2px;text-transform:uppercase;color:var(--red);font-weight:800}
+.tp h1{font-family:Georgia,"Times New Roman",serif;color:var(--deep);font-size:2.15rem;line-height:1.08;margin:10px 0 6px}
+.tp-sub{font-style:italic;font-family:Georgia,serif;color:#6b6e69}
+.tp-orn{width:60%;height:1px;background:linear-gradient(90deg,transparent,#C9971C,transparent);margin:14px auto}
+.tp-p{font-size:.85rem;color:#55584f;max-width:300px;margin:8px auto}
+.tp-turn{margin-top:10px;font-weight:800;color:var(--red);font-size:.85rem}
+.nudge{display:inline-block;animation:nudge 1.2s ease-in-out infinite}
+@keyframes nudge{50%{transform:translateX(7px)}}
+.blank{display:grid;place-items:center}
+.endp{font-size:2rem;color:#e0d6c0}
+
+/* Contents page */
+.chap{font-size:.68rem;letter-spacing:1.2px;text-transform:uppercase;color:#a3967b;margin:10px 0 2px;font-weight:800}
+.trow{display:flex;align-items:baseline;gap:8px;width:100%;background:none;border:none;font:inherit;font-size:.9rem;padding:4px 2px;cursor:pointer;color:inherit;text-align:left;border-radius:6px}
+.trow .tl{flex:1;border-bottom:1.5px dotted #cbbfa5;transform:translateY(-4px);min-width:12px}
+.trow .tpn{font-family:Georgia,serif;color:var(--deep);font-weight:700}
+.trow:hover .tt{color:var(--red)}
+.howto{margin-top:12px;font-size:.8rem;background:#F5EFE1;border-radius:8px;padding:8px 10px;color:#55584f}
+
+/* Figures */
+.fig{margin:8px 0;background:#FBF8F0;border:1px solid #EAE3D3;border-radius:10px;padding:6px}
+.fig>svg{display:block;width:100%;height:auto}
+.fig figcaption{font-size:.74rem;color:#7a7d77;text-align:center;font-style:italic;margin:2px 4px 2px}
+.lw{fill:none;stroke:#373A36;stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
+.lo{fill:#fff;stroke:#373A36;stroke-width:2;stroke-linejoin:round}
+.ls{font-size:15px;font-weight:700;fill:#373A36}
+.lt{font-size:11px;font-weight:600;fill:#373A36}
+.lr{font-size:11px;font-weight:700;fill:#A6192E}
+.lsm{font-size:9.5px;fill:#6b6e69}
+.scr{fill:#FFF7E6;stroke:#e0d1ae;stroke-width:1.2}
+.dash{fill:none;stroke:#b9ad92;stroke-width:1.5;stroke-dasharray:6 5}
+.rail{stroke:#9a958a;stroke-dasharray:5 5;stroke-width:1.4}
+.curve{fill:none;stroke:#A6192E;stroke-width:3;stroke-linejoin:round}
+.flow{fill:none;stroke:#A6192E;stroke-width:2;stroke-dasharray:3 6;stroke-linecap:round;animation:lflow .8s linear infinite}
+@keyframes lflow{to{stroke-dashoffset:-9}}
+.wv{fill:none;stroke:#A6192E;stroke-width:2.2;animation:lwv 1.6s linear infinite}
+.wv.in{stroke:#373A36;stroke-width:1.8}
+.wv.ghost{stroke:#a9a397;stroke-dasharray:4 4;stroke-width:1.5}
+@keyframes lwv{to{transform:translateX(-40px)}}
+.ring{fill:none;stroke:#A6192E;stroke-width:2;transform-box:fill-box;transform-origin:center;animation:lring 1.6s ease-out infinite}
+@keyframes lring{from{transform:scale(.6);opacity:1}to{transform:scale(2.6);opacity:0}}
+.lpop{opacity:0;animation:lpopIn .6s ease forwards}
+@keyframes lpopIn{to{opacity:1}}
+
+/* Mini calculators */
+.calc{background:#F3EEE1;border-radius:10px;padding:8px 10px;margin:8px 0;font-size:.8rem}
+.calc .ct{font-weight:800;color:var(--deep);margin-bottom:4px}
+.calc label{display:grid;grid-template-columns:30px 1fr 62px;align-items:center;gap:8px}
+.calc input[type=range]{width:100%;accent-color:var(--red)}
+.calc label b{text-align:right}
+.meter{position:relative;height:10px;background:#e3dccb;border-radius:6px;margin:6px 0 2px;overflow:hidden}
+.meter i{position:absolute;top:0;bottom:0;background:var(--red);border-radius:6px;transition:left .2s,width .2s,background .2s}
+.meter .z{position:absolute;left:50%;top:0;bottom:0;width:2px;margin-left:-1px;background:#373A36}
+.mscale{display:flex;justify-content:space-between;font-size:.68rem;color:#8a8d86}
+.cres{margin-top:3px}
+.calc.sat .meter i{background:#D4A017}
+.calc.sat [data-o=vo]{color:#B8860B}
+
+/* Contents panel in sidebar */
+.toc{padding:8px 12px 4px;display:flex;flex-direction:column;max-height:430px;overflow-y:auto}
+.toc .chap{margin:8px 6px 2px}
+.toc .trow{font-size:.86rem;padding:5px 8px}
+.toc .trow.on{background:var(--badbg)}
+.toc .trow.on .tt{color:var(--red);font-weight:700}
+.prog{margin:8px 18px 4px;height:8px;border-radius:6px;background:var(--sand2);overflow:hidden}
+.prog-bar{height:100%;width:0;background:linear-gradient(90deg,var(--deep),var(--red));transition:width .5s}
+.prog-l{font-size:.8rem;color:#7a7d77;padding:0 18px 14px}
+
+@media (prefers-reduced-motion: reduce){
+  .flow,.wv,.ring,.nudge{animation:none}
+}
+/* ---- DC motor additions ---- */
+.circuit svg.dg{max-width:500px;max-height:none;margin:8px auto}
+.circuit .sheet{max-width:420px;margin:18px auto}
+.sheet{border-collapse:collapse;font-size:.92rem;background:#fff;width:100%;border-radius:8px;overflow:hidden}
+.sheet th{background:var(--charcoal);color:#fff;text-align:left;padding:8px 12px;font-weight:600}
+.sheet td{border-bottom:1px solid var(--line);padding:7px 12px}
+.sheet td:last-child{text-align:right;font-weight:700}
+.prompt b{color:var(--deep)}
+.sol{margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,.08);color:var(--charcoal);font-weight:500}
+.datrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 14px 14px}
+.datrow #datLink{grid-column:1/-1}
+.datrow .btn{font-size:.82rem;padding:8px 10px;background:var(--paper);border:1.5px solid #cfc9bb;color:var(--charcoal)}
+.datrow .btn:hover{border-color:var(--red);color:var(--red)}
+.datnote{font-size:.75rem;color:#7a7d77;padding:0 18px 14px;margin-top:-6px}
+.pin details{background:#fff;border:1px dashed #cdbf9f;border-radius:8px;padding:5px 10px;margin:5px 0;font-size:.83rem}
+.pin details summary{cursor:pointer;color:var(--deep);font-weight:700}
+.pin .fig>svg,.pin figure.fig>svg{width:100%;height:auto;display:block}
+.pin .fig[data-sim=comm] svg{max-width:300px;margin:0 auto;display:block}
+.pbar{display:flex;height:14px;background:#e3dccb;border-radius:7px;overflow:hidden;margin:6px 0 2px}
+.pbar i{display:block;height:100%;transition:width .2s}.pbar .h{background:#A6192E}.pbar .m{background:#2E7D32}
+.calc .mscale span:first-child{color:#A6192E}.calc .mscale span:last-child{color:#2E7D32}
+.mspin{animation:mspin 4s linear infinite}
+@keyframes mspin{to{transform:rotate(360deg)}}
+.mflow{stroke-dasharray:6 7;animation:mdash 1s linear infinite}
+.mflow.slow{animation-duration:2s}.mflow.rev{animation-direction:reverse}
+@keyframes mdash{to{stroke-dashoffset:-13}}
+.mpulse{animation:mpulse 1.4s ease-in-out infinite}
+@keyframes mpulse{50%{opacity:.35}}
+.mslide{animation:mslide 4s ease-in-out infinite alternate}
+@keyframes mslide{from{transform:translateX(0)}to{transform:translateX(70px)}}
+.mlift{animation:mlift 4s ease-in-out infinite alternate}
+@keyframes mlift{from{transform:translateY(0)}to{transform:translateY(-70px)}}
+.mstripes{animation:mstripes 1s linear infinite}
+@keyframes mstripes{to{transform:translateY(-16px)}}
+@media (prefers-reduced-motion: reduce){.mspin,.mflow,.mpulse,.mslide,.mlift,.mstripes{animation:none}}
+/* ---- Grade forecast ---- */
+.hpills{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.hpills .streak{margin-left:0}
+.gpill{background:#fff!important;color:var(--deep);font-weight:800}
+.gwrap{display:flex;align-items:center;gap:14px;padding:14px 18px 6px}
+.gbadge{flex:none;width:72px;height:72px;border-radius:50%;display:grid;place-items:center;color:#fff;font:800 1.7rem/1 Georgia,serif;box-shadow:inset 0 -4px 0 rgba(0,0,0,.18),0 3px 10px rgba(118,35,47,.25);transition:background .4s,transform .4s}
+.gbadge.hd{background:radial-gradient(circle at 35% 30%,#a8323f,#76232F 70%)!important;box-shadow:0 0 0 4px #F2C94C,0 0 18px rgba(212,160,23,.7);animation:hdglow 2s ease-in-out infinite}
+@keyframes hdglow{50%{box-shadow:0 0 0 4px #F2C94C,0 0 30px rgba(212,160,23,.95)}}
+.glbl{font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;color:#7a7d77;font-weight:700}
+.gname{font-size:1.15rem;font-weight:800;color:var(--deep);line-height:1.2}
+.gsub{font-size:.82rem;color:#6b6e69}
+.gscale{position:relative;margin:10px 18px 4px;padding-top:10px}
+.gbands{display:grid;grid-template-columns:50fr 15fr 10fr 10fr 15fr;height:20px;border-radius:6px;overflow:hidden;font-size:.68rem;font-weight:800;color:#fff}
+.gbands i{display:grid;place-items:center;font-style:normal}
+.gbands .b0{background:#e3dccb}.gbands .b1{background:#8F8A7E}.gbands .b2{background:#C9971C}.gbands .b3{background:#A6192E}.gbands .b4{background:#76232F}
+.gmark{position:absolute;top:0;width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:10px solid var(--charcoal);transform:translateX(-7px);transition:left .6s cubic-bezier(.2,1.4,.4,1)}
+.glast{display:flex;gap:2px;justify-content:space-between;padding:10px 18px 4px}
+.gdot{width:30px;height:32px;display:grid;place-items:center;font-weight:800;color:#9a968b}
+.gdot.empty::before{content:'';width:12px;height:12px;border-radius:50%;border:2px dashed #d6cfbf}
+.gdot.rev{font-size:1.2rem}
+.gtip{margin:6px 18px 0;font-size:.85rem;background:var(--sand2);border-radius:10px;padding:8px 10px}
+.gquote{margin:10px 18px 0;padding:10px 12px;border-left:4px solid var(--red);background:#FBEFF0;border-radius:0 10px 10px 0;font-family:Georgia,serif;font-style:italic;font-size:.9rem;color:#3a2a20}
+.gquote .btn-ghost{font-family:system-ui,sans-serif;font-style:normal;font-size:.78rem;padding:4px 0 0}
+.gnote{font-size:.72rem;color:#8a8d86;padding:8px 18px 14px}
+.mgrade{margin:10px 0 4px;font-weight:700;color:var(--deep)}
+.gl-b{display:inline-block;color:#fff;border-radius:999px;padding:2px 10px;margin:0 2px}
+.gl-lock{color:#7a7d77;font-weight:600;font-size:.88rem}
+.mquote{font-family:Georgia,serif;font-style:italic;color:#55584f;font-size:.92rem;background:var(--sand2);border-radius:10px;padding:8px 12px;margin-top:8px}
+
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <svg width="30" height="30" viewBox="0 0 30 30"><circle cx="15" cy="15" r="12" fill="none" stroke="#fff" stroke-width="2.4"/><path d="M5.5 9.5 A11 11 0 0 1 9.5 5.5" stroke="#fff" stroke-width="4"/><path d="M24.5 20.5 A11 11 0 0 1 20.5 24.5" stroke="#fff" stroke-width="4"/><circle cx="15" cy="15" r="6" fill="#fff"/><circle cx="15" cy="15" r="2" fill="#A6192E"/></svg>
+  </div>
+  <div>
+    <h1>DC Motor Challenge</h1>
+    <p>Mechatronics · Learn and practise permanent-magnet DC motor analysis</p>
+  </div>
+  <div class="hpills"><div class="streak gpill" id="gradePill">Grade forecast: locked</div><div class="streak" id="streak">HD streak: 0</div></div>
+</header>
+
+<nav class="tabbar">
+  <div class="tabs" role="tablist">
+    <button class="tab active" id="tabPractice" role="tab" aria-selected="true" data-tab="practice">
+      <svg width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="14" r="6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 3l4 5 4-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      Practice challenge</button>
+    <button class="tab" id="tabLearn" role="tab" aria-selected="false" data-tab="learn">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path d="M12 6c-2-1.5-5-2-8-1.5v14c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5v-14c-3-.5-6 0-8 1.5zM12 6v14" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      Learn DC Motors</button>
+  </div>
+</nav>
+
+<main>
+  <section class="card" id="practiceCard">
+    <div class="toolbar">
+      <button class="btn btn-primary" id="create">Create question</button>
+      <select id="ctype" aria-label="Topic">
+        <option value="any">Any topic</option>
+        <option value="force">Forces &amp; the elementary motor</option>
+        <option value="model">Motor model: V = IR + E</option>
+        <option value="power">Power &amp; efficiency</option>
+        <option value="sheet">Datasheets &amp; units</option>
+      </select>
+      <span class="qcount" id="qcount">No questions yet</span>
+    </div>
+
+    <div class="circuit" id="circuit"><div class="empty"><svg width="64" height="64" viewBox="0 0 30 30"><circle cx="15" cy="15" r="12" fill="none" stroke="#A6192E" stroke-width="2"/><circle cx="15" cy="15" r="6" fill="none" stroke="#A6192E" stroke-width="2"/><circle cx="15" cy="15" r="1.8" fill="#A6192E"/></svg><h2>Ready for a challenge?</h2><p>Choose a topic and press <b>Create question</b>.<br>New to DC motors? Read the <b>Learn DC Motors</b> book first.</p><p style="font-size:.9rem">Every answer updates your <b>grade forecast</b>. Solve without hints to work at <b>HD</b> level.</p></div></div>
+
+    <div class="qbox" id="qbox" hidden>
+      <span class="tag" id="qtag"></span>
+      <p class="prompt" id="qprompt"></p>
+      <p class="assume" id="qassume">Assume an ideal PMDC motor (no friction) unless stated. The numbers are chosen so you can work them out in your head.</p>
+    </div>
+
+    <div class="answer" id="answer" hidden>
+      <label for="ans" id="anslabel">Answer</label>
+      <div class="inwrap">
+        <input id="ans" type="text" inputmode="decimal" autocomplete="off" placeholder="e.g. 0.25">
+        <span class="unit" id="unit"></span>
+      </div>
+      <button class="btn btn-dark" id="check">Check answer</button>
+    </div>
+    <div class="feedback " id="feedback" aria-live="polite"></div>
+    <div class="foot" id="foot" hidden>
+      <span id="attempts">Attempts: 0</span>
+      <button class="btn btn-ghost" id="giveup" data-armed="">Reveal answer (10 pts)</button>
+    </div>
+  </section>
+
+  <section class="card learn" id="learnCard" hidden>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+      <marker id="lbA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#A6192E"/></marker>
+      <marker id="lbC" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#373A36"/></marker>
+    </defs></svg>
+    <div class="learn-top">
+      <div><h2>Learn DC Motors</h2><div class="lt-s">Read it like a real book: use the buttons, click a page corner, press ← →, or swipe.</div></div>
+      <button class="snd" id="bkSound" aria-pressed="true"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Page sound on</span></button>
+    </div>
+    <div class="book" id="book">
+      <div class="bk-wrap">
+        <div class="spread" id="spread">
+          <div class="pg left" id="pgL"></div>
+          <div class="pg right" id="pgR"></div>
+          <div class="leaf" id="leaf"><div class="face front" id="faceF"></div><div class="face back" id="faceB"></div></div>
+          <button class="corner l" id="cnL" aria-label="Previous page"></button>
+          <button class="corner r" id="cnR" aria-label="Next page"></button>
+        </div>
+      </div>
+    </div>
+    <div class="bk-nav">
+      <button class="btn btn-dark" id="bkPrev">‹ Back</button>
+      <div class="bk-mid"><div class="bk-dots" id="bkDots"></div><div class="bk-pos" id="bkPos"></div></div>
+      <button class="btn btn-primary" id="bkNext">Next ›</button>
+    </div>
+  </section>
+
+  <aside>
+    <section class="card" id="tocCard" hidden>
+      <div class="panel-h">
+        <svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 6c-2-1.5-5-2-8-1.5v14c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5v-14c-3-.5-6 0-8 1.5zM12 6v14" fill="none" stroke="#A6192E" stroke-width="2" stroke-linejoin="round"/></svg>
+        <h2>Contents</h2>
+      </div>
+      <div class="toc" id="toc"></div>
+      <div class="prog"><div class="prog-bar" id="progBar"></div></div>
+      <div class="prog-l" id="progL"></div>
+    </section>
+    <section class="card" id="hintsCard">
+      <div class="panel-h">
+        <svg width="20" height="20" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.4 1 1.1 1 1.9V16h5v-.2c0-.8.4-1.5 1-1.9A6 6 0 0 0 12 3z" fill="none" stroke="#A6192E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        <h2>Hints</h2>
+      </div>
+      <div class="award-now" id="awardnow" hidden>
+        <span id="awardicon"></span>
+        <div><div class="lbl">Solve now for</div><div class="tier" id="awardtier">HD level</div></div>
+      </div>
+      <div id="hints"><div class="placeholder">Create a question to unlock its hints. Each hint you reveal lowers the grade this answer counts for, so try without them first!</div></div>
+      <div class="ladder" id="ladder"></div>
+    </section>
+
+    <section class="card" id="gradeCard">
+      <div class="panel-h">
+        <svg width="20" height="20" viewBox="0 0 24 24"><path d="M3 9l9-5 9 5-9 5-9-5z" fill="none" stroke="#A6192E" stroke-width="2" stroke-linejoin="round"/><path d="M7 11.5V16c0 1.5 2.5 3 5 3s5-1.5 5-3v-4.5M21 9v6" fill="none" stroke="#A6192E" stroke-width="2" stroke-linecap="round"/></svg>
+        <h2>Grade forecast</h2>
+      </div>
+      <div class="gwrap"><div class="gbadge" id="gBadge">?</div>
+        <div><div class="glbl">You are working at</div><div class="gname" id="gName">…</div><div class="gsub" id="gSub"></div></div></div>
+      <div class="gscale"><div class="gbands"><i class="b0"></i><i class="b1">P</i><i class="b2">Cr</i><i class="b3">D</i><i class="b4">HD</i></div><div class="gmark" id="gMark"></div></div>
+      <div class="glast" id="gLast"></div>
+      <div class="gtip" id="gTip"></div>
+      <div class="gquote"><div id="gQuote"></div><button class="btn btn-ghost" id="gNewQuote">Another quote ↻</button></div>
+      <div class="gnote"><button class="btn btn-ghost" id="reset" style="font-size:.78rem;float:right;padding:0 0 0 8px">Reset</button>A practice forecast from your last 10 questions, not your official MTRN2060 grade. But the skills are the same ones the exam tests.</div>
+    </section>
+
+  </aside>
+</main>
+
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="mtitle">
+  <div class="modal">
+    <div id="mmedal" class="medal-bounce"></div>
+    <div class="kicker">This answer is</div>
+    <h2 id="mtitle">HD level</h2>
+    <p id="mmsg"></p>
+    <p class="meta" id="mmeta"></p>
+    <div class="mgrade" id="mgrade"></div>
+    <p class="mquote" id="mquote"></p>
+    <div class="acts">
+      <button class="btn btn-primary" id="mnext">Next question</button>
+      <button class="btn btn-dark" id="mclose">Review question</button>
+    </div>
+  </div>
+</div>
+<canvas id="confetti"></canvas>
+
+<script>
+/* ---------------- Utilities ---------------- */
+const rand = n => Math.floor(Math.random()*n);
+const pick = a => a[rand(a.length)];
+const fmt = x => { const v=parseFloat((+x).toFixed(4)); return (Object.is(v,-0)?0:v).toString(); };
+function sig(x){ const s=parseFloat((+x).toPrecision(4)); return (s<0?'−':'')+Math.abs(s).toString(); }
+const TXT = 'font-family="system-ui,sans-serif"';
+function f2(n){return (+n).toFixed(1)}
+function arrow(x1,y1,x2,y2,c='#A6192E',w=2.5,h=9){
+  const a=Math.atan2(y2-y1,x2-x1), bx=x2-h*Math.cos(a), by=y2-h*Math.sin(a);
+  const p1=[bx+h*.5*Math.sin(a), by-h*.5*Math.cos(a)], p2=[bx-h*.5*Math.sin(a), by+h*.5*Math.cos(a)];
+  return `<line x1="${f2(x1)}" y1="${f2(y1)}" x2="${f2(bx)}" y2="${f2(by)}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/><polygon points="${f2(x2)},${f2(y2)} ${f2(p1[0])},${f2(p1[1])} ${f2(p2[0])},${f2(p2[1])}" fill="${c}"/>`;
+}
+function cond(x,y,into,r=10,fill='#C87533'){
+  x=+x; y=+y;
+  const s = into
+    ? `<line x1="${x-r*.55}" y1="${y-r*.55}" x2="${x+r*.55}" y2="${y+r*.55}" stroke="#222" stroke-width="2"/><line x1="${x-r*.55}" y1="${y+r*.55}" x2="${x+r*.55}" y2="${y-r*.55}" stroke="#222" stroke-width="2"/>`
+    : `<circle cx="${x}" cy="${y}" r="${r*.25}" fill="#222"/>`;
+  return `<circle cx="${x}" cy="${y}" r="${r}" fill="${fill}" stroke="#222" stroke-width="1.5"/>${s}`;
+}
+function sector(cx,cy,r1,r2,a0,a1){
+  const R=a=>a*Math.PI/180, P=(r,a)=>[(cx+r*Math.cos(R(a))).toFixed(2),(cy+r*Math.sin(R(a))).toFixed(2)];
+  const L=(a1-a0)>180?1:0, [x1,y1]=P(r2,a0),[x2,y2]=P(r2,a1),[x3,y3]=P(r1,a1),[x4,y4]=P(r1,a0);
+  return `M${x1} ${y1} A${r2} ${r2} 0 ${L} 1 ${x2} ${y2} L${x3} ${y3} A${r1} ${r1} 0 ${L} 0 ${x4} ${y4}Z`;
+}
+
+/* ================= question diagrams ================= */
+function dField(B,I,L){
+  let lines=''; for(const y of [38,62,86,110,134]) lines+=`<line x1="66" y1="${y}" x2="254" y2="${y}" stroke="#76232F" stroke-width="1.6" class="mflow slow" opacity=".7"/>`;
+  return `<svg class="dg" viewBox="0 0 320 172" width="360"><rect x="10" y="22" width="54" height="128" rx="6" fill="#A6192E"/><text x="37" y="94" fill="#fff" font-size="26" font-weight="700" text-anchor="middle" ${TXT}>N</text>
+  <rect x="256" y="22" width="54" height="128" rx="6" fill="#373A36"/><text x="283" y="94" fill="#fff" font-size="26" font-weight="700" text-anchor="middle" ${TXT}>S</text>${lines}
+  ${cond(160,86,true,15)}${arrow(160,104,160,156,'#2E7D32',3.5)}
+  <text x="172" y="150" font-size="13" fill="#2E7D32" font-weight="700" ${TXT}>F = ?</text>
+  <text x="160" y="16" font-size="12.5" text-anchor="middle" fill="#373A36" ${TXT}>B = ${B} T →</text>
+  <text x="182" y="72" font-size="12" fill="#373A36" ${TXT}>I = ${I} A (into page)</text>
+  <text x="182" y="88" font-size="12" fill="#373A36" ${TXT}>L = ${L} m</text></svg>`;
+}
+function dRotor(n,r,B,I){
+  let c=''; for(let i=0;i<12;i++){const a=i*Math.PI/6+Math.PI/12, x=160+52*Math.cos(a), y=90+52*Math.sin(a); c+=cond(x.toFixed(1),y.toFixed(1),Math.cos(a)>0,7);}
+  return `<svg class="dg" viewBox="0 0 320 180" width="340"><path d="${sector(160,90,66,84,140,220)}" fill="#A6192E"/><path d="${sector(160,90,66,84,-40,40)}" fill="#373A36"/>
+  <text x="84" y="95" fill="#A6192E" font-weight="700" ${TXT}>N</text><text x="228" y="95" fill="#373A36" font-weight="700" ${TXT}>S</text>
+  <circle cx="160" cy="90" r="62" fill="#B9BCC0" stroke="#7C838A"/>${c}<circle cx="160" cy="90" r="6" fill="#373A36"/>
+  ${arrow(160,90,160,40,'#76232F',2,7)}<text x="166" y="68" font-size="12" fill="#76232F" font-weight="700" ${TXT}>r</text>
+  <text x="10" y="172" font-size="12" fill="#373A36" ${TXT}>${n} conductors · ${I} A each · B = ${B} T</text></svg>`;
+}
+function dCircuit(o){
+  return `<svg class="dg" viewBox="0 0 330 175" width="360">
+  <path d="M60 30 H125 M185 30 H280 V61 M280 109 V145 H60 V95 M60 79 V30" fill="none" stroke="#373A36" stroke-width="2.4"/>
+  <path d="M125 30 l5 -9 l10 18 l10 -18 l10 18 l10 -18 l10 18 l5 -9" fill="none" stroke="#373A36" stroke-width="2.4"/>
+  <line x1="44" y1="79" x2="76" y2="79" stroke="#373A36" stroke-width="3"/><line x1="52" y1="95" x2="68" y2="95" stroke="#373A36" stroke-width="5"/>
+  <text x="36" y="76" font-size="13" fill="#A6192E" font-weight="700" ${TXT}>+</text>
+  <circle cx="280" cy="85" r="24" fill="#fff" stroke="#76232F" stroke-width="2.6"/><text x="280" y="91" text-anchor="middle" font-size="16" font-weight="700" fill="#76232F" ${TXT}>E</text>
+  ${arrow(210,30,240,30,'#A6192E',2.4,9)}<text x="214" y="22" font-size="12" fill="#A6192E" ${TXT}>I ${o.I||''}</text>
+  <text x="8" y="92" font-size="13" font-weight="700" fill="#373A36" ${TXT}>${o.V}</text>
+  <text x="155" y="58" text-anchor="middle" font-size="13" fill="#373A36" ${TXT}>R = ${o.R}</text>
+  <text x="312" y="80" text-anchor="end" font-size="12" fill="#373A36" ${TXT} transform="translate(0,0)"></text>
+  <text x="78" y="62" font-size="12" fill="#76232F" ${TXT}>${o.K||''}</text>
+  <text x="78" y="128" font-size="12" fill="#76232F" ${TXT}>${o.w||''}</text>
+  <text x="110" y="168" font-size="11" fill="#6B6E69" ${TXT}>V = IR + E,  E = K<tspan baseline-shift="sub" font-size="8">E</tspan>ω</text></svg>`;
+}
+function dCurve(ts,w0,o={}){
+  const X=t=>45+250*t/ts*0.85, Y=w=>170-150*w/w0*0.85;
+  let extra='';
+  if(o.tl!==undefined){ extra+=`<line x1="${X(o.tl)}" y1="20" x2="${X(o.tl)}" y2="170" stroke="#2E7D32" stroke-width="2" stroke-dasharray="5 4"/><text x="${X(o.tl)+4}" y="30" font-size="11" fill="#2E7D32" ${TXT}>load ${o.tl} N·m</text><circle cx="${X(o.tl)}" cy="${Y(w0*(1-o.tl/ts))}" r="5" fill="#2E7D32"/><text x="${X(o.tl)+8}" y="${Y(w0*(1-o.tl/ts))-6}" font-size="12" font-weight="700" fill="#2E7D32" ${TXT}>ω = ?</text>`; }
+  return `<svg class="dg" viewBox="0 0 320 212" width="380"><line x1="45" y1="170" x2="305" y2="170" stroke="#373A36" stroke-width="1.5"/><line x1="45" y1="170" x2="45" y2="12" stroke="#373A36" stroke-width="1.5"/>
+  <text x="305" y="206" text-anchor="end" font-size="11" fill="#6B6E69" ${TXT}>torque τ (N·m)</text><text x="12" y="20" font-size="11" fill="#6B6E69" ${TXT}>ω</text>
+  <line x1="${X(0)}" y1="${Y(w0)}" x2="${X(ts)}" y2="${Y(0)}" stroke="#A6192E" stroke-width="3"/>
+  <text x="50" y="${Y(w0)-5}" font-size="11.5" fill="#76232F" ${TXT}>${o.hideW0?'ω₀':'ω₀ = '+w0+' rad/s'}</text><text x="${X(ts)}" y="186" text-anchor="middle" font-size="11.5" fill="#76232F" ${TXT}>${o.hideTs?'τs':'τs = '+ts}</text>${extra}</svg>`;
+}
+function dRail(o){
+  let dots=''; for(let x=70;x<=220;x+=30) for(const y of [80,110]) dots+=`<g opacity=".45">${cond(x,y,true,5,'#fff')}</g>`;
+  return `<svg class="dg" viewBox="0 0 330 190" width="360">${dots}
+  <line x1="40" y1="55" x2="240" y2="55" stroke="#7C838A" stroke-width="5"/><line x1="40" y1="135" x2="240" y2="135" stroke="#7C838A" stroke-width="5"/>
+  <line x1="40" y1="55" x2="40" y2="84" stroke="#373A36" stroke-width="2"/><line x1="40" y1="106" x2="40" y2="135" stroke="#373A36" stroke-width="2"/>
+  <line x1="26" y1="84" x2="54" y2="84" stroke="#373A36" stroke-width="3"/><line x1="33" y1="106" x2="47" y2="106" stroke="#373A36" stroke-width="5"/>
+  <text x="8" y="100" font-size="12" font-weight="700" fill="#373A36" ${TXT}>${o.V}</text>
+  <rect x="146" y="48" width="10" height="94" rx="2" fill="#C87533"/>
+  <line x1="156" y1="95" x2="282" y2="95" stroke="#373A36" stroke-width="1.5"/><circle cx="290" cy="103" r="10" fill="#fff" stroke="#373A36" stroke-width="2"/>
+  <line x1="300" y1="103" x2="300" y2="150" stroke="#373A36" stroke-width="1.5"/><rect x="286" y="150" width="28" height="24" fill="#373A36"/>
+  ${o.v?arrow(160,160,205,160,'#2E7D32',2.5,8)+`<text x="210" y="164" font-size="12" fill="#2E7D32" ${TXT}>${o.v}</text>`:''}
+  <text x="70" y="182" font-size="11.5" fill="#6B6E69" ${TXT}>${o.cap||''}</text></svg>`;
+}
+function dSheet(rows,title='Motor datasheet (extract)'){
+  return `<table class="sheet" style="max-width:380px"><tr><th colspan="2">${title}</th></tr>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</table>`;
+}
+
+/* ================= question generators ================= */
+const PRESETS=[{V:12,R:2,K:0.1},{V:12,R:1,K:0.05},{V:24,R:4,K:0.2},{V:10,R:2,K:0.1},{V:20,R:4,K:0.1},{V:6,R:1,K:0.05},{V:24,R:2,K:0.1},{V:12,R:3,K:0.1},{V:12,R:4,K:0.1}];
+const KE='K<sub>E</sub>', KT='K<sub>T</sub>', W0='ω<sub>0</sub>', TS='τ<sub>s</sub>', IS='I<sub>s</sub>';
+const motorLine = p => `<b>${p.V} V</b> supply, terminal resistance <b>R = ${p.R} Ω</b>, ${KT} = ${KE} = <b>${p.K}</b> (N·m/A = V·s/rad)`;
+const GENS=[
+ {topic:'force', f(){
+   const B=pick([0.5,1,2]), I=pick([2,4,5,10]), L=pick([0.1,0.2,0.5]), F=B*I*L;
+   return {title:'Force on a conductor', text:`A straight conductor of length <b>${L} m</b> sits at right angles to a uniform magnetic field of <b>${B} T</b> and carries a current of <b>${I} A</b>. What is the magnitude of the force on the conductor?`,
+   ans:F, unit:'N', diagram:dField(B,I,L),
+   hints:['A current-carrying conductor in a magnetic field feels a force at right angles to both the field and the current (Fleming’s left-hand rule).','When the conductor is perpendicular to the field, the force is F = B·I·L.',`Substitute: F = ${B} × ${I} × ${L}`,`${B} × ${I} = ${fmt(B*I)}, now multiply by ${L}.`],
+   sol:`F = BIL = ${B} × ${I} × ${L} = <b>${fmt(F)} N</b>`};}},
+ {topic:'force', f(){
+   const n=pick([10,20,40]), B=pick([0.5,1]), I=pick([1,2,5]), L=pick([0.05,0.1]), r=pick([0.02,0.05,0.1]);
+   const F1=B*I*L, Ft=n*F1, T=Ft*r;
+   return {title:'From force to torque', text:`A rotor of radius <b>${r} m</b> has <b>${n}</b> active conductors, each <b>${L} m</b> long, sitting in an air-gap flux density of <b>${B} T</b>. Each conductor carries <b>${I} A</b>, and every force pushes the rotor the same way round. What torque does the rotor produce?`,
+   ans:T, unit:'N·m', diagram:dRotor(n,r,B,I),
+   hints:['Torque is force multiplied by the radius at which it acts: τ = F·r.','Each conductor feels F = B·I·L, and the forces of all conductors add up.',`One conductor: F = ${B} × ${I} × ${L} = ${fmt(F1)} N. All ${n} conductors: ${fmt(Ft)} N.`,`τ = ${fmt(Ft)} N × ${r} m`],
+   sol:`F per conductor = BIL = ${fmt(F1)} N → total = ${n} × ${fmt(F1)} = ${fmt(Ft)} N → τ = F·r = ${fmt(Ft)} × ${r} = <b>${fmt(T)} N·m</b>`};}},
+ {topic:'force', f(){
+   const V=pick([2,4,6,10,12]), R=pick([1,2,4]), P=V*V/R;
+   return {title:'Elementary motor held still', text:`In the elementary (linear) motor, the conductor bar has resistance <b>${R} Ω</b> and is connected to a <b>${V} V</b> supply. The mass is too heavy, so the bar does not move (v = 0). What is the electrical input power?`,
+   ans:P, unit:'W', diagram:dRail({V:V+' V', cap:'v = 0: the bar is stalled'}),
+   hints:['If the bar is not moving, there is no induced (back) EMF: E = BLv = 0.',`So the current is limited only by resistance: I = V/R = ${V}/${R} = ${fmt(V/R)} A.`,'Input power is P = V·I, which here equals V²/R.',`P = ${V}² / ${R} = ${V*V} / ${R}`],
+   sol:`E = 0, so I = V/R = ${fmt(V/R)} A and P<sub>in</sub> = VI = V²/R = <b>${fmt(P)} W</b>. Mechanical power F·v = 0, so all of it becomes heat!`};}},
+ {topic:'force', f(){
+   const B=pick([0.5,1]), L=pick([0.2,0.5,1]), v=pick([2,4,10]), R=pick([0.5,1,2]), I=pick([1,2,4]); const E=B*L*v, V=E+I*R;
+   return {title:'Elementary motor moving', text:`The bar of an elementary linear motor is <b>${L} m</b> long, moves at a steady <b>${v} m/s</b> through a field of <b>${B} T</b>, has resistance <b>${R} Ω</b> and is connected to <b>${fmt(V)} V</b>. What current flows in the bar?`,
+   ans:I, unit:'A', diagram:dRail({V:fmt(V)+' V', v:'v = '+v+' m/s', cap:`B = ${B} T into page, L = ${L} m`}),
+   hints:['A conductor moving through a field has an EMF induced in it, and that EMF opposes the supply: back EMF.',`E = B·L·v = ${B} × ${L} × ${v} = ${fmt(E)} V`,'Only the difference between supply and back EMF drives current through the resistance: I = (V − E)/R.',`I = (${fmt(V)} − ${fmt(E)}) / ${R}`],
+   sol:`E = BLv = ${fmt(E)} V; I = (V − E)/R = (${fmt(V)} − ${fmt(E)})/${R} = <b>${fmt(I)} A</b>`};}},
+ {topic:'model', f(){
+   const p=pick(PRESETS), I=p.V/p.R;
+   return {title:'Stall current', text:`A PMDC motor with terminal resistance <b>${p.R} Ω</b> is connected to <b>${p.V} V</b>. The shaft is clamped so it cannot turn (stall). What current flows?`,
+   ans:I, unit:'A', diagram:dCircuit({V:p.V+' V', R:p.R+' Ω', w:'ω = 0 (stalled)', I:'= ?'}),
+   hints:['At stall the motor is not turning: ω = 0.',`Back EMF is E = ${KE}·ω, so at stall E = 0.`,'From V = IR + E with E = 0, you get I = V/R.',`I = ${p.V} / ${p.R}`],
+   sol:`E = 0 at stall, so I<sub>s</sub> = V/R = ${p.V}/${p.R} = <b>${fmt(I)} A</b>`};}},
+ {topic:'model', f(){
+   const p=pick(PRESETS), I=p.V/p.R, T=p.K*I;
+   return {title:'Stall torque', text:`A PMDC motor has ${motorLine(p)}. What is the stall torque?`,
+   ans:T, unit:'N·m', diagram:dCircuit({V:p.V+' V', R:p.R+' Ω', K:`KT = ${p.K} N·m/A`, w:'ω = 0'}),
+   hints:['Stall torque happens when the motor is held still, so ω = 0 and the back EMF is zero.',`Stall current I<sub>s</sub> = V/R = ${p.V}/${p.R} = ${fmt(I)} A.`,`Torque is proportional to current: τ = ${KT}·I.`,`τ<sub>s</sub> = ${p.K} × ${fmt(I)}`],
+   sol:`I<sub>s</sub> = V/R = ${fmt(I)} A; τ<sub>s</sub> = ${KT}·I<sub>s</sub> = ${p.K} × ${fmt(I)} = <b>${fmt(T)} N·m</b>`};}},
+ {topic:'model', f(){
+   const p=pick(PRESETS), w=p.V/p.K;
+   return {title:'No-load speed', text:`An ideal (frictionless) PMDC motor with ${KE} = <b>${p.K} V·s/rad</b> is connected to <b>${p.V} V</b> and has nothing attached to its shaft. What speed does it reach?`,
+   ans:w, unit:'rad/s', diagram:dCircuit({V:p.V+' V', R:p.R+' Ω', K:`KE = ${p.K} V·s/rad`, w:'ω = ? (no load)'}),
+   hints:['With no load and no friction, the motor needs zero torque, and so zero current.','If I = 0, then V = IR + E gives E = V: the back EMF rises until it equals the supply.',`E = ${KE}·ω, so ω<sub>0</sub> = V / ${KE}.`,`ω<sub>0</sub> = ${p.V} / ${p.K}`],
+   sol:`At no load I = 0, so E = V and ω<sub>0</sub> = V/${KE} = ${p.V}/${p.K} = <b>${fmt(w)} rad/s</b>`};}},
+ {topic:'model', f(){
+   const K=pick([0.02,0.05,0.1,0.2]), w=pick([50,100,200,300]), E=K*w;
+   return {title:'Back EMF', text:`A PMDC motor has an electrical constant ${KE} = <b>${K} V·s/rad</b>. What back EMF does it generate when spinning at <b>${w} rad/s</b>?`,
+   ans:E, unit:'V', diagram:dCircuit({V:'V', R:'R', K:`KE = ${K} V·s/rad`, w:`ω = ${w} rad/s`}),
+   hints:['A spinning motor acts as a generator too: its conductors cut the field and an EMF is induced.','That back EMF is proportional to speed.',`E = ${KE}·ω`,`E = ${K} × ${w}`],
+   sol:`E = ${KE}·ω = ${K} × ${w} = <b>${fmt(E)} V</b>`};}},
+ {topic:'model', f(){
+   const p=pick(PRESETS), x=pick([0.25,0.5,0.75]), w=x*p.V/p.K, E=p.K*w, I=(p.V-E)/p.R;
+   return {title:'Current at speed', text:`A PMDC motor has ${motorLine(p)}. It is running at <b>${fmt(w)} rad/s</b>. What current does it draw?`,
+   ans:I, unit:'A', diagram:dCircuit({V:p.V+' V', R:p.R+' Ω', K:`KE = ${p.K}`, w:`ω = ${fmt(w)} rad/s`, I:'= ?'}),
+   hints:['First find the back EMF at this speed.',`E = ${KE}·ω = ${p.K} × ${fmt(w)} = ${fmt(E)} V`,'Rearrange V = IR + E to get I = (V − E)/R.',`I = (${p.V} − ${fmt(E)}) / ${p.R}`],
+   sol:`E = ${fmt(E)} V; I = (V − E)/R = (${p.V} − ${fmt(E)})/${p.R} = <b>${fmt(I)} A</b>`};}},
+ {topic:'model', f(){
+   const p=pick(PRESETS), x=pick([0.25,0.5,0.75]), w=x*p.V/p.K, E=p.K*w, I=(p.V-E)/p.R, T=p.K*I;
+   return {title:'Torque at speed', text:`A PMDC motor has ${motorLine(p)}. What torque does it produce while running at <b>${fmt(w)} rad/s</b>?`,
+   ans:T, unit:'N·m', diagram:dCircuit({V:p.V+' V', R:p.R+' Ω', K:`KT = KE = ${p.K}`, w:`ω = ${fmt(w)} rad/s`}),
+   hints:[`Torque comes from current: τ = ${KT}·I. So find the current first.`,`Back EMF: E = ${KE}·ω = ${fmt(E)} V`,`I = (V − E)/R = (${p.V} − ${fmt(E)})/${p.R} = ${fmt(I)} A`,`τ = ${p.K} × ${fmt(I)}`],
+   sol:`E = ${fmt(E)} V → I = ${fmt(I)} A → τ = ${KT}·I = <b>${fmt(T)} N·m</b>`};}},
+ {topic:'model', f(){
+   const p=pick(PRESETS), w=1.5*p.V/p.K, E=p.K*w, I=(p.V-E)/p.R;
+   return {title:'Generating!', text:`A PMDC motor with ${motorLine(p)} is connected to its supply, but the load (say, a robot rolling down a ramp) drives the shaft at <b>${fmt(w)} rad/s</b>. Taking current flowing <i>into</i> the motor's + terminal as positive, what is the armature current?`,
+   ans:I, unit:'A', diagram:dCircuit({V:p.V+' V', R:p.R+' Ω', K:`KE = ${p.K}`, w:`ω = ${fmt(w)} rad/s`, I:'= ?'}),
+   hints:[`Find the back EMF: E = ${KE}·ω = ${fmt(E)} V.`,`Compare E with V. Here E (${fmt(E)} V) is bigger than V (${p.V} V), so the machine is generating.`,'The same equation still works: I = (V − E)/R. Expect a negative answer.',`I = (${p.V} − ${fmt(E)}) / ${p.R}`],
+   sol:`E = ${fmt(E)} V > V, so I = (V − E)/R = (${p.V} − ${fmt(E)})/${p.R} = <b>${fmt(I)} A</b>. The negative sign means current flows back into the supply: mechanical power is converted to electrical (regenerative braking).`};}},
+ {topic:'model', f(){
+   const p=pick(PRESETS), x=pick([0.25,0.5,0.75]), ts=p.K*p.V/p.R, w0=p.V/p.K, tl=ts*(1-x), I=tl/p.K, E=p.V-I*p.R, w=E/p.K;
+   return {title:'Operating speed under load', text:`A PMDC motor has ${motorLine(p)}. It drives a load needing a constant torque of <b>${fmt(tl)} N·m</b>. At what speed will it run in steady state?`,
+   ans:w, unit:'rad/s', diagram:dCurve(ts,w0,{tl:fmt(tl),hideW0:true,hideTs:true}),
+   hints:['In steady state, motor torque equals load torque, so the current is set by the load.',`I = τ / ${KT} = ${fmt(tl)} / ${p.K} = ${fmt(I)} A`,`Back EMF: E = V − IR = ${p.V} − ${fmt(I)} × ${p.R} = ${fmt(E)} V`,`ω = E / ${KE} = ${fmt(E)} / ${p.K}`],
+   sol:`I = τ/${KT} = ${fmt(I)} A → E = V − IR = ${fmt(E)} V → ω = E/${KE} = <b>${fmt(w)} rad/s</b>`};}},
+ {topic:'power', f(){
+   const p=pick(PRESETS), w=0.5*p.V/p.K, E=p.K*w, I=(p.V-E)/p.R, P=E*I;
+   return {title:'Mechanical power', text:`A PMDC motor has ${motorLine(p)}. What mechanical output power does it deliver at <b>${fmt(w)} rad/s</b>? (Ignore friction.)`,
+   ans:P, unit:'W', diagram:dCircuit({V:p.V+' V', R:p.R+' Ω', K:`KE = ${p.K}`, w:`ω = ${fmt(w)} rad/s`}),
+   hints:['Mechanical power is P = τ·ω, which (in SI units) equals E·I.',`E = ${KE}·ω = ${fmt(E)} V`,`I = (V − E)/R = (${p.V} − ${fmt(E)})/${p.R} = ${fmt(I)} A`,`P = E·I = ${fmt(E)} × ${fmt(I)}`],
+   sol:`E = ${fmt(E)} V, I = ${fmt(I)} A, P<sub>mech</sub> = EI = <b>${fmt(P)} W</b> (check: τω = ${fmt(p.K*I)} × ${fmt(w)} = ${fmt(P)} W)`};}},
+ {topic:'power', f(){
+   const ts=pick([0.2,0.4,0.5,0.8,1]), w0=pick([100,200,400]), P=ts*w0/4;
+   return {title:'Maximum output power', text:`An ideal PMDC motor has a stall torque of <b>${ts} N·m</b> and a no-load speed of <b>${w0} rad/s</b>. What is the maximum mechanical power it can deliver?`,
+   ans:P, unit:'W', diagram:dCurve(ts,w0),
+   hints:['Power is P = τ·ω, the area of a rectangle under the straight torque–speed line.','On a straight line from (0, ω₀) to (τs, 0), the product τ·ω is largest exactly halfway.',`So τ = τs/2 = ${fmt(ts/2)} N·m and ω = ω₀/2 = ${fmt(w0/2)} rad/s.`,`P<sub>max</sub> = ${fmt(ts/2)} × ${fmt(w0/2)}  (= τs·ω₀/4)`],
+   sol:`P<sub>max</sub> = (τs/2)(ω₀/2) = τs·ω₀/4 = ${ts} × ${w0} / 4 = <b>${fmt(P)} W</b>`};}},
+ {topic:'power', f(){
+   const p=pick(PRESETS), x=pick([0.25,0.5,0.75]), w=x*p.V/p.K, E=p.K*w;
+   return {title:'Efficiency', text:`An ideal (frictionless) PMDC motor has ${motorLine(p)}. What is its efficiency when running at <b>${fmt(w)} rad/s</b>? Give your answer in %.`,
+   ans:x*100, unit:'%', diagram:dCircuit({V:p.V+' V', R:p.R+' Ω', K:`KE = ${p.K}`, w:`ω = ${fmt(w)} rad/s`}),
+   hints:['Efficiency η = P<sub>mech</sub> / P<sub>in</sub>.','P<sub>mech</sub> = E·I and P<sub>in</sub> = V·I, so the current cancels: η = E/V.',`E = ${KE}·ω = ${p.K} × ${fmt(w)} = ${fmt(E)} V`,`η = ${fmt(E)} / ${p.V} × 100%`],
+   sol:`η = EI/VI = E/V = ${fmt(E)}/${p.V} = <b>${fmt(x*100)} %</b>. In an ideal motor, efficiency equals ω/ω₀.`};}},
+ {topic:'power', f(){
+   const p=pick(PRESETS), x=pick([0,0.5]), w=x*p.V/p.K, I=(p.V-p.K*w)/p.R, Pc=I*I*p.R;
+   return {title:'Copper loss (heat)', text:`A PMDC motor has ${motorLine(p)}. ${x===0?'The shaft is <b>stalled</b>.':`It runs at <b>${fmt(w)} rad/s</b>.`} How much power is turned into heat in the windings?`,
+   ans:Pc, unit:'W', diagram:dCircuit({V:p.V+' V', R:p.R+' Ω', K:`KE = ${p.K}`, w:`ω = ${fmt(w)} rad/s`}),
+   hints:['Heat in the copper windings is the I²R loss.',x===0?'At stall, E = 0 so I = V/R.':`Find E = ${KE}·ω first, then I = (V − E)/R.`,`I = ${fmt(I)} A`,`P<sub>heat</sub> = ${fmt(I)}² × ${p.R}`],
+   sol:`I = ${fmt(I)} A → P<sub>heat</sub> = I²R = ${fmt(I)}² × ${p.R} = <b>${fmt(Pc)} W</b>`};}},
+ {topic:'sheet', f(){
+   const N=pick([600,1200,1800,3000,6000,12000]), rad=Math.random()<0.5;
+   const ans = rad? 2*Math.PI*N/60 : N/60;
+   return {title:'Units: rpm', text:`A datasheet lists a no-load speed of <b>${N} rpm</b>. What is this in <b>${rad?'rad/s':'Hz (revolutions per second)'}</b>?${rad?' (Use π ≈ 3.14.)':''}`,
+   ans, unit:rad?'rad/s':'Hz', tol:0.01, diagram:dSheet([['No-load speed',N+' rpm'],['Nominal voltage','12 V']]),
+   hints:['rpm means revolutions per minute.','There are 60 seconds in a minute, so revolutions per second = rpm / 60.',rad?`${N}/60 = ${fmt(N/60)} rev/s. One revolution is 2π radians.`:`f = ${N} / 60`,rad?`ω = 2π × ${fmt(N/60)} = ${fmt(2*N/60)}π`:`${N} ÷ 60 = ?`],
+   sol: rad?`ω = 2π·N/60 = 2π × ${fmt(N/60)} = <b>${fmt(ans)} rad/s</b>`:`f = N/60 = ${N}/60 = <b>${fmt(ans)} Hz</b>`};}},
+ {topic:'sheet', f(){
+   const K=pick([0.02,0.05,0.1,0.2]), Is=pick([2,5,10,20]), ts=K*Is;
+   return {title:'Torque constant from a datasheet', text:`Use the datasheet extract to find the torque constant ${KT} of this motor in <b>N·m/A</b>.`,
+   ans:K, unit:'N·m/A', diagram:dSheet([['Nominal voltage','12 V'],['Stall torque',fmt(ts*1000)+' mN·m'],['Stall current',Is+' A']]),
+   hints:[`Torque is proportional to current, τ = ${KT}·I, at any operating point.`,`Use the stall point: ${KT} = τs / Is.`,`Convert units first: ${fmt(ts*1000)} mN·m = ${fmt(ts)} N·m.`,`${KT} = ${fmt(ts)} / ${Is}`],
+   sol:`${KT} = τs/Is = ${fmt(ts)} N·m / ${Is} A = <b>${fmt(K)} N·m/A</b>`};}},
+ {topic:'sheet', f(){
+   const p=pick(PRESETS), w0=p.V/p.K;
+   return {title:'Electrical constant from a datasheet', text:`Use the datasheet extract to find the electrical (back-EMF) constant ${KE} in <b>V·s/rad</b>. Assume an ideal motor (no friction).`,
+   ans:p.K, unit:'V·s/rad', diagram:dSheet([['Nominal voltage',p.V+' V'],['No-load speed',fmt(w0)+' rad/s'],['Terminal resistance',p.R+' Ω']]),
+   hints:['At no load (ideal) the current is zero, so back EMF equals the applied voltage.',`${KE} = E/ω, and at no load E = V.`,`${KE} = V / ω<sub>0</sub>`,`${KE} = ${p.V} / ${fmt(w0)}`],
+   sol:`${KE} = V/ω₀ = ${p.V}/${fmt(w0)} = <b>${fmt(p.K)} V·s/rad</b> (numerically equal to ${KT} in N·m/A)`};}}
+];
+
+const TOPICNAME={force:'Forces & elementary motor',model:'Motor model',power:'Power & efficiency',sheet:'Datasheets & units'};
+let lastGen=-1;
+function generate(type){
+  const idx=GENS.map((g,i)=>i).filter(i=>type==='any'||GENS[i].topic===type);
+  let i; do{ i=pick(idx); }while(idx.length>1 && i===lastGen); lastGen=i;
+  const dec=v=>(String(parseFloat((+v).toFixed(6))).split('.')[1]||'').length;
+  let g,n=0; do{ g=GENS[i].f(); n++; }while(!g.tol && dec(g.ans)>3 && n<60);
+  return {type:GENS[i].topic, name:g.title, topic:TOPICNAME[GENS[i].topic], diagram:g.diagram, sol:g.sol, tol:g.tol,
+          ask:{prompt:g.text, unit:g.unit, value:g.ans, show:g.tol?sig(g.ans):fmt(g.ans)}, hints:g.hints};
+}
+
+function motorXS(size=230){
+  let slots=''; for(let i=0;i<12;i++){const a=i*Math.PI/6; slots+=`<circle cx="${(100+44*Math.cos(a)).toFixed(1)}" cy="${(100+44*Math.sin(a)).toFixed(1)}" r="6.5" fill="${i===0?'#A6192E':'#C87533'}"/>`;}
+  return `<svg viewBox="0 0 200 200" width="${size}"><circle cx="100" cy="100" r="94" fill="#373A36"/><circle cx="100" cy="100" r="82" fill="#FFFDF7"/>
+  <path d="${sector(100,100,62,82,130,230)}" fill="#A6192E"/><path d="${sector(100,100,62,82,-50,50)}" fill="#6B6E69"/>
+  <text x="27" y="105" fill="#fff" font-weight="700" font-size="14" ${TXT}>N</text><text x="164" y="105" fill="#fff" font-weight="700" font-size="14" ${TXT}>S</text>
+  <g class="mspin" style="transform-origin:100px 100px"><circle cx="100" cy="100" r="56" fill="#B9BCC0" stroke="#7C838A" stroke-width="1.5"/>${slots}<circle cx="100" cy="100" r="10" fill="#373A36"/><rect x="97" y="56" width="6" height="18" fill="#7C838A"/></g></svg>`;
+}
+function curveSVG(){
+  // power & efficiency for example motor: ts=0.6, w0=120, V=12, K=0.1, friction 0.03
+  const ts=.6,w0=120,V=12,K=.1,tf=.03; const X=t=>40+t/ts*240, Yp=p=>180-p/20*150, Ye=e=>180-e*150;
+  let pp='',pe='',pi='';
+  for(let i=0;i<=60;i++){ const t=ts*i/60; pp+=(i?'L':'M')+X(t).toFixed(1)+' '+Yp(t*w0*(1-t/ts)).toFixed(1); pi+=(i?'L':'M')+X(t).toFixed(1)+' '+Ye(1-t/ts).toFixed(1); }
+  for(let i=0;i<=80;i++){ const t=(ts-tf)*i/80, I=(t+tf)/K, w=w0*(1-(t+tf)/ts), e=t*w/(V*I); pe+=(i?'L':'M')+X(t).toFixed(1)+' '+Ye(Math.max(e,0)).toFixed(1); }
+  return `<svg viewBox="0 0 320 215" width="330"><line x1="40" y1="180" x2="290" y2="180" stroke="#373A36"/><line x1="40" y1="180" x2="40" y2="22" stroke="#373A36"/><line x1="280" y1="180" x2="280" y2="22" stroke="#373A36" opacity=".4"/>
+  <text x="165" y="205" text-anchor="middle" font-size="11" fill="#6B6E69" ${TXT}>torque τ (N·m) → 0 … 0.6</text>
+  <text x="6" y="20" font-size="10" fill="#76232F" ${TXT}>P (W)</text><text x="282" y="18" font-size="10" fill="#2E7D4F" ${TXT}>η</text>
+  <text x="34" y="34" text-anchor="end" font-size="9" fill="#76232F" ${TXT}>20</text><text x="34" y="183" text-anchor="end" font-size="9" fill="#76232F" ${TXT}>0</text>
+  <text x="284" y="34" font-size="9" fill="#2E7D4F" ${TXT}>100%</text>
+  <path d="${pi}" fill="none" stroke="#2E7D4F" stroke-width="1.5" stroke-dasharray="4 4" opacity=".7"/>
+  <path d="${pe}" fill="none" stroke="#2E7D4F" stroke-width="2.6" class="drawin"/>
+  <path d="${pp}" fill="none" stroke="#A6192E" stroke-width="3"/>
+  <line x1="${X(.3)}" y1="${Yp(18)}" x2="${X(.3)}" y2="180" stroke="#A6192E" stroke-dasharray="3 3"/><circle cx="${X(.3)}" cy="${Yp(18)}" r="4.5" fill="#A6192E" class="mpulse"/>
+  <text x="${X(.3)+6}" y="${Yp(18)-6}" font-size="11" fill="#A6192E" font-weight="700" ${TXT}>P max = 18 W at τs/2</text>
+  
+  </svg>`;
+}
+/* ---------------- Medals ---------------- */
+const TIERS=[
+  {key:'genius',  name:'HD', c1:'#a8323f',c2:'#76232F',ring:'#F2C94C',msg:'Solved without a single hint. That is exactly how HD students work!',conf:260},
+  {key:'gold',    name:'D',  c1:'#d0384d',c2:'#A6192E',ring:'#e9b3bb',msg:'Just one hint. Distinction-level work.',conf:90},
+  {key:'silver',  name:'Cr', c1:'#e2b445',c2:'#B8860B',ring:'#f3dc9c',msg:'Two hints. Credit level. Hold off on the hints a little longer next time.',conf:40},
+  {key:'bronze',  name:'P',  c1:'#a19c91',c2:'#6b6e69',ring:'#d6d2c4',msg:'Three hints, but you got there. Try the next one with fewer.',conf:18},
+  {key:'finisher',name:'↑',  c1:'#F1EEE6',c2:'#b9b3a5',ring:'#cfc9bb',msg:'You worked through every hint. Now try one on your own to climb.',conf:0}
+];
+const tierLabel=t=>t<4?TIERS[t].name+' level':'Keep going';
+let mid=0;
+function starPath(cx,cy,R,r){ let d=''; for(let i=0;i<10;i++){ const a=-Math.PI/2+i*Math.PI/5, rr=i%2?r:R; d+=(i?'L':'M')+(cx+rr*Math.cos(a)).toFixed(1)+','+(cy+rr*Math.sin(a)).toFixed(1); } return d+'Z'; }
+function medalSVG(t,w){
+  const T=TIERS[t], id='g'+(mid++), cx=60, cy=60;
+  let rays='', spark='';
+  if(t===0){
+    let p=''; for(let i=0;i<16;i++){ const a=i*Math.PI/8, b=a+Math.PI/16; p+=`<polygon points="${cx},${cy} ${cx+58*Math.cos(a)},${cy+58*Math.sin(a)} ${cx+58*Math.cos(b)},${cy+58*Math.sin(b)}" fill="#F2C94C" opacity=".55"/>`; }
+    rays=`<g>${p}<animateTransform attributeName="transform" type="rotate" from="0 ${cx} ${cy}" to="360 ${cx} ${cy}" dur="14s" repeatCount="indefinite"/></g>`;
+    spark=[[16,18],[104,22],[102,100],[14,98]].map(([x,y],i)=>`<path d="${starPath(x,y,7,2.2)}" fill="#fff" stroke="#D4A017" stroke-width="1"><animate attributeName="opacity" values="0;1;0" dur="1.6s" begin="${i*0.4}s" repeatCount="indefinite"/></path>`).join('');
+  }
+  const fs=T.name.length>1?30:36, ink=t===4?'#76232F':'#fff';
+  return `<svg width="${w}" height="${w}" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+   <defs><radialGradient id="${id}" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="${T.c1}"/><stop offset="1" stop-color="${T.c2}"/></radialGradient></defs>
+   ${rays}<circle cx="${cx}" cy="${cy}" r="40" fill="url(#${id})" stroke="${T.ring}" stroke-width="5"/>
+   <circle cx="${cx}" cy="${cy}" r="32" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5" stroke-dasharray="2 3"/>
+   <text x="${cx}" y="${cy+fs*0.36}" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="${fs}" fill="${ink}">${T.name}</text>${spark}</svg>`;
+}
+
+/* ---------------- Confetti ---------------- */
+const cv=document.getElementById('confetti'), cx2=cv.getContext('2d'); let parts=[], raf=null;
+function sizeCv(){ cv.width=innerWidth*devicePixelRatio; cv.height=innerHeight*devicePixelRatio; }
+addEventListener('resize',sizeCv); sizeCv();
+function confetti(n){
+  if(!n) return;
+  const cols=['#A6192E','#76232F','#D6D2C4','#F2C94C','#ffffff','#373A36','#D4A017'];
+  const W0=cv.width, H0=cv.height;
+  for(let i=0;i<n;i++){
+    const a=-Math.PI/2+(Math.random()-.5)*Math.PI*1.1, sp=(8+Math.random()*14)*devicePixelRatio;
+    parts.push({x:W0/2+(Math.random()-.5)*80,y:H0*0.45,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,w:(6+Math.random()*7)*devicePixelRatio,h:(3+Math.random()*5)*devicePixelRatio,rot:Math.random()*6,vr:(Math.random()-.5)*.4,c:pick(cols),life:0});
+  }
+  if(!raf) loop();
+}
+function loop(){
+  cx2.clearRect(0,0,cv.width,cv.height);
+  parts.forEach(p=>{ p.vy+=0.38*devicePixelRatio; p.vx*=0.985; p.vy*=0.985; p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr; p.life++;
+    cx2.save(); cx2.translate(p.x,p.y); cx2.rotate(p.rot); cx2.fillStyle=p.c; cx2.fillRect(-p.w/2,-p.h/2,p.w,p.h); cx2.restore(); });
+  parts=parts.filter(p=>p.y<cv.height+40 && p.life<400);
+  if(parts.length) raf=requestAnimationFrame(loop); else { raf=null; cx2.clearRect(0,0,cv.width,cv.height); }
+}
+
+/* ---------------- State & UI ---------------- */
+const $=id=>document.getElementById(id);
+let q=null, st={hints:0,solved:false,attempts:0,done:false}, qn=0;
+let cab={genius:0,gold:0,silver:0,bronze:0,finisher:0,revealed:0,streak:0};
+try{ const s=JSON.parse(localStorage.getItem('dcmotorCabinet')||'null'); if(s) cab=Object.assign(cab,s); }catch(e){}
+function saveCab(){ try{ localStorage.setItem('dcmotorCabinet',JSON.stringify(cab)); }catch(e){} }
+
+function renderCab(){
+  $('streak').textContent=`HD streak: ${cab.streak}`; renderGrade();
+}
+function renderLadder(){
+  if(!q){ $('ladder').innerHTML=''; return; }
+  $('ladder').innerHTML=TIERS.map((T,i)=>`<div class="rung ${i<st.hints?'lost':''} ${i===st.hints&&!st.done?'cur':''}">${medalSVG(i,40).replace('<animateTransform','<animateTransform begin="indefinite"')}${T.name}</div>`).join('');
+  $('awardnow').hidden = st.done;
+  $('awardicon').innerHTML = medalSVG(st.hints,46);
+  $('awardtier').textContent = tierLabel(st.hints);
+}
+function renderHints(){
+  if(!q) return;
+  $('hints').innerHTML='<div class="hints">'+q.hints.map((h,i)=>{
+    const open = i<st.hints || st.done, next = i===st.hints && !st.done;
+    return `<div class="hint ${open?'open':(next?'':'locked')}">
+      <div class="hhead"><span class="hnum">Hint ${i+1}</span>${open?'':`<button class="reveal" data-i="${i}" ${next?'':'disabled'}>${next?'Reveal':'Locked'}</button>`}</div>
+      ${open?`<div class="hbody">${h}</div>`:`<div class="hcost">${next?`${i+1<4?`Revealing drops this answer to <b>${tierLabel(i+1)}</b>`:'Revealing means this answer won’t reach Pass level'}`:'Reveal the previous hint first'}</div>`}
+    </div>`;}).join('')+'</div>';
+  document.querySelectorAll('.reveal').forEach(b=>b.onclick=()=>{ st.hints=+b.dataset.i+1; renderHints(); renderLadder(); });
+}
+function setFeedback(cls,html){ const f=$('feedback'); f.className='feedback '+(cls||''); f.innerHTML=html||''; }
+
+function newQuestion(){
+  q=generate($('ctype').value); qn++;
+  st={hints:0,solved:false,attempts:0,done:false};
+  $('circuit').innerHTML=q.diagram;
+  $('qtag').textContent=`Question ${qn} · ${q.name}`;
+  $('qprompt').innerHTML=q.ask.prompt;
+  $('unit').textContent=q.ask.unit;
+  $('anslabel').innerHTML = q.ask.unit==='V' ? 'Answer' : 'Answer';
+  $('ans').value=''; $('ans').disabled=false; $('check').disabled=false; $('giveup').disabled=false;
+  $('qbox').hidden=$('answer').hidden=$('foot').hidden=false;
+  if($('giveup').disarm) $('giveup').disarm();
+  $('attempts').textContent='Attempts: 0';
+  $('qcount').textContent=`${qn} question${qn===1?'':'s'} this session`;
+  setFeedback('','');
+  renderHints(); renderLadder();
+  $('ans').focus({preventScroll:true});
+}
+function finish(){ st.done=true; $('ans').disabled=true; $('check').disabled=true; $('giveup').disabled=true; renderHints(); renderLadder(); }
+
+function check(){
+  if(!q||st.done) return;
+  const raw=$('ans').value.trim().replace(/[−–]/g,'-').replace(',','.');
+  const x=parseFloat(raw);
+  if(raw===''||isNaN(x)){ setFeedback('info','Enter a number first (e.g. <b>0.25</b> or <b>-3</b>).'); return; }
+  st.attempts++; $('attempts').textContent=`Attempts: ${st.attempts}`;
+  const c=q.ask.value, tol=Math.max(Math.abs(c)*(q.tol||0.02),1e-4), u=q.ask.unit;
+  if(Math.abs(x-c)<=tol){
+    st.solved=true; const t=st.hints; finish();
+    setFeedback('ok',`Correct! The answer is <b>${q.ask.show} ${u}</b>. All hints are now open as a worked solution.<div class="sol"><b>Worked solution:</b> ${q.sol}</div>`);
+    cab[TIERS[t].key]++; pushHist(TIERS[t].key,st.attempts); cab.streak = t===0 ? cab.streak+1 : 0; saveCab(); renderCab();
+    showMedal(t); return;
+  }
+  let tip='Not quite. Check your working and try again.';
+  if(Math.abs(x+c)<=tol) tip='The magnitude is right but the <b>sign</b> is wrong. Is the machine motoring or generating?';
+  else if(Math.abs(x/1000-c)<=tol||Math.abs(x*1000-c)<=tol) tip=`Looks like a <b>units</b> slip. The answer is required in <b>${u}</b>.`;
+  else if(c!==0 && Math.abs(x/c-1)<0.1) tip='Very close! Check your rounding and arithmetic.';
+  setFeedback('bad',tip);
+}
+function showMedal(t){
+  const T=TIERS[t];
+  $('mmedal').innerHTML=medalSVG(t,130);
+  const tt=$('mtitle'); tt.textContent=tierLabel(t)+(t===0?'!':''); tt.className = t===0?'shine':'';
+  $('mmsg').textContent=T.msg;
+  $('mgrade').innerHTML=gradeChangeLine(); $('mquote').textContent='“'+nextQuip()+'”'; showQuote();
+  $('mmeta').textContent=`${st.hints} hint${st.hints===1?'':'s'} used · solved in ${st.attempts} attempt${st.attempts===1?'':'s'}`+(t===0&&cab.streak>1?` · HD streak ×${cab.streak}`:'');
+  $('overlay').classList.add('show');
+  confetti(T.conf); if(t===0) setTimeout(()=>confetti(160),550);
+}
+function closeModal(){ $('overlay').classList.remove('show'); }
+
+$('create').onclick=newQuestion;
+$('check').onclick=check;
+$('ans').addEventListener('keydown',e=>{ if(e.key==='Enter') check(); });
+/* Inline two-click confirmation (browser confirm() pop-ups are often blocked in LMS embeds and previews) */
+function armButton(btn,armedText,action){
+  const idle=btn.textContent; let timer=null;
+  btn.onclick=()=>{
+    if(btn.dataset.armed==='1'){ clearTimeout(timer); btn.dataset.armed=''; btn.textContent=idle; action(); return; }
+    btn.dataset.armed='1'; btn.textContent=armedText;
+    timer=setTimeout(()=>{ btn.dataset.armed=''; btn.textContent=idle; },4000);
+  };
+  btn.disarm=()=>{ clearTimeout(timer); btn.dataset.armed=''; btn.textContent=idle; };
+}
+armButton($('giveup'),'Click again to reveal (10 pts)',()=>{
+  if(!q||st.done) return;
+  const a=q.ask.value;
+  $('ans').value=q.ask.show.replace('−','-');
+  finish(); cab.revealed++; pushHist('revealed'); cab.streak=0; saveCab(); renderCab();
+  setFeedback('info',`Answer revealed: <b>${q.ask.show} ${q.ask.unit}</b>. This one counts as 10 points.<div class="sol"><b>Worked solution:</b> ${q.sol}</div>`);
+});
+$('mnext').onclick=()=>{ closeModal(); newQuestion(); };
+$('mclose').onclick=closeModal;
+$('overlay').addEventListener('click',e=>{ if(e.target.id==='overlay') closeModal(); });
+addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+/* ---------------- Grade forecast ---------------- */
+const PTS={genius:100,gold:80,silver:70,bronze:58,finisher:40,revealed:10};
+const BANDS=[
+  {k:'HD',min:85,name:'High Distinction level',col:'#76232F',msg:'Top band. This is how HD students work.'},
+  {k:'D', min:75,name:'Distinction level',col:'#A6192E',msg:'Strong work. A few more hint-free answers and you’re in HD territory.'},
+  {k:'Cr',min:65,name:'Credit level',col:'#C9971C',msg:'Solid foundations. Try the hints a little later and you’ll climb.'},
+  {k:'P', min:50,name:'Pass level',col:'#6b6e69',msg:'You’re getting there. Re-read the book pages for the topics that need hints.'},
+  {k:'↑', min:0, name:'Not quite there yet',col:'#9a968b',msg:'Every answer you work out yourself pulls you up fast. Try a topic from the book you’ve just read.'}
+];
+const WINDOW=10, MINQ=3;
+const QUIPS=[
+  'Be like a motor at no-load: spinning fast because nothing is holding you back.',
+  'Stalled? Good news: that’s exactly where the torque is highest.',
+  'Brushes wear out. Curiosity doesn’t.',
+  'Hints are like friction. A little is fine, but too much and you’ll never reach top speed.',
+  'Keep calm and remember K_T = K_E.',
+  'If at first you don’t succeed, reverse the current and try again.',
+  'An HD is just a very efficient operating point. Go find yours.',
+  'Even magnets need a small air gap. Mind the gaps in your knowledge.',
+  'Torque is easy at stall. Power means you actually have to move.',
+  'Your brain makes back EMF too: the faster it spins, the less it struggles.',
+  'Commutate your bad study habits every half turn.',
+  'Generators turn being pushed around into useful power. So can you.',
+  'Copper limited to 8 A/mm². Your potential: not rated.',
+  'Without a commutator a motor just rocks back and forth. Keep switching it up.',
+  'A 12 V motor can’t beat its own no-load speed. Luckily, you’re not a 12 V motor.',
+  'Brilliance is 1% inspiration and 99% knowing that rpm ≠ rad/s.'
+];
+let quipIdx=rand(QUIPS.length);
+function nextQuip(){ quipIdx=(quipIdx+1+rand(QUIPS.length-1))%QUIPS.length; return QUIPS[quipIdx]; }
+let prevGrade=null;
+function gradeOf(h){
+  if(h.length<MINQ) return null;
+  const avg=h.reduce((s,e)=>s+e.p,0)/h.length, i=BANDS.findIndex(b=>avg>=b.min);
+  return {avg,i,band:BANDS[i]};
+}
+function curHist(){ return (cab.hist||[]).map(e=>typeof e==='string'?{k:e,p:PTS[e]??0}:e).slice(-WINDOW); }
+function pushHist(k,tries=1){ prevGrade=gradeOf(curHist()); const p=Math.max(PTS[k]-20,PTS[k]-5*Math.max(0,tries-1),0); cab.hist=curHist().concat({k,p}).slice(-WINDOW); }
+function geniusToNext(g){
+  if(!g||g.i===0) return 0;
+  const target=BANDS[g.i-1].min; let h=curHist(), n=0;
+  while(n<WINDOW){ h=h.concat({k:'genius',p:100}).slice(-WINDOW); n++; const a=h.reduce((s,e)=>s+e.p,0)/h.length; if(a>=target) break; }
+  return n;
+}
+function gradeChangeLine(){
+  const g=gradeOf(curHist()); if(!g) return `<span class="gl-lock">Grade forecast unlocks after ${MINQ} questions (${curHist().length}/${MINQ})</span>`;
+  const badge=`<b class="gl-b" style="background:${g.band.col}">${g.band.k}</b>`;
+  if(!prevGrade) return `Grade forecast unlocked: ${badge} ${g.band.name}`;
+  if(g.i<prevGrade.i) return `▲ Up to ${badge} ${g.band.name}!`;
+  if(g.i>prevGrade.i) return `▼ Dropped to ${badge} ${g.band.name}. Win it back hint-free!`;
+  return `Still working at ${badge} ${g.band.name}`;
+}
+function renderGrade(){
+  const h=curHist(), g=gradeOf(h);
+  $('gLast').innerHTML = Array.from({length:WINDOW},(_,i)=>{ const k=h[i]&&h[i].k;
+    if(!k) return `<span class="gdot empty"></span>`;
+    if(k==='revealed') return `<span class="gdot rev" title="Answer revealed">–</span>`;
+    const t=TIERS.findIndex(T=>T.key===k); return `<span class="gdot" title="${tierLabel(t)} · ${h[i].p} pts">${medalSVG(t,30).replace('<animateTransform','<animateTransform begin="indefinite"')}</span>`; }).join('');
+  if(!g){
+    $('gBadge').textContent='?'; $('gBadge').style.background='#cfc9bb'; $('gBadge').className='gbadge';
+    $('gName').textContent='Grade locked'; $('gSub').textContent=`Answer ${MINQ-h.length} more question${MINQ-h.length===1?'':'s'} to unlock your forecast.`;
+    $('gMark').style.display='none'; $('gTip').innerHTML='Points per question: <b>no hints 100</b> · 1 hint 80 · 2 hints 70 · 3 hints 58 · all 4 hints 40 · revealed 10. Each wrong attempt costs 5. Your grade is the average of your last 10.';
+    $('gradePill').textContent=`Grade forecast: ${h.length}/${MINQ} to unlock`;
+  } else {
+    const b=g.band; $('gBadge').textContent=b.k; $('gBadge').style.background=b.col; $('gBadge').className='gbadge'+(g.i===0?' hd':'');
+    $('gName').textContent=b.name; $('gSub').textContent=`${Math.round(g.avg)} points (rolling average)`;
+    $('gMark').style.display=''; $('gMark').style.left=Math.min(100,g.avg)+'%';
+    const n=geniusToNext(g);
+    $('gTip').innerHTML = g.i===0
+      ? `🏆 ${b.msg}${cab.streak>=3?` HD streak ×${cab.streak} 🔥`:' Keep answering hint-free to stay here.'}`
+      : `${b.msg} <b>${n} hint-free answer${n===1?'':'s'} in a row</b> would lift you to <b>${BANDS[g.i-1].k}</b>.`;
+    $('gradePill').textContent=`Working at: ${b.k}`;
+  }
+}
+function showQuote(){ $('gQuote').textContent='“'+QUIPS[quipIdx]+'”'; }
+$('gNewQuote').onclick=()=>{ nextQuip(); showQuote(); };
+showQuote();
+
+armButton($('reset'),'Click again to reset',()=>{ cab={genius:0,gold:0,silver:0,bronze:0,finisher:0,revealed:0,streak:0,hist:[]}; prevGrade=null; saveCab(); renderCab(); });
+renderCab();
+
+window.__test={GENS,generate};
+</script>
+
+<script>
+/* ================= Learn DC Motors: flip-book ================= */
+(()=>{
+const G=id=>document.getElementById(id);
+const S=(b,x)=>`${b}<sub>${x}</sub>`;
+const KT=S('K','T'),KE=S('K','E'),W0=S('ω','0'),TS=S('τ','s'),IS=S('I','s'),PM=S('P','mech'),PI=S('P','in');
+const figS=(svg,cap='',mw='')=>`<figure class="fig"${mw?` style="max-width:${mw}px;margin-left:auto;margin-right:auto"`:''}>${svg}${cap?`<figcaption>${cap}</figcaption>`:''}</figure>`;
+
+/* ---- Figures ---- */
+const F={};
+F.title=figS(motorXS(200),'',230);
+F.what=figS(`<svg viewBox="0 0 340 230">
+ <rect x="10" y="80" width="62" height="70" rx="8" fill="#373A36"/><rect x="30" y="72" width="22" height="9" fill="#373A36"/><text x="41" y="122" fill="#fff" text-anchor="middle" font-size="22" font-weight="700" ${TXT}>+ −</text>
+ <path d="M76 105 H124" stroke="#A6192E" stroke-width="5" class="mflow"/><text x="100" y="94" text-anchor="middle" font-size="11" fill="#A6192E" ${TXT}>V · I</text>
+ <g transform="translate(128,56) scale(.6)">${motorXS(200).replace('width="200"','width="200" height="200"')}</g>
+ <path d="M250 115 H270" stroke="#373A36" stroke-width="7"/>
+ <g class="mspin" style="transform-origin:296px 115px"><circle cx="296" cy="115" r="28" fill="none" stroke="#373A36" stroke-width="7"/><line x1="296" y1="87" x2="296" y2="143" stroke="#373A36" stroke-width="3"/><line x1="268" y1="115" x2="324" y2="115" stroke="#373A36" stroke-width="3"/></g>
+ <text x="296" y="166" text-anchor="middle" font-size="11" fill="#373A36" ${TXT}>τ · ω</text>
+ <path d="M290 190 Q170 225 50 175" fill="none" stroke="#2E7D32" stroke-width="2.5" class="mflow slow"/><text x="170" y="222" text-anchor="middle" font-size="11" fill="#2E7D32" ${TXT}>…and back again when generating</text>
+ <text x="186" y="40" text-anchor="middle" font-size="12" fill="#76232F" ${TXT}>electrical → mechanical</text></svg>`,'Electrical power in (V·I) becomes mechanical power out (τ·ω).');
+F.bil=figS(dField('B','I','L').replace('F = ?','F').replace('width="360"','').replace('I = I A (into page)','I (into page)').replace('L = L m','length L').replace('B = B T →','field B →'),'Field from N to S, current into the page, force downwards.');
+F.flem=figS(`<svg viewBox="0 0 330 100">
+ ${arrow(120,60,200,60,'#76232F',4)}<text x="206" y="64" font-size="12" fill="#76232F" ${TXT}>First finger: Field</text>
+ ${arrow(120,60,82,30,'#C87533',4)}<text x="4" y="22" font-size="12" fill="#C87533" ${TXT}>seCond finger: Current</text>
+ <g class="mpulse">${arrow(120,60,120,98,'#2E7D32',4)}</g><text x="128" y="94" font-size="12" fill="#2E7D32" ${TXT}>thuMb: Motion (force)</text></svg>`,'Fleming’s left-hand rule for motors.');
+F.couple=figS(`<svg viewBox="0 0 300 250">
+ <rect x="6" y="50" width="40" height="150" rx="6" fill="#A6192E"/><text x="26" y="130" fill="#fff" font-weight="700" font-size="20" text-anchor="middle" ${TXT}>N</text>
+ <rect x="254" y="50" width="40" height="150" rx="6" fill="#373A36"/><text x="274" y="130" fill="#fff" font-weight="700" font-size="20" text-anchor="middle" ${TXT}>S</text>
+ ${[80,105,145,170].map(y=>`<line x1="48" y1="${y}" x2="252" y2="${y}" stroke="#76232F" stroke-width="1.3" class="mflow slow" opacity=".5"/>`).join('')}
+ <circle cx="150" cy="125" r="70" fill="none" stroke="#B9BCC0" stroke-width="2" stroke-dasharray="4 4"/>
+ <line x1="80" y1="125" x2="220" y2="125" stroke="#C87533" stroke-width="3"/>${cond(220,125,true,13)}${cond(80,125,false,13)}
+ <g class="mpulse">${arrow(220,140,220,195,'#2E7D32',3.5)}${arrow(80,110,80,55,'#2E7D32',3.5)}</g>
+ <text x="228" y="190" font-size="13" fill="#2E7D32" font-weight="700" ${TXT}>F</text><text x="88" y="62" font-size="13" fill="#2E7D32" font-weight="700" ${TXT}>F</text>
+ <text x="150" y="118" font-size="12" fill="#76232F" text-anchor="middle" ${TXT}>← 2r →</text>
+ <g class="mspin" style="transform-origin:150px 125px;animation-duration:3s"><path d="M150 35 A90 90 0 0 1 225 75" fill="none" stroke="#76232F" stroke-width="3"/><polygon points="230,82 216,76 228,68" fill="#76232F"/></g>
+ <text x="150" y="240" text-anchor="middle" font-size="12" fill="#373A36" ${TXT}>⊗ current into page · ⊙ out of page</text></svg>`,'Opposite currents on opposite sides give a turning couple.');
+F.mag=figS(`<svg viewBox="0 0 200 200">
+ <circle cx="100" cy="100" r="94" fill="#373A36"/><circle cx="100" cy="100" r="80" fill="#FFFDF7"/>
+ <path d="${sector(100,100,58,80,140,220)}" fill="#A6192E"/><path d="${sector(100,100,58,80,-40,40)}" fill="#6B6E69"/>
+ <circle cx="100" cy="100" r="52" fill="#B9BCC0"/>
+ <path d="M30 100 L170 100 L187 100 A87 87 0 0 0 13 100 Z" fill="none" stroke="#D4A017" stroke-width="2.5" class="mflow"/>
+ <path d="M30 92 L170 92" fill="none" stroke="#D4A017" stroke-width="1.5" class="mflow" opacity=".7"/><path d="M30 108 L170 108" fill="none" stroke="#D4A017" stroke-width="1.5" class="mflow" opacity=".7"/>
+ <path d="M30 100 L170 100 L187 100 A87 87 0 0 1 13 100 Z" fill="none" stroke="#D4A017" stroke-width="2.5" class="mflow"/>
+ <text x="100" y="60" text-anchor="middle" font-size="9" fill="#373A36" ${TXT}>rotor (iron)</text>
+ <text x="34" y="78" font-size="10" fill="#fff" font-weight="700" ${TXT}>N</text><text x="158" y="78" font-size="10" fill="#fff" font-weight="700" ${TXT}>S</text>
+ <text x="100" y="12" text-anchor="middle" font-size="8.5" fill="#fff" ${TXT}>steel yoke</text>
+ ${arrow(140,140,151,124,'#76232F',1.5,5)}<text x="118" y="150" font-size="8.5" fill="#76232F" ${TXT}>air gap</text></svg>`,'Flux (gold) crosses the air gap, the rotor and the magnets, then returns through the steel yoke.',260);
+F.slot=figS(`<svg viewBox="0 0 220 220">
+ <path d="${sector(110,110,84,104,140,220)}" fill="#A6192E"/><path d="${sector(110,110,84,104,-40,40)}" fill="#6B6E69"/>
+ ${[60,85,110,135,160].map(y=>`<line x1="10" y1="${y}" x2="210" y2="${y}" stroke="#D4A017" stroke-width="1.6" class="mflow" opacity=".75"/>`).join('')}
+ <circle cx="110" cy="110" r="80" fill="#B9BCC0" stroke="#7C838A" stroke-width="1.5" opacity=".95"/>
+ <g class="mspin" style="transform-origin:110px 110px;animation-duration:14s">${Array.from({length:16},(_,i)=>`<rect x="104" y="30" width="12" height="24" rx="2" fill="#C87533" stroke="#8a4a1c" transform="rotate(${i*22.5} 110 110)"/>`).join('')}</g>
+ <circle cx="110" cy="110" r="14" fill="#373A36"/></svg>`,'Copper sits in slots; the iron teeth between them carry the flux and keep the gap small.',240);
+F.anat=figS(`<svg viewBox="0 0 320 240">
+ <rect x="30" y="34" width="200" height="170" rx="10" fill="#373A36"/><rect x="42" y="46" width="176" height="146" fill="#FFFDF7"/>
+ <rect x="60" y="50" width="140" height="22" fill="#A6192E"/><text x="130" y="66" text-anchor="middle" fill="#fff" font-size="12" font-weight="700" ${TXT}>N magnet</text>
+ <rect x="60" y="166" width="140" height="22" fill="#6B6E69"/><text x="130" y="182" text-anchor="middle" fill="#fff" font-size="12" font-weight="700" ${TXT}>S magnet</text>
+ <rect x="0" y="114" width="320" height="10" fill="#7C838A"/>
+ <defs><clipPath id="armclip"><rect x="70" y="78" width="120" height="82"/></clipPath></defs>
+ <g clip-path="url(#armclip)"><rect x="70" y="78" width="120" height="82" fill="#B9BCC0"/><g class="mstripes">${Array.from({length:7},(_,i)=>`<rect x="70" y="${78+i*16}" width="120" height="7" fill="#C87533"/>`).join('')}</g></g>
+ <rect x="244" y="98" width="30" height="42" fill="#C87533" stroke="#8a4a1c"/><line x1="244" y1="119" x2="274" y2="119" stroke="#8a4a1c" stroke-width="2"/>
+ <rect x="250" y="80" width="18" height="18" fill="#2A2C29"/><rect x="250" y="140" width="18" height="18" fill="#2A2C29"/>
+ <line x1="259" y1="80" x2="259" y2="60" stroke="#A6192E" stroke-width="2"/><text x="259" y="56" text-anchor="middle" fill="#A6192E" font-weight="700" ${TXT}>+</text>
+ <line x1="259" y1="158" x2="259" y2="178" stroke="#373A36" stroke-width="2"/><text x="259" y="192" text-anchor="middle" fill="#373A36" font-weight="700" ${TXT}>−</text>
+ ${[['1',40,24],['2',130,42],['3',130,114],['4',259,222],['5',292,86],['6',302,134],['7',200,134]].map(([n,x,y])=>`<circle cx="${x}" cy="${y}" r="9" fill="#fff" stroke="#76232F" stroke-width="2"/><text x="${x}" y="${y+4}" text-anchor="middle" font-size="11" font-weight="700" fill="#76232F" ${TXT}>${n}</text>`).join('')}
+ </svg>`,'Simplified side view. The copper stripes scroll to show the armature turning.');
+F.rail0=figS(dRail({V:'V',cap:'Bar is stalled: v = 0'}).replace('width="360"',''),'Bar of resistance R across two rails in field B (into page); a string pulls a hanging mass.');
+F.rail1=figS(`<svg viewBox="0 0 340 200">
+ ${(()=>{let d='';for(let x=70;x<=250;x+=30)for(const y of [80,110])d+=`<g opacity=".4">${cond(x,y,true,5,'#fff')}</g>`;return d;})()}
+ <line x1="40" y1="55" x2="270" y2="55" stroke="#7C838A" stroke-width="5"/><line x1="40" y1="135" x2="270" y2="135" stroke="#7C838A" stroke-width="5"/>
+ <line x1="40" y1="55" x2="40" y2="84" stroke="#373A36" stroke-width="2"/><line x1="40" y1="106" x2="40" y2="135" stroke="#373A36" stroke-width="2"/>
+ <line x1="26" y1="84" x2="54" y2="84" stroke="#373A36" stroke-width="3"/><line x1="33" y1="106" x2="47" y2="106" stroke="#373A36" stroke-width="5"/><text x="10" y="100" font-weight="700" font-size="12" fill="#373A36" ${TXT}>V</text>
+ <g class="mslide"><rect x="110" y="48" width="10" height="94" rx="2" fill="#C87533"/>${arrow(124,160,165,160,'#2E7D32',2.5,8)}<text x="130" y="178" font-size="12" fill="#2E7D32" ${TXT}>v</text>
+ <text x="84" y="40" font-size="11" fill="#A6192E" font-weight="700" ${TXT}>E = BLv</text></g>
+ <line x1="120" y1="95" x2="292" y2="95" stroke="#373A36" stroke-width="1.5"/>
+ <circle cx="300" cy="103" r="10" fill="#fff" stroke="#373A36" stroke-width="2"/><line x1="310" y1="103" x2="310" y2="200" stroke="#373A36" stroke-width="1.5"/>
+ <g class="mlift"><rect x="296" y="160" width="28" height="26" fill="#373A36"/><text x="310" y="178" text-anchor="middle" fill="#fff" font-size="11" ${TXT}>m</text></g></svg>`,'As the bar moves it cuts field lines, generating E = BLv, which opposes the supply.');
+F.curves=figS(curveSVG(),'Red: mechanical power. Green: efficiency (dashed ideal, solid with a little friction). Example motor: 12 V, R = 2 Ω, K = 0.1.');
+
+/* ---- Interactive widgets ---- */
+function genSVG(gen){
+  return `<svg viewBox="0 0 320 210">
+  <path d="M60 40 H125 M185 40 H260 V75 M260 125 V170 H60 V112 M60 98 V40" fill="none" stroke="#373A36" stroke-width="2.5"/>
+  <path d="M125 40 l5 -9 l10 18 l10 -18 l10 18 l10 -18 l10 18 l5 -9" fill="none" stroke="#373A36" stroke-width="2.5"/>
+  <line x1="44" y1="98" x2="76" y2="98" stroke="#373A36" stroke-width="3"/><line x1="52" y1="112" x2="68" y2="112" stroke="#373A36" stroke-width="5"/>
+  <text x="20" y="110" font-weight="700" font-size="15" fill="#373A36" ${TXT}>V</text><text x="155" y="70" text-anchor="middle" font-size="13" fill="#373A36" ${TXT}>R</text>
+  <path d="M60 40 H260 V170 H60 Z" fill="none" stroke="${gen?'#2E7D32':'#A6192E'}" stroke-width="4" stroke-dasharray="2 12" stroke-linecap="round" class="mflow ${gen?'rev':''}"/>
+  <circle cx="260" cy="100" r="25" fill="#fff" stroke="#76232F" stroke-width="2.6"/><text x="260" y="106" text-anchor="middle" font-size="16" font-weight="700" fill="#76232F" ${TXT}>E</text>
+  <g class="mspin" style="transform-origin:300px 100px;animation-duration:${gen?'1.1s':'2s'}"><circle cx="300" cy="100" r="12" fill="none" stroke="#373A36" stroke-width="3"/><line x1="300" y1="88" x2="300" y2="112" stroke="#373A36" stroke-width="2"/></g>
+  <text x="160" y="200" text-anchor="middle" font-size="13" fill="${gen?'#2E7D32':'#A6192E'}" font-weight="700" ${TXT}>${gen?'E > V  →  I < 0 (generating)':'E < V  →  I > 0 (motoring)'}</text>
+  ${gen?arrow(230,40,200,40,'#2E7D32',2.5,9):arrow(200,40,230,40,'#A6192E',2.5,9)}<text x="215" y="30" text-anchor="middle" font-size="12" fill="#373A36" ${TXT}>I</text></svg>`;
+}
+function renderGen(el){ const g=el.dataset.gen==='1'; el.querySelector('[data-o=svg]').innerHTML=genSVG(g);
+  el.querySelector('[data-o=cap]').innerHTML = g ? 'Generating: the load drives the shaft faster than ω<sub>0</sub>, so E &gt; V. Current flows back into the supply.' : 'Motoring: E &lt; V, so current flows into the motor and power goes electrical → mechanical.';
+  el.querySelector('[data-act=gen]').textContent = g ? 'Switch to motoring' : 'Switch to generating'; }
+
+function commInit(el){
+  el.innerHTML=`<svg viewBox="0 0 280 270">
+   <rect x="4" y="40" width="40" height="160" rx="6" fill="#A6192E"/><text x="24" y="126" fill="#fff" font-weight="700" font-size="18" text-anchor="middle" ${TXT}>N</text>
+   <rect x="236" y="40" width="40" height="160" rx="6" fill="#373A36"/><text x="256" y="126" fill="#fff" font-weight="700" font-size="18" text-anchor="middle" ${TXT}>S</text>
+   ${[70,95,145,170].map(y=>`<line x1="46" y1="${y}" x2="234" y2="${y}" stroke="#76232F" stroke-width="1.2" opacity=".35"/>`).join('')}
+   <circle cx="140" cy="120" r="72" fill="none" stroke="#B9BCC0" stroke-dasharray="4 4"/>
+   <line data-r="coil" stroke="#C87533" stroke-width="3"/>
+   <path data-r="segA" fill="#A6192E"/><path data-r="segB" fill="#9AA1A8"/>
+   <rect x="104" y="113" width="14" height="14" fill="#2A2C29"/><rect x="162" y="113" width="14" height="14" fill="#2A2C29"/>
+   <text x="104" y="108" font-size="10" fill="#373A36" font-weight="700" ${TXT}>−</text><text x="166" y="108" font-size="10" fill="#A6192E" font-weight="700" ${TXT}>+</text>
+   <g data-r="A"></g><g data-r="B"></g><g data-r="F"></g>
+   <text x="140" y="222" text-anchor="middle" font-size="11" fill="#373A36" ${TXT}>torque</text>
+   <rect x="40" y="228" width="200" height="14" rx="7" fill="#EDEBE5"/><line x1="140" y1="226" x2="140" y2="244" stroke="#373A36"/>
+   <rect data-r="bar" y="230" height="10" rx="5" fill="#2E7D32"/>
+   <text data-r="lbl" x="140" y="262" text-anchor="middle" font-size="11" fill="#76232F" ${TXT}></text></svg>`;
+  el._st={th:-0.3,w:4,comm:true}; commDraw(el);
+}
+function commDraw(el){
+  const st=el._st, q=s=>el.querySelector(`[data-r="${s}"]`), cx=140,cy=120,r=72;
+  const ax=cx+r*Math.cos(st.th), ay=cy+r*Math.sin(st.th), bx=cx-r*Math.cos(st.th), by=cy-r*Math.sin(st.th);
+  const c=q('coil'); c.setAttribute('x1',ax);c.setAttribute('y1',ay);c.setAttribute('x2',bx);c.setAttribute('y2',by);
+  const sA = st.comm ? (Math.cos(st.th)>=0?1:-1) : 1;
+  q('A').innerHTML=cond(ax,ay,sA>0,11,'#A6192E'); q('B').innerHTML=cond(bx,by,sA<0,11,'#9AA1A8');
+  q('F').innerHTML=arrow(ax,ay+(sA>0?13:-13),ax,ay+(sA>0?45:-45),'#2E7D32',2.5,8)+arrow(bx,by+(sA<0?13:-13),bx,by+(sA<0?45:-45),'#2E7D32',2.5,8);
+  const deg=st.th*180/Math.PI; q('segA').setAttribute('d',sector(cx,cy,0.01,18,deg-88,deg+88)); q('segB').setAttribute('d',sector(cx,cy,0.01,18,deg+92,deg+268));
+  const tau = st.comm? 2*Math.abs(Math.cos(st.th)) : 2*Math.cos(st.th), bw=tau*45, bar=q('bar');
+  bar.setAttribute('x',bw>=0?140:140+bw); bar.setAttribute('width',Math.abs(bw)); bar.setAttribute('fill',bw>=0?'#2E7D32':'#A6192E');
+  q('lbl').textContent = st.comm? 'With commutator: torque always clockwise' : 'No commutator: torque reverses every half turn';
+  return tau;
+}
+let lt=performance.now();
+(function commLoop(t){ const dt=Math.min(0.04,(t-lt)/1000); lt=t;
+  if(!G('learnCard').hidden) document.querySelectorAll('#spread [data-sim=comm]').forEach(el=>{ if(!el._st) commInit(el); const st=el._st, tau=commDraw(el); st.w+=(7*tau-(st.comm?1.1:0.9)*st.w)*dt; st.th+=st.w*dt; });
+  requestAnimationFrame(commLoop); })(lt);
+
+const pfCalc=`<div class="calc" data-calc="pf"><div class="ct">Try it · 12 V, R = 2 Ω, K = 0.1 (ω<sub>0</sub> = 120 rad/s)</div>
+<label><span>ω/ω₀</span><input type="range" min="0" max="100" value="50" data-k="x" aria-label="Speed fraction"><b data-o="x"></b></label>
+<div class="pbar"><i class="h"></i><i class="m"></i></div><div class="mscale"><span>■ heat I²R</span><span>■ mechanical EI</span></div>
+<div class="cres" data-o="res"></div></div>`;
+const tsCalc=`<div class="calc" data-calc="ts"><div class="ct">Try it · R = 2 Ω, K<sub>T</sub> = K<sub>E</sub> = 0.1</div>
+<label><span>V</span><input type="range" min="2" max="24" value="12" data-k="v" aria-label="Voltage"><b data-o="v"></b></label>
+<label><span>τ<sub>L</sub></span><input type="range" min="0" max="24" value="6" data-k="t" aria-label="Load torque"><b data-o="t"></b></label>
+<div data-o="chart"></div><div class="cres" data-o="res"></div></div>`;
+const f1=(v,d=1)=>(+v).toFixed(d);
+function updCalc(c){
+  const k=c.dataset.calc, o=n=>c.querySelector(`[data-o=${n}]`), val=n=>+c.querySelector(`[data-k=${n}]`).value;
+  if(k==='pf'){
+    const x=val('x')/100, V=12,R=2,K=.1, w=120*x, E=K*w, I=(V-E)/R, Pin=V*I, H=I*I*R, Pm=E*I;
+    o('x').textContent=Math.round(x*100)+'%';
+    c.querySelector('.pbar .h').style.width=(H/72*100)+'%'; c.querySelector('.pbar .m').style.width=(Pm/72*100)+'%';
+    o('res').innerHTML=`ω = ${f1(w,0)} rad/s · E = ${f1(E)} V · I = ${f1(I,2)} A<br>${PI} = <b>${f1(Pin)} W</b> = heat <b>${f1(H)} W</b> + ${PM} <b>${f1(Pm)} W</b> · η = <b>${Pin>0?Math.round(Pm/Pin*100):0}%</b>`;
+  }
+  if(k==='ts'){
+    const V=val('v'), tl=val('t')*0.05, R=2,K=.1, ts=K*V/R, w0=V/K, ok=tl<ts, w=ok?(V-R*tl/K)/K:0, I=ok?tl/K:V/R;
+    o('v').textContent=V+' V'; o('t').textContent=f1(tl,2)+' N·m';
+    const X=t=>36+t/1.2*270, Y=w=>172-w/240*160;
+    const line=(v,c,sw,op)=>`<line x1="${X(0)}" y1="${Y(v/K)}" x2="${X(K*v/R)}" y2="${Y(0)}" stroke="${c}" stroke-width="${sw}" opacity="${op}"/>`;
+    o('chart').innerHTML=`<svg viewBox="0 0 320 196" style="width:100%;display:block;background:#fff;border-radius:8px;margin:6px 0">
+     <line x1="36" y1="172" x2="310" y2="172" stroke="#373A36"/><line x1="36" y1="172" x2="36" y2="8" stroke="#373A36"/>
+     <text x="306" y="190" text-anchor="end" font-size="10" fill="#6b6e69" ${TXT}>torque (N·m)</text><text x="40" y="14" font-size="10" fill="#6b6e69" ${TXT}>ω (rad/s)</text>
+     ${[0,0.4,0.8,1.2].map(t=>`<text x="${X(t)}" y="184" text-anchor="middle" font-size="9" fill="#6b6e69" ${TXT}>${t}</text>`).join('')}
+     ${[80,160,240].map(w=>`<text x="32" y="${Y(w)+3}" text-anchor="end" font-size="9" fill="#6b6e69" ${TXT}>${w}</text>`).join('')}
+     ${line(6,'#A6192E',1.5,.25)}${line(18,'#A6192E',1.5,.25)}${line(V,'#A6192E',3,1)}
+     <line x1="${X(tl)}" y1="172" x2="${X(tl)}" y2="10" stroke="#2E7D32" stroke-width="2" stroke-dasharray="5 4"/>
+     ${ok?`<circle cx="${X(tl)}" cy="${Y(w)}" r="5.5" fill="#2E7D32"/><text x="${X(tl)+8}" y="${Y(w)-7}" font-size="10.5" font-weight="700" fill="#2E7D32" ${TXT}>operating point</text>`:`<text x="${Math.min(X(tl)+6,250)}" y="34" font-size="11" font-weight="700" fill="#A6192E" ${TXT}>STALLED!</text>`}
+     <text x="${X(0)+5}" y="${Y(w0)-4}" font-size="10" fill="#76232F" ${TXT}>ω₀ = ${f1(w0,0)}</text><text x="${X(ts)+4}" y="${Y(0)-5}" font-size="10" fill="#76232F" ${TXT}>τs = ${f1(ts,2)}</text></svg>`;
+    o('res').innerHTML=`Speed <b>${f1(w,0)} rad/s</b> · current <b>${f1(I,2)} A</b> · ${PM} <b>${f1(ok?tl*w:0)} W</b> · η<sub>ideal</sub> <b>${ok?Math.round(w/w0*100):0}%</b>`;
+  }
+}
+function initWidgets(root){
+  root.querySelectorAll('.calc').forEach(updCalc);
+  root.querySelectorAll('[data-sim=gen]').forEach(renderGen);
+  root.querySelectorAll('[data-sim=comm]').forEach(commInit);
+}
+
+/* ---- Pages ---- */
+const C1='Chapter 1 · Making torque',C2='Chapter 2 · Inside the motor',C3='Chapter 3 · Building a model',C4='Chapter 4 · Performance',C5='Chapter 5 · Putting it together';
+const PAGES=[
+{t:'Title page',ch:'',cls:'title',html:`<div class="tp"><div class="tp-k">MTRN2060 · Mechatronics</div><h1>Learn<br>DC Motors</h1><div class="tp-sub">A pocket guide to permanent-magnet DC machines</div><div class="tp-orn"></div>${F.title}<p class="tp-p">Seventeen short pages, from the force on a wire to reading a motor datasheet. About 25 minutes. Then test yourself in the Practice tab.</p><div class="tp-turn">Turn the page <span class="nudge">→</span></div></div>`},
+{t:'Contents',ch:'Contents',html:''},
+{t:'What is a DC motor?',ch:C1,html:`<h2>What is a DC motor?</h2><p class="lead">A DC motor converts <b>electrical power</b> (volts × amps) into <b>mechanical power</b> (torque × speed) using magnetic fields and current-carrying copper.</p>${F.what}<ul class="lst"><li><b>Speed ≈ proportional to voltage.</b> More volts, more speed.</li><li><b>Torque ∝ current.</b> Measure current and you know the torque.</li><li><b>Reversible:</b> the same machine works as a generator (regenerative braking).</li></ul><div class="note">Almost everything in this book follows from two equations: <b>τ = ${KT}·I</b> and <b>E = ${KE}·ω</b>.</div>`},
+{t:'Force on a conductor',ch:C1,html:`<h2>Force on a conductor</h2><p class="lead">A conductor carrying current <i>I</i> through a field of flux density <i>B</i> feels a force at right angles to <b>both</b> the field and the current.</p>${F.bil}<div class="eq">F = B · I · L</div><ul class="lst"><li><b>B</b>: flux density in tesla (T). Motor air gaps are typically 0.5–1 T.</li><li><b>L</b>: length of conductor inside the field (m). At an angle θ to the field, F = BIL sin θ.</li></ul>${F.flem}<div class="ex"><b>Quick check.</b> B = 1 T, I = 5 A, L = 0.2 m. F = 1 × 5 × 0.2 = <b>1 N</b>.</div>`},
+{t:'From force to torque',ch:C1,html:`<h2>From force to torque</h2><p class="lead">Mount conductors on a <b>rotor</b>. The two sides of a coil carry opposite currents, so they are pushed in opposite directions and the rotor turns.</p>${F.couple}<div class="eq">τ = F · r</div><p>A real armature has many conductors, and all their torques add:</p><div class="eq">τ = (N·B·L·r) · I = ${KT} · I</div><div class="note"><b>Torque is proportional to current.</b> ${KT} is the <i>torque constant</i> (N·m/A), fixed by how the motor is built.</div><div class="ex"><b>Quick check.</b> 20 conductors, B = 1 T, I = 2 A, L = 0.1 m, r = 0.05 m: F = 20 × 0.2 = 4 N, τ = 4 × 0.05 = <b>0.2 N·m</b>.</div>`},
+{t:'Magnetic circuits',ch:C2,html:`<h2>Magnetic circuits</h2><p class="lead">The magnets push flux around a closed loop, like a battery pushing current around a circuit. Iron carries flux easily (low <b>reluctance</b>); air is about a thousand times harder.</p>${F.mag}<table class="tbl"><tr><th>Electric circuit</th><th>Magnetic circuit</th></tr><tr><td>Voltage (EMF)</td><td>MMF (ampere-turns)</td></tr><tr><td>Current</td><td>Flux Φ</td></tr><tr><td>Resistance</td><td>Reluctance</td></tr></table><div class="note"><b>Keep the air gap small:</b> it is almost all of the reluctance. But a good magnetic circuit alone gives <i>no torque</i>. We need current-carrying conductors on the rotor.</div>`},
+{t:'Slotting: copper vs iron',ch:C2,html:`<h2>Slotting: copper vs iron</h2><p class="lead">Copper wound on the rotor <i>surface</i> widens the air gap and must be held on to transmit its force. <b>Slots</b> fix both problems.</p>${F.slot}<p>The conductors still produce torque, though it doesn't look like it, and the force is passed straight to the rotor iron.</p><div class="eq">τ ∝ B × I</div><ul class="lst"><li><b>Copper</b> is limited by current density, about <b>2–8 A/mm²</b> (heating).</li><li><b>Iron</b> is limited by saturation, about <b>1.5 T</b>.</li></ul><div class="note">Wider slots mean more copper but narrower teeth that saturate. Copper and iron compete for the same space.</div>`},
+{t:'Anatomy of a PMDC motor',ch:C2,html:`<h2>Anatomy of a PMDC motor</h2>${F.anat}<ol class="steps"><li><b>Steel casing (yoke):</b> completes the magnetic circuit.</li><li><b>Permanent magnets (stator):</b> a steady field B.</li><li><b>Armature (rotor):</b> laminated steel with copper windings in slots.</li><li><b>Brushes:</b> carbon blocks feeding current from the supply.</li><li><b>Commutator:</b> segmented copper ring connected to the coils.</li><li><b>Shaft &amp; bearings:</b> carry torque to the load.</li><li><b>Air gap:</b> small clearance between rotor and magnets.</li></ol><div class="note">Current path: supply → + brush → commutator → rotor coils → commutator → − brush. <i>Brushless</i> motors switch electronically, but the same model applies.</div>`},
+{t:'Commutation',ch:C2,html:`<h2>Commutation</h2><p class="lead">While the right-hand conductor carries current <b>into</b> the page (⊗) it is pushed down, so the rotor turns clockwise. After half a turn it is on the left. With the same current it would now be pushed <b>backwards</b>.</p><div class="fig" data-sim="comm"></div><div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="reveal" data-act="ctog">Remove commutator</button><button class="reveal" data-act="ckick">Give it a spin</button></div><div class="note">The <b>commutator reverses the coil current every half turn</b>, so torque always acts the same way. Remove it and watch the coil rock to a stop. Real motors use many coils and segments to smooth the torque.</div>`},
+{t:'Elementary motor at rest',ch:C3,html:`<h2>The elementary motor at rest</h2><p class="lead">A simple linear motor lets us build a model. Here the mass is too heavy, so the bar cannot move: <b>v = 0</b>.</p>${F.rail0}<p>Work each one out first, then open it.</p><details><summary>Current I?</summary>No motion, no induced voltage: <b>I = V/R</b>, the maximum current.</details><details><summary>Pulling force F?</summary><b>F = BIL = BLV/R</b>, the maximum force.</details><details><summary>Electrical input power?</summary><b>${PI} = VI = V²/R</b></details><details><summary>Mechanical output power?</summary><b>F·v = 0</b>, because v = 0.</details><div class="note"><b>Stall:</b> maximum current and torque, zero useful power. All input power becomes <b>heat</b>, which is why stalled motors get hot fast.</div>`},
+{t:'Elementary motor moving',ch:C3,html:`<h2>The elementary motor moving</h2><p class="lead">A conductor moving through a field generates a voltage, the <b>back EMF</b>. It opposes the supply.</p>${F.rail1}<div class="eq">E = B · L · v</div><details><summary>Current I?</summary><b>I = (V − BLv)/R</b>. The faster the bar, the less current.</details><details><summary>Pulling force F?</summary><b>F = BIL</b>, smaller than at stall.</details><details><summary>Mechanical output power?</summary><b>${PM} = F·v = BILv = E·I</b>. Useful work at last!</details><div class="note"><b>Self-regulating:</b> as speed rises, E rises and current falls. With no load, the bar speeds up until E = V and I = 0. That is the <b>no-load speed</b>.</div>`},
+{t:'Equivalent circuit',ch:C3,html:`<h2>Equivalent circuit &amp; back EMF</h2><p class="lead">A rotating motor behaves just like the elementary motor: a <b>winding resistance R</b> in series with a <b>back EMF E</b> that grows with speed.</p><div data-sim="gen" data-gen="0"><figure class="fig" data-o="svg"></figure><div style="text-align:center"><button class="reveal" data-act="gen">Switch to generating</button></div><p class="cap" data-o="cap" style="font-size:.78rem;color:#6b6e69;text-align:center;font-style:italic"></p></div><div class="eq">V = I·R + E, &nbsp; E = ${KE}·ω</div><ul class="lst"><li><b>Motoring (E &lt; V):</b> I &gt; 0; electrical → mechanical.</li><li><b>Generating (E &gt; V):</b> the load drives the shaft above no-load speed, I reverses; mechanical → electrical.</li></ul><div class="note">At stall ω = 0, so E = 0 and I = V/R. At no load I ≈ 0, so E ≈ V.</div>`},
+{t:'Power flow & K_T = K_E',ch:C3,html:`<h2>Power flow &amp; ${KT} = ${KE}</h2><p class="lead">Multiply every term of V = IR + E by I:</p><div class="eq">V·I = I²R + E·I &nbsp;⇒&nbsp; ${PI} = heat + ${PM}</div><p>Mechanical power is also torque × speed, τ·ω = E·I. Substitute τ = ${KT}I and E = ${KE}ω:</p><div class="eq">${KT}·I·ω = ${KE}·ω·I &nbsp;⇒&nbsp; ${KT} = ${KE}</div>${pfCalc}<div class="note"><b>Units matter!</b> ${KT} [N·m/A] equals ${KE} [V·s/rad] <b>only in SI units</b>. Convert first: ω = 2π × rpm / 60; 1 mN·m = 0.001 N·m.</div>`},
+{t:'Torque–speed curve',ch:C4,html:`<h2>Torque–speed curve</h2><p class="lead">Combine V = IR + ${KE}ω with I = τ/${KT} to get one straight line:</p><div class="eq">ω = V/${KE} − (R / ${KE}${KT}) · τ</div><ul class="lst"><li><b>No-load speed</b> (τ = 0): ${W0} = V/${KE}</li><li><b>Stall torque</b> (ω = 0): ${TS} = ${KT}·V/R, with ${IS} = V/R</li></ul>${tsCalc}<div class="note">Changing V shifts the line <b>parallel</b> to itself. The motor settles where its line meets the load torque: the <b>operating point</b>. Shortcuts: ${KT} = ${TS}/${IS}, ${KE} = V/${W0}.</div>`},
+{t:'Power & efficiency',ch:C4,html:`<h2>Power &amp; efficiency</h2><p class="lead">Mechanical power ${PM} = τ·ω is the area of a rectangle under the torque–speed line, and it is largest at the middle:</p><div class="eq">${S('P','max')} = ${TS}·${W0} / 4 &nbsp; at τ = ${TS}/2, ω = ${W0}/2</div>${F.curves}<div class="eq">η<sub>ideal</sub> = E·I / V·I = E/V = ω/${W0}</div><p>So at max power an ideal motor is only <b>50% efficient</b>. Real motors have friction, so efficiency peaks at about <b>10–20% of stall torque</b>.</p><div class="note">Run continuously near <b>peak efficiency</b> (high speed, low torque). Use max power only in short bursts or the windings overheat.</div>`},
+{t:'Reading a datasheet',ch:C4,html:`<h2>Reading a datasheet</h2><table class="tbl"><tr><th colspan="2">Example PMDC motor (fictional)</th></tr><tr><td>Nominal voltage</td><td>12 V</td></tr><tr><td>No-load speed</td><td>1146 rpm (120 rad/s)</td></tr><tr><td>Stall torque</td><td>600 mN·m</td></tr><tr><td>Stall current</td><td>6 A</td></tr><tr><td>Terminal resistance</td><td>2 Ω</td></tr><tr><td>Max. continuous current</td><td>1.5 A</td></tr></table><p>The lecture example questions. Try each, then reveal:</p><details><summary>a) Stall torque in N·m?</summary>600 mN·m = <b>0.6 N·m</b></details><details><summary>b) Stall current?</summary>V/R = 12/2 = <b>6 A</b> ✔</details><details><summary>c) No-load speed in Hz and rad/s?</summary>1146/60 ≈ <b>19.1 Hz</b>; × 2π = <b>120 rad/s</b></details><details><summary>d) I, E and τ at half no-load speed?</summary>ω = 60 rad/s: E = <b>6 V</b>, I = (12 − 6)/2 = <b>3 A</b>, τ = <b>0.3 N·m</b></details><details><summary>e) Efficiency there?</summary>18 W out / 36 W in = <b>50%</b></details><details><summary>f) ${KT} and ${KE}?</summary>0.6/6 = <b>0.1 N·m/A</b>; 12/120 = <b>0.1 V·s/rad</b></details><div class="note">3 A is double the 1.5 A continuous rating: fine for a burst, too hot to hold.</div>`},
+{t:'A recipe for any question',ch:C5,html:`<h2>A recipe for any question</h2><p class="lead">Every question in the Practice tab falls to the same five steps.</p><ol class="recipe"><li><b>Convert units:</b> rpm → rad/s, mN·m → N·m.</li><li><b>Find the constants:</b> ${KT} = ${TS}/${IS}, ${KE} = V/${W0}.</li><li><b>Back EMF:</b> E = ${KE}·ω (zero at stall).</li><li><b>Current &amp; torque:</b> I = (V − E)/R, τ = ${KT}·I.</li><li><b>Power:</b> ${PI} = VI, ${PM} = EI = τω, heat = I²R, η = E/V.</li></ol><table class="tbl"><tr><th>Quantity</th><th>Formula</th></tr><tr><td>Force / torque</td><td>F = BIL, τ = F·r</td></tr><tr><td>Stall</td><td>${IS} = V/R, ${TS} = ${KT}V/R</td></tr><tr><td>No load</td><td>${W0} = V/${KE}</td></tr><tr><td>Max power</td><td>${TS}${W0}/4</td></tr></table><p style="font-size:.82rem"><b>Watch next on iLearn:</b> Maxon tutorials Ch 1 <i>Motor data and operating ranges</i>, Ch 2 <i>Speed vs torque</i>, Ch 3 <i>Windings</i>.</p><div class="end"><div class="orn">✦ The End ✦</div><button class="btn btn-primary" data-tab="practice">Start the challenge →</button></div>`}
+];
+function tocRows(from){ let h='',last=''; PAGES.forEach((p,i)=>{ if(i<from) return; const ch=i<2?'Front matter':p.ch; if(ch!==last){ h+=`<div class="chap">${ch}</div>`; last=ch; } h+=`<button class="trow" data-go="${i}"><span class="tt">${p.t.replace('&','&amp;').replace('K_T = K_E','K<sub>T</sub> = K<sub>E</sub>')}</span><span class="tl"></span><span class="tpn">${i+1}</span></button>`; }); return h; }
+PAGES[1].html=`<h2>Contents</h2>${tocRows(2)}<div class="howto"><b>How to read this book:</b> use the Next and Back buttons, click a page corner, press the ← → keys, or swipe on a touch screen.</div>`;
+const N=PAGES.length;
+
+/* ---- Book engine ---- */
+const book=G('book'),spread=G('spread'),pL=G('pgL'),pR=G('pgR'),leaf=G('leaf'),fF=G('faceF'),fB=G('faceB');
+let cur=0,busy=false,tok=0;
+try{ cur=Math.max(0,Math.min(N-1,+localStorage.getItem('dcmotorBookPage')||0)); }catch(e){}
+const single=()=>book.classList.contains('single');
+const step=()=>single()?1:2;
+function pageHTML(n){
+  if(n<0||n>=N) return `<div class="pin blank"><div class="endp">✦</div></div>`;
+  const p=PAGES[n];
+  return `<div class="pin ${p.cls||''}">${n?`<div class="rh"><span>${p.ch}</span><span>DC Motors</span></div>`:''}${p.html}</div>${n?`<div class="pno">— ${n+1} —</div>`:''}`;
+}
+function fill(el,n){ el.innerHTML=pageHTML(n); initWidgets(el); }
+function render(){ if(single()) fill(pR,cur); else { fill(pL,cur); fill(pR,cur+1); } updNav(cur); }
+function layout(){
+  if(G('learnCard').hidden) return;
+  const s=book.clientWidth<700; book.classList.toggle('single',s);
+  if(!s) cur-=cur%2; render();
+}
+function updNav(at){
+  const st=step(), first=at, last=Math.min(N-1,at+st-1);
+  G('bkPrev').disabled=at<=0; G('bkNext').disabled=at+st>=N;
+  G('cnL').hidden=at<=0; G('cnR').hidden=at+st>=N;
+  G('bkPos').textContent= st===2 ? `Pages ${first+1}–${last+1} of ${N}` : `Page ${first+1} of ${N}`;
+  const nd=Math.ceil(N/st), on=Math.floor(at/st);
+  G('bkDots').innerHTML=Array.from({length:nd},(_,i)=>`<button class="bk-dot ${i===on?'on':''}" data-go="${i*st}" aria-label="Go to page ${i*st+1}"></button>`).join('');
+  document.querySelectorAll('#toc .trow').forEach(r=>{ const g=+r.dataset.go; r.classList.toggle('on',g>=first&&g<=last); });
+  G('progBar').style.width=((last+1)/N*100)+'%';
+  G('progL').textContent= last+1>=N ? 'Finished! Time to practise.' : `Read ${last+1} of ${N} pages`;
+  try{ localStorage.setItem('dcmotorBookPage',at); }catch(e){}
+}
+
+/* paper rustle */
+let snd=true, actx=null;
+try{ snd=localStorage.getItem('dcmotorBookSound')!=='0'; }catch(e){}
+function rustle(){
+  if(!snd) return;
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    const d=.42,n=Math.floor(actx.sampleRate*d),b=actx.createBuffer(1,n,actx.sampleRate),ch=b.getChannelData(0);
+    for(let i=0;i<n;i++){ const t=i/n; ch[i]=(Math.random()*2-1)*Math.pow(Math.sin(Math.PI*t),1.6)*(.55+.45*Math.random()); }
+    const src=actx.createBufferSource(); src.buffer=b;
+    const f=actx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=2600; f.Q.value=.7;
+    const g=actx.createGain(); g.gain.value=.16;
+    src.connect(f).connect(g).connect(actx.destination); src.start();
+  }catch(e){}
+}
+function setSnd(){ const b=G('bkSound'); b.setAttribute('aria-pressed',snd); b.querySelector('span').textContent=snd?'Page sound on':'Page sound off'; }
+
+function go(target){
+  if(busy) return;
+  target=Math.max(0,Math.min(N-1,target));
+  if(!single()) target-=target%2;
+  if(target===cur) return;
+  const fwd=target>cur;
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){ cur=target; render(); return; }
+  busy=true; const my=++tok;
+  if(single()){
+    if(fwd){ fF.innerHTML=pageHTML(cur); fill(pR,target); } else { fF.innerHTML=pageHTML(target); }
+    fB.innerHTML='';
+  } else if(fwd){ fF.innerHTML=pageHTML(cur+1); fB.innerHTML=pageHTML(target); fill(pR,target+1); }
+  else { fF.innerHTML=pageHTML(target+1); fB.innerHTML=pageHTML(cur); fill(pL,target); }
+  [fF,fB].forEach(initWidgets);
+  leaf.className='leaf'; void leaf.offsetWidth; leaf.className='leaf show '+(fwd?'fwd':'bwd');
+  updNav(target); rustle();
+  const done=()=>{ if(my!==tok||!busy) return; busy=false; cur=target; render(); leaf.className='leaf'; fF.innerHTML=fB.innerHTML=''; };
+  leaf.onanimationend=e=>{ if(e.target===leaf) done(); };
+  setTimeout(done,1400);
+}
+const next=()=>go(cur+step()), prev=()=>go(cur-step());
+
+/* ---- Wiring ---- */
+G('bkNext').onclick=next; G('bkPrev').onclick=prev; G('cnR').onclick=next; G('cnL').onclick=prev;
+G('bkSound').onclick=()=>{ snd=!snd; try{ localStorage.setItem('dcmotorBookSound',snd?'1':'0'); }catch(e){} setSnd(); if(snd) rustle(); };
+G('toc').innerHTML=tocRows(0);
+document.addEventListener('click',e=>{
+  const g=e.target.closest('[data-go]'); if(g && (g.closest('#learnCard')||g.closest('#tocCard'))){ go(+g.dataset.go); return; }
+  const t=e.target.closest('[data-tab]'); if(t) showTab(t.dataset.tab);
+});
+spread.addEventListener('input',e=>{ const c=e.target.closest('.calc'); if(c) updCalc(c); });
+spread.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]'); if(!b) return; const pin=b.closest('.pin');
+  if(b.dataset.act==='gen'){ const g=pin.querySelector('[data-sim=gen]'); g.dataset.gen=g.dataset.gen==='1'?'0':'1'; renderGen(g); }
+  const cm=pin.querySelector('[data-sim=comm]'); if(!cm||!cm._st) return;
+  if(b.dataset.act==='ctog'){ cm._st.comm=!cm._st.comm; b.textContent=cm._st.comm?'Remove commutator':'Add commutator'; if(cm._st.comm) cm._st.w=Math.max(cm._st.w,2); }
+  if(b.dataset.act==='ckick') cm._st.w+=5;
+});
+addEventListener('keydown',e=>{
+  if(G('learnCard').hidden||e.target.closest('input,select,textarea')) return;
+  if(document.querySelector('.overlay.show')) return;
+  if(e.key==='ArrowRight'){ e.preventDefault(); next(); } else if(e.key==='ArrowLeft'){ e.preventDefault(); prev(); }
+});
+let tx0=null,ty0=0;
+spread.addEventListener('touchstart',e=>{ if(e.target.closest('input')) return; tx0=e.touches[0].clientX; ty0=e.touches[0].clientY; },{passive:true});
+spread.addEventListener('touchend',e=>{ if(tx0===null) return; const dx=e.changedTouches[0].clientX-tx0, dy=e.changedTouches[0].clientY-ty0; tx0=null; if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5){ dx<0?next():prev(); } });
+if(window.ResizeObserver) new ResizeObserver(()=>{ if(busy||G('learnCard').hidden) return; const s=book.clientWidth<700; if(s!==single()) layout(); }).observe(book);
+else addEventListener('resize',()=>{ if(!busy) layout(); });
+
+function showTab(t){
+  const learn=t==='learn';
+  G('practiceCard').hidden=learn; G('hintsCard').hidden=learn;
+  G('learnCard').hidden=!learn; G('tocCard').hidden=!learn;
+  G('tabPractice').classList.toggle('active',!learn); G('tabLearn').classList.toggle('active',learn);
+  G('tabPractice').setAttribute('aria-selected',!learn); G('tabLearn').setAttribute('aria-selected',learn);
+  try{ localStorage.setItem('dcmotorTab',t); }catch(e){}
+  if(learn) layout();
+  scrollTo({top:0,behavior:'smooth'});
+}
+setSnd();
+let startTab='practice'; try{ startTab=localStorage.getItem('dcmotorTab')||'practice'; }catch(e){}
+showTab(startTab);
+})();
+</script>
+</body></html>
