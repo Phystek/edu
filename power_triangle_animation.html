@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Where the Power Triangle Comes From — ELEC2005</title>
+<style>
+:root{
+  --ink:#1a1512; --paper:#faf7f2; --panel:#ffffff; --maroon:#7a1730;
+  --muted:#6b6156; --grid:#e4ddd2; --focus:#1c5f7a; --mustard:#c98a2c;
+  --serif:"Iowan Old Style","Georgia",serif;
+  --sans:"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+body{margin:0;background:#e6e6e4;color:var(--ink);font-family:var(--sans);}
+.wrap{max-width:960px;margin:0 auto;padding:24px 20px 36px;}
+header{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:6px 16px;
+  border-bottom:1px solid var(--grid);padding-bottom:12px;margin-bottom:14px;}
+.eyebrow{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin:0 0 4px;}
+h1{font-family:var(--serif);font-size:26px;letter-spacing:-0.01em;line-height:1.15;margin:0;font-weight:700;}
+.tag{font-size:12px;color:var(--muted);white-space:nowrap;}
+.intro{font-size:14px;line-height:1.55;margin:0 0 12px;max-width:820px;}
+.callout{background:#fbe9c6;border:1px solid #e0be6f;color:#5c4a12;border-radius:4px;padding:9px 12px;font-size:12.5px;line-height:1.45;margin:0 0 16px;}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start;}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0;}
+.panel{background:var(--panel);border:1px solid var(--grid);border-radius:4px;padding:14px 16px;min-width:0;}
+.panel-label{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 8px;}
+svg{display:block;width:100%;height:auto;}
+svg text{font-family:var(--sans);user-select:none;-webkit-user-select:none;}
+.stepcap{display:flex;align-items:flex-start;gap:9px;margin-top:10px;padding:8px 10px;background:var(--paper);border:1px solid var(--grid);border-radius:4px;font-size:13px;line-height:1.4;min-height:40px;}
+.stepcap .n{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--maroon);color:#fff;font-weight:700;font-size:12px;}
+.stepcap.idle .n{background:var(--muted);}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:11.5px;color:var(--muted);margin-top:8px;}
+.legend > span{display:inline-flex;align-items:center;gap:6px;}
+.legend i{display:inline-block;width:22px;height:0;border-top:3px solid;}
+.legend i.dash{border-top-style:dashed;border-top-width:2px;}
+.legend i.box{width:12px;height:12px;border:1px solid var(--grid);border-radius:2px;}
+.chapter-n{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin:0 0 4px;}
+.story h2{font-family:var(--serif);font-size:20px;letter-spacing:-0.01em;line-height:1.2;margin:0 0 8px;}
+.story-text{font-family:var(--serif);font-size:15.5px;line-height:1.55;margin:0;min-height:12.5em;}
+.story-text b{color:var(--maroon);}
+.dots{display:flex;gap:6px;margin:14px 0 10px;}
+.dots button{flex:1;height:30px;border:1px solid var(--grid);border-radius:4px;background:var(--paper);color:var(--muted);
+  font:700 12px var(--sans);cursor:pointer;padding:0;}
+.dots button.done{background:#f3e6e9;color:var(--maroon);border-color:#e3c9cf;}
+.dots button[aria-current="step"]{background:var(--maroon);color:#fff;border-color:var(--maroon);}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;}
+.btn{flex:1 1 0;min-width:80px;padding:9px 10px;font:700 13px var(--sans);border-radius:4px;border:1px solid var(--ink);
+  background:transparent;color:var(--ink);cursor:pointer;line-height:1.2;}
+.btn.primary{background:var(--ink);color:var(--paper);flex:1.6 1 0;}
+@media (hover:hover){ .btn:hover{background:var(--ink);color:var(--paper);} .btn.primary:hover{background:var(--maroon);border-color:var(--maroon);} }
+.btn:disabled{opacity:0.35;cursor:default;pointer-events:none;}
+.btn.reset{display:block;width:100%;margin-top:4px;}
+button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
+.switch{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);margin-top:10px;cursor:pointer;}
+.switch input{accent-color:var(--maroon);width:15px;height:15px;margin:0;}
+.slider-block{margin-bottom:12px;}
+.slider-label-row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:4px;gap:8px;}
+.slider-value{font-weight:700;color:var(--maroon);font-variant-numeric:tabular-nums;white-space:nowrap;}
+input[type=range]{width:100%;accent-color:var(--maroon);margin:2px 0;}
+.slider-caption{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
+.stat-card{background:var(--paper);border:1px solid var(--grid);border-radius:4px;padding:9px 11px;min-width:0;}
+.stat-label{font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+.stat-value{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--maroon);white-space:nowrap;}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:2px;min-height:13px;}
+.sym{text-transform:none;letter-spacing:0;}
+footer{text-align:center;color:var(--muted);font-size:11.5px;margin-top:26px;}
+@media (max-width:800px){
+  .wrap{padding:16px 12px 28px;}
+  h1{font-size:22px;}
+  .grid{grid-template-columns:minmax(0,1fr);gap:12px;}
+  .col{display:contents;}
+  .p-scene{order:1;} .p-wave{order:2;} .p-story{order:3;} .p-explore{order:4;}
+  .story-text{min-height:0;font-size:15px;}
+}
+@media (pointer:coarse){ input[type=range]{height:30px;} .btn,.dots button{min-height:40px;} }
+.motion-note{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--paper);border:1px solid var(--grid);border-radius:4px;padding:8px 12px;font-size:12.5px;margin:0 0 14px;}
+.motion-note .btn{flex:0 0 auto;width:auto;padding:6px 12px;font-size:12px;margin:0;}
+.noscript{background:#f7e9e7;border:1px solid #a3372c;color:#5c1a14;border-radius:4px;padding:10px 14px;font-size:14px;line-height:1.45;margin:0 0 14px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <noscript><div class="noscript"><b>This page needs JavaScript to run.</b> Open it in a web browser (Chrome, Edge, Safari or Firefox), not in a file preview.</div></noscript>
+  <header>
+    <div>
+      <p class="eyebrow">AC power &middot; Animated explainer</p>
+      <h1>Where the Power Triangle Comes From</h1>
+    </div>
+    <div class="tag">ELEC2005 &middot; Week 8</div>
+  </header>
+  <p class="intro">Why does an AC load have three different powers, and why do they make a right-angled triangle?
+  Build the load up one part at a time: a resistor, then an inductor, then both, and watch the current, the power
+  waveform and the triangle grow together. Finish by correcting the power factor with a capacitor.</p>
+  <div class="callout"><b>Slowed right down, with ideal parts.</b> One AC cycle here takes 4 seconds; on the 50 Hz
+  mains it takes 20 ms. The load is a pure resistor, inductor and capacitor in parallel across a 230 V (rms) supply,
+  so each branch carries only one kind of power. Numbers on the circuit and the triangle are rms; the waveforms show
+  instantaneous values.</div>
+
+  <div class="grid">
+    <div class="col">
+      <div class="panel p-scene">
+        <p class="panel-label">Circuit and triangle</p>
+        <svg id="scene" viewBox="0 0 560 330" role="img" aria-label="A 230 volt AC source feeding a resistor, an inductor and a capacitor in parallel, next to the power triangle for the load"></svg>
+        <div class="stepcap idle" id="stepcap" aria-live="polite"><span class="n" id="capN">&middot;</span><span id="capText">Press Play to start chapter 1.</span></div>
+        <div class="legend">
+          <span><i style="border-color:#c98a2c;border-top-width:5px;border-top-style:dotted"></i><span>moving charge (speed = current)</span></span>
+          <span><i class="box" style="background:#7a1730"></i><span>energy in the inductor</span></span>
+          <span><i class="box" style="background:#1c5f7a"></i><span>energy in the capacitor</span></span>
+        </div>
+      </div>
+      <div class="panel p-wave">
+        <p class="panel-label">Over two cycles</p>
+        <svg id="wave" viewBox="0 0 560 252" role="img" aria-label="Voltage, current and instantaneous power over two cycles"></svg>
+        <div class="legend" id="waveLegend"></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel story p-story">
+        <p class="chapter-n" id="chN"></p>
+        <h2 id="chTitle"></h2>
+        <p class="story-text" id="chText"></p>
+        <div class="dots" id="dots" role="group" aria-label="Chapters"></div>
+        <div class="btnrow">
+          <button type="button" class="btn" id="btnBack">&#9664; Back</button>
+          <button type="button" class="btn primary" id="btnPlay">Play</button>
+          <button type="button" class="btn" id="btnNext">Next &#9654;</button>
+        </div>
+        <label class="switch"><input type="checkbox" id="autoNext"> Carry on to the next chapter automatically</label>
+      </div>
+      <div class="panel p-explore">
+        <p class="panel-label">Take control</p>
+        <div class="slider-block">
+          <div class="slider-label-row"><span>Resistor, real power <i>P</i></span><span class="slider-value" id="valP"></span></div>
+          <input type="range" id="sP" min="0" max="2" step="0.05" value="1.6" aria-label="Real power taken by the resistor, kilowatts">
+          <div class="slider-caption"><span>0 kW</span><span>2.0 kW</span></div>
+        </div>
+        <div class="slider-block">
+          <div class="slider-label-row"><span>Inductor, <i>Q</i><sub>L</sub></span><span class="slider-value" id="valQL"></span></div>
+          <input type="range" id="sQL" min="0" max="2" step="0.05" value="1.2" aria-label="Reactive power taken by the inductor, kilovar">
+          <div class="slider-caption"><span>0 kvar</span><span>2.0 kvar</span></div>
+        </div>
+        <div class="slider-block">
+          <div class="slider-label-row"><span>Capacitor, <i>Q</i><sub>C</sub> (supplied)</span><span class="slider-value" id="valQC"></span></div>
+          <input type="range" id="sQC" min="0" max="2" step="0.025" value="0" aria-label="Reactive power supplied by the capacitor, kilovar">
+          <div class="slider-caption"><span>0 kvar (no capacitor)</span><span>2.0 kvar</span></div>
+        </div>
+        <button type="button" class="btn reset" id="btnReset">Reset to defaults</button>
+        <div class="stats">
+          <div class="stat-card"><div class="stat-label">Real power, <span class="sym">P</span></div><div class="stat-value" id="stP"></div><div class="stat-sub">average of p(t)</div></div>
+          <div class="stat-card"><div class="stat-label">Reactive, <span class="sym">Q</span></div><div class="stat-value" id="stQ"></div><div class="stat-sub" id="stQsub"></div></div>
+          <div class="stat-card"><div class="stat-label">Apparent, <span class="sym">|S|</span></div><div class="stat-value" id="stS"></div><div class="stat-sub" id="stSsub"></div></div>
+          <div class="stat-card"><div class="stat-label">Power factor</div><div class="stat-value" id="stPF"></div><div class="stat-sub" id="stPFsub"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer>ELEC2005 &middot; Week 8 &middot; for concept exploration, not assessment</footer>
+</div>
+<script>
+(function(){
+'use strict';
+const $ = id => document.getElementById(id);
+// =====================================================================================
+// Model. Parallel R, L, C across v(t) = sqrt2 V cos(wt), V = 230 V rms.
+//   Branch rms currents: I_R = P/V, I_L = Q_L/V, I_C = Q_C/V  (powers in W / var)
+//   i_R = sqrt2 I_R cos wt,  i_L = sqrt2 I_L sin wt (lags 90 deg),  i_C = -sqrt2 I_C sin wt (leads 90 deg)
+//   p(t) = v i = P (1 + cos 2wt) + (Q_L - Q_C) sin 2wt      [real part + reactive part]
+//   S = P + jQ, Q = Q_L - Q_C (inductive Q positive, as S = V I*)
+// =====================================================================================
+const V = 230, VPK = V * Math.SQRT2, T = 4, W = 2 * Math.PI / T, R2 = Math.SQRT2;
+function load(P, QL, QC){            // P, QL, QC in kW / kvar
+  const Q = QL - QC, S = Math.hypot(P, Q);
+  const I = S * 1000 / V;
+  const pf = S > 1e-9 ? P / S : NaN;
+  const theta = S > 1e-9 ? Math.atan2(Q, P) : 0;   // rad, + = lagging
+  return { P, QL, QC, Q, S, I, IR: P * 1000 / V, IL: QL * 1000 / V, IC: QC * 1000 / V, pf, theta };
+}
+function inst(t, P, QL, QC){         // instantaneous values; v in V, currents in A, powers in kW
+  const c = Math.cos(W * t), s = Math.sin(W * t);
+  const v = VPK * c;
+  const iR = R2 * P * 1000 / V * c, iL = R2 * QL * 1000 / V * s, iC = -R2 * QC * 1000 / V * s;
+  const i = iR + iL + iC;
+  const pP = P * (1 + Math.cos(2 * W * t)), pQ = (QL - QC) * Math.sin(2 * W * t);
+  return { v, iR, iL, iC, iX: iL + iC, i, p: v * i / 1000, pP, pQ,
+           wL: QL * s * s, wC: QC * c * c };   // stored energy, in units of (Q/w)
+}
+const smooth = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x);
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+
+// =====================================================================================
+// Story
+// =====================================================================================
+const SHOW0 = { v: 0, i: 0, iParts: 0, p: 0, shade: 0, pAvg: 0, pParts: 0, bars: 0, tri: 0 };
+const CH = [
+  { title: 'A resistor: power only flows in', start: [1.6, 0, 0], m: 1,
+    text: 'Start with a heater, a pure resistance. Its current rises and falls <b>in step</b> with the voltage. Multiply the two at every instant and you get the power, <b>p = v i</b>. Whenever v is negative, so is i, so their product is never negative: energy only ever flows <b>into</b> the resistor, in pulses at twice the supply frequency. The average of those pulses is the <b>real power, P = V I</b>: here 230 V × 6.96 A = 1.60 kW.',
+    steps: [
+      { at: 0,   cap: 'The voltage and the current rise and fall together.', show: { v: 1, i: 1 } },
+      { at: 2.5, cap: 'Multiply them: p = v i pulses at twice the supply frequency.', show: { p: 1, shade: 1 } },
+      { at: 5,   cap: 'p never drops below zero. Its average is P = 1.60 kW: the base of the triangle.', show: { pAvg: 1, tri: 1 } }
+    ], end: 8.5 },
+  { title: 'An inductor: energy borrowed and returned', start: [1.6, 0, 0], m: 1,
+    text: 'Now swap the heater for a pure inductor. Its current <b>lags</b> the voltage by a quarter cycle (90°). For a quarter cycle, v and i have the same sign and energy flows <b>into</b> the inductor’s magnetic field. For the next quarter they have opposite signs and <b>the same energy flows back</b> to the supply. The power averages to zero. Its peak, <b>Q = V I</b>, says how much energy sloshes back and forth: the <b>reactive power</b>, measured in var. Here Q = 1.20 kvar.',
+    steps: [
+      { at: 0,   cap: 'Swap the resistor for an inductor: the current now lags by 90°.', show: { v: 1, i: 1 }, set: { P: 0, QL: 1.2 }, dur: 1.6 },
+      { at: 3,   cap: 'p swings positive and negative by the same amount.', show: { p: 1, shade: 1 } },
+      { at: 5.5, cap: 'The maroon bar is energy in the inductor’s field: it fills, then empties back to the supply.', show: { bars: 1 } },
+      { at: 9,   cap: 'The average power is zero. The peak is Q = 1.20 kvar: a vertical side, with no base.', show: { pAvg: 1, tri: 1 } }
+    ], end: 12.5 },
+  { title: 'Both together: one current, two parts', start: [0, 1.2, 0], m: 0,
+    text: 'Put the heater and the inductor in parallel. The supply current is the sum of the two branch currents: <b>I<sub>R</sub> = 6.96 A</b>, in phase with V, and <b>I<sub>L</sub> = 5.22 A</b>, a quarter cycle behind. They peak at different times, so as phasors they sit at 90° and add like the sides of a right-angled triangle: I = √(6.96² + 5.22²) = <b>8.70 A</b>, not 6.96 + 5.22 = 12.2 A.',
+    steps: [
+      { at: 0,   cap: 'Connect both branches. Each one carries its own current (dashed).', show: { v: 1, i: 1, iParts: 1 }, set: { P: 1.6, QL: 1.2 }, dur: 1.6 },
+      { at: 3.5, cap: 'The supply current i is their sum, but they peak at different times.', show: {} },
+      { at: 6.5, cap: 'As phasors they are at 90°: I = √(6.96² + 5.22²) = 8.70 A.', show: { tri: 1 } }
+    ], end: 10.5 },
+  { title: 'Multiply by V: the power triangle', start: [1.6, 1.2, 0], m: 0,
+    text: 'Multiply every side of the current triangle by V = 230 V. The in-phase current gives <b>P = V I<sub>R</sub> = 1.60 kW</b>, the 90° current gives <b>Q = V I<sub>L</sub> = 1.20 kvar</b>, and the whole supply current gives the <b>apparent power |S| = V I = 2.00 kVA</b>. The triangle flips upward because we use <b>S = V I*</b>, the convention that makes an inductor’s Q positive. The power waveform splits the same way: a real part that only flows in, plus a reactive part that sloshes.',
+    steps: [
+      { at: 0,   cap: 'Start from the current triangle.', show: { v: 1, i: 1, tri: 1 } },
+      { at: 1.6, cap: 'Multiply every side by V = 230 V, and flip it up (S = V I*).', show: {}, setM: 1, mDur: 2.6 },
+      { at: 5,   cap: 'p(t) = a real part that only flows in + a reactive part that sloshes.', show: { p: 1, shade: 1, pParts: 1 } },
+      { at: 8.5, cap: 'P = 1.60 kW, Q = 1.20 kvar, |S| = 2.00 kVA: a 3-4-5 triangle.', show: { pAvg: 1 } }
+    ], end: 12 },
+  { title: 'Power factor: the useful fraction', start: [1.6, 1.2, 0], m: 1,
+    text: 'Only P does useful work, but the supply has to carry the whole current, and that is set by |S|. The <b>power factor</b> is the useful fraction: <b>pf = cos θ = P / |S|</b> = 1.60 / 2.00 = <b>0.80 lagging</b>. Watch what happens when the inductive load grows: P stays at 1.60 kW, but Q, |S| and the supply current all rise, and the power factor falls. Every cable, fuse and transformer has to be sized for that current.',
+    steps: [
+      { at: 0,   cap: 'pf = cos θ = P / |S| = 1.60 / 2.00 = 0.80 lagging. Supply current 8.70 A.', show: { v: 1, i: 1, p: 1, shade: 1, pAvg: 1, tri: 1 } },
+      { at: 3.5, cap: 'More inductive load: P is unchanged, but I rises to 11.1 A and pf falls to 0.62.', show: {}, set: { QL: 2.0 }, dur: 2.5 },
+      { at: 8,   cap: 'Back to Q = 1.20 kvar: pf 0.80, I = 8.70 A.', show: {}, set: { QL: 1.2 }, dur: 2 }
+    ], end: 11.5 },
+  { title: 'Correction: supply the Q locally', start: [1.6, 1.2, 0], m: 1,
+    text: 'Add a capacitor in parallel. Its current <b>leads</b> by 90°, exactly opposite to the inductor’s, so its reactive power is negative. Watch the energy bars: the capacitor fills as the inductor empties, so the energy sloshes <b>between them</b> instead of travelling back to the supply. A 0.67 kvar capacitor takes Q from 1.20 to 0.53 kvar, |S| to 1.68 kVA and the current from 8.70 A to <b>7.32 A</b>. P has not changed. The power factor is now <b>0.95 lagging</b>; a 1.20 kvar capacitor would make it 1.',
+    steps: [
+      { at: 0,   cap: 'Add a capacitor branch.', show: { v: 1, i: 1, p: 1, shade: 1, pAvg: 1, bars: 1, tri: 1 } },
+      { at: 1.5, cap: 'Its Q is negative: it pulls the tip of the triangle down.', show: {}, set: { QC: 0.674 }, dur: 3 },
+      { at: 5.5, cap: 'Energy now sloshes between L and C; less of it travels back to the supply.', show: {} },
+      { at: 9,   cap: 'pf 0.95 lagging, I = 7.32 A, and P is still 1.60 kW.', show: {} }
+    ], end: 12.5 }
+];
+const EXPLORE = { title: 'Your turn', text: 'Build your own load with the three sliders. Try making the capacitor match the inductor (<b>Q<sub>C</sub> = Q<sub>L</sub></b>) for unity power factor, then keep going: the triangle flips below the axis and the power factor becomes <b>leading</b>. Set P to zero for a purely reactive load. The dashed outline is the triangle without the capacitor.' };
+const DEF = { P: 1.6, QL: 1.2, QC: 0 };
+
+// =====================================================================================
+// State
+// =====================================================================================
+let t = 0, ch = 0, mode = 'story', playing = false, chT = 0, ended = false, stepIdx = -1;
+const par = { P: { v: 1.6, a: 1.6, b: 1.6, t0: 0, d: 0 }, QL: { v: 0, a: 0, b: 0, t0: 0, d: 0 }, QC: { v: 0, a: 0, b: 0, t0: 0, d: 0 },
+              m: { v: 1, a: 1, b: 1, t0: 0, d: 0 } };
+const vis = Object.assign({}, SHOW0), visT = Object.assign({}, SHOW0);
+const chargeQ = { sup: 0, R: 0, L: 0, C: 0 };
+
+const OS_REDUCED = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+let REDUCED = false;
+(function motionNote(){
+  if (!OS_REDUCED) return;
+  const d = document.createElement('div');
+  d.className = 'motion-note';
+  d.innerHTML = '<span>Your device’s <b>reduce motion</b> setting is on. This page is an animation, so it plays anyway.</span>';
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = 'Turn animation off';
+  b.addEventListener('click', () => { REDUCED = !REDUCED; document.body.classList.toggle('reduced', REDUCED); b.textContent = REDUCED ? 'Turn animation on' : 'Turn animation off'; if (REDUCED && mode === 'story') finishChapterNow(); });
+  d.appendChild(b);
+  const g = document.querySelector('.grid'); g.parentNode.insertBefore(d, g);
+})();
+
+function setPar(k, val, dur){
+  const p = par[k];
+  if (!dur || REDUCED){ p.v = p.a = p.b = val; p.d = 0; return; }
+  p.a = p.v; p.b = val; p.t0 = chT; p.d = dur;
+}
+function tickPar(){
+  for (const k in par){
+    const p = par[k];
+    if (p.d > 0){ const f = smooth((chT - p.t0) / p.d); p.v = p.a + (p.b - p.a) * f; if (f >= 1){ p.v = p.b; p.d = 0; } }
+  }
+}
+function applyStep(s, animate){
+  Object.assign(visT, s.show || {});
+  if (s.set) for (const k in s.set) setPar(k, s.set[k], animate ? s.dur : 0);
+  if (s.setM !== undefined) setPar('m', s.setM, animate ? s.mDur : 0);
+}
+function startChapter(k, autoplay){
+  mode = 'story'; ch = k; chT = 0; ended = false; stepIdx = -1;
+  const c = CH[k];
+  setPar('P', c.start[0]); setPar('QL', c.start[1]); setPar('QC', c.start[2]); setPar('m', c.m);
+  Object.assign(visT, SHOW0);
+  if (autoplay && !REDUCED){
+    Object.assign(vis, SHOW0);
+    playing = true;
+    stepIdx = 0; applyStep(c.steps[0], true);
+  } else {
+    finishChapterNow();
+  }
+  syncSliders(); renderStory();
+}
+function finishChapterNow(){
+  const c = CH[ch];
+  c.steps.forEach(s => applyStep(s, false));
+  for (const k in par){ par[k].v = par[k].b; par[k].d = 0; }
+  Object.assign(vis, visT);
+  stepIdx = c.steps.length - 1; chT = c.end; playing = false; ended = true;
+  syncSliders(); renderStory();
+}
+function tickStory(dt){
+  if (mode !== 'story' || !playing) return;
+  const c = CH[ch];
+  chT += dt;
+  while (stepIdx + 1 < c.steps.length && c.steps[stepIdx + 1].at <= chT){ stepIdx++; applyStep(c.steps[stepIdx], true); renderCaption(); }
+  tickPar(); syncSliders();
+  if (chT >= c.end){
+    playing = false; ended = true; renderStory();
+    if ($('autoNext').checked && ch < CH.length - 1) setTimeout(() => { if (mode === 'story' && !playing && ended) startChapter(ch + 1, true); }, 1200);
+  }
+}
+
+// =====================================================================================
+// Drawing helpers
+// =====================================================================================
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent, text){
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+// text with tspan subscripts: parts = ['I', {sub:'R'}, ' = 6.96 A']
+function txt(parent, attrs, parts){
+  const t = el('text', attrs, parent), fs = parseFloat(attrs['font-size'] || 12);
+  let shifted = false;
+  (Array.isArray(parts) ? parts : [parts]).forEach(p => {
+    const isSub = typeof p === 'object', a = {};
+    if (isSub){ a['font-size'] = (fs * 0.72).toFixed(1); a.dy = (fs * 0.28).toFixed(1); }
+    else if (shifted) a.dy = (-fs * 0.28).toFixed(1);
+    el('tspan', a, t, isSub ? p.sub : p); shifted = isSub;
+  });
+  return t;
+}
+const INK = '#1a1512', MAROON = '#7a1730', FOCUS = '#1c5f7a', MUSTARD = '#c98a2c', MUTED = '#6b6156', GRID = '#e4ddd2';
+const f2 = x => x.toFixed(2);
+
+// =====================================================================================
+// Scene: circuit (left) + triangle (right)
+// =====================================================================================
+const scene = $('scene');
+const XR = 120, XL = 185, XC = 250, YT = 50, YB = 290, C0 = 130, C1 = 210;
+const TX0 = 330, TY0 = 172, KP = 64, KA = KP * V / 1000 * 0.8;   // px per kVA; px per A in current mode
+let S = {};
+function buildScene(){
+  scene.innerHTML = '';
+  el('text', { x: 12, y: 16, 'font-size': 10.5, 'letter-spacing': '1.2', fill: MUTED, 'font-weight': 700 }, scene, 'CIRCUIT');
+  S.triTitle = el('text', { x: 312, y: 16, 'font-size': 10.5, 'letter-spacing': '1.2', fill: MUTED, 'font-weight': 700 }, scene, 'POWER TRIANGLE');
+  el('line', { x1: 300, y1: 26, x2: 300, y2: 314, stroke: GRID, 'stroke-width': 1 }, scene);
+  const g = el('g', { fill: 'none', stroke: INK, 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, scene);
+  // source and rails
+  el('path', { d: `M40,150 V${YT} H${XC} V164 M${XC},176 V${YB} H40 V190` }, g);
+  // R branch
+  S.brR = el('g', {}, g);
+  S.glowR = el('rect', { x: XR - 13, y: C0 - 2, width: 26, height: C1 - C0 + 4, rx: 4, fill: MUSTARD, stroke: 'none', opacity: 0 }, S.brR);
+  let z = `M${XR},${YT} V${C0}`; for (let k = 0; k < 8; k++) z += ` L${XR + (k % 2 ? -8 : 8)},${C0 + 5 + 10 * k}`; z += ` L${XR},${C1} V${YB}`;
+  el('path', { d: z }, S.brR);
+  // L branch
+  S.brL = el('g', {}, g);
+  let lp = `M${XL},${YT} V${C0}`; for (let k = 0; k < 4; k++) lp += ' a10,10 0 0 1 0,20'; lp += ` V${YB}`;
+  el('path', { d: lp }, S.brL);
+  // C branch (plates; the rail wires to it are drawn above, so fade only the plates and label)
+  S.brC = el('g', {}, g);
+  el('line', { x1: XC - 14, y1: 164, x2: XC + 14, y2: 164, 'stroke-width': 2.6 }, S.brC);
+  el('line', { x1: XC - 14, y1: 176, x2: XC + 14, y2: 176, 'stroke-width': 2.6 }, S.brC);
+  // junction dots
+  [[XR, YT], [XR, YB], [XL, YT], [XL, YB]].forEach(([x, y]) => el('circle', { cx: x, cy: y, r: 3, fill: INK, stroke: 'none' }, scene));
+  // source symbol
+  el('circle', { cx: 40, cy: 170, r: 20, fill: '#fff', stroke: INK, 'stroke-width': 2 }, scene);
+  el('path', { d: 'M28,170 q6,-11 12,0 t12,0', fill: 'none', stroke: INK, 'stroke-width': 1.8 }, scene);
+  el('text', { x: 66, y: 164, 'font-size': 11, fill: MUTED }, scene, 'V');
+  el('text', { x: 66, y: 180, 'font-size': 12.5, fill: MAROON, 'font-weight': 700 }, scene, '230 V');
+  // moving-charge overlays
+  const flow = d => el('path', { d, fill: 'none', stroke: MUSTARD, 'stroke-width': 4.5, 'stroke-linecap': 'round', 'stroke-dasharray': '0.1 13' }, scene);
+  S.fSup = flow(`M40,150 V${YT} H${XR - 6} M${XR - 6},${YB} H40 V190`);
+  S.fR = flow(`M${XR},${YT + 6} V${C0} M${XR},${C1} V${YB - 6}`);
+  S.fL = flow(`M${XL},${YT + 6} V${C0} M${XL},${C1 + 0} V${YB - 6}`);
+  S.fC = flow(`M${XC},${YT + 6} V164 M${XC},176 V${YB - 6}`);
+  // energy bars
+  const bar = (x, col) => { const gg = el('g', {}, scene); el('rect', { x, y: 140, width: 8, height: 60, fill: '#fff', stroke: GRID }, gg); const f = el('rect', { x: x + 1, y: 199, width: 6, height: 0, fill: col }, gg); return { g: gg, f }; };
+  S.barL = bar(XL + 16, MAROON); S.barC = bar(XC + 18, FOCUS);
+  // labels
+  S.labSup = txt(scene, { x: 50, y: 40, 'font-size': 12.5, fill: MAROON, 'font-weight': 700 }, ['I = 0.00 A']);
+  const blab = (x, sub) => { const gg = el('g', {}, scene); txt(gg, { x: x + 6, y: 240, 'font-size': 11, fill: MUTED }, ['I', { sub }]); const v = el('text', { x: x + 6, y: 254, 'font-size': 11.5, fill: INK, 'font-weight': 700 }, gg, ''); return { g: gg, v }; };
+  S.lR = blab(XR, 'R'); S.lL = blab(XL, 'L'); S.lC = blab(XC, 'C');
+  el('text', { x: XR + 13, y: 174, 'font-size': 11, fill: MUTED }, S.brR, 'R');
+  el('text', { x: XL - 8, y: 174, 'font-size': 11, fill: MUTED, 'text-anchor': 'end' }, S.brL, 'L');
+  el('text', { x: XC - 18, y: 174, 'font-size': 11, fill: MUTED, 'text-anchor': 'end' }, S.brC, 'C');
+  S.tri = el('g', {}, scene);
+}
+const brOp = val => 0.15 + 0.85 * clamp(val / 0.12, 0, 1);
+
+// ----- triangle -----
+// Returns label boxes for the overlap tests.
+function drawTriangle(P, QL, QC, m, op){
+  const g = S.tri; g.innerHTML = '';
+  g.setAttribute('opacity', op.toFixed(3));
+  const boxes = [];
+  if (op < 0.01) return boxes;
+  const L = load(P, QL, QC);
+  const mm = smooth(m), sgn = -Math.cos(Math.PI * mm);                  // -1 current (lagging below), +1 power
+  const opI = clamp((0.4 - m) / 0.4, 0, 1), opP = clamp((m - 0.6) / 0.4, 0, 1);
+  // geometry in px, math y-up: base along +x, vertical = sgn * reactive
+  const base = (mm < 1 ? (L.IR * KA * (1 - mm) + P * KP * mm) : P * KP);
+  const reac = (L.IL - L.IC) * KA * (1 - mm) + L.Q * KP * mm;          // signed, + = Q > 0 in power mode
+  const vert = sgn * reac;
+  const x0 = TX0, y0 = TY0, xe = x0 + base, ye = y0 - vert;
+  // axis
+  el('line', { x1: x0 - 8, y1: y0, x2: 492, y2: y0, stroke: GRID, 'stroke-width': 1 }, g);
+  // V reference phasor (current mode only)
+  if (opI > 0.01){
+    const gv = el('g', { opacity: opI }, g);
+    el('line', { x1: x0, y1: y0, x2: 470, y2: y0, stroke: FOCUS, 'stroke-width': 2 }, gv);
+    el('path', { d: `M470,${y0} l-9,-4.5 v9 z`, fill: FOCUS }, gv);
+    el('text', { x: 477, y: y0 + 4.5, 'font-size': 13, fill: FOCUS, 'font-weight': 700 }, gv, 'V');
+    el('line', { x1: 477, y1: y0 - 9, x2: 486, y2: y0 - 9, stroke: FOCUS, 'stroke-width': 1.3 }, gv);
+    boxes.push(['V', 470, y0 - 12, 490, y0 + 6]);
+  }
+  // ghost load triangle (before correction)
+  const ghost = QC > 0.004 && opP > 0.01;
+  if (ghost){
+    const ygq = y0 - sgn * QL * KP;
+    el('path', { d: `M${x0},${y0} L${xe},${ygq} L${xe},${y0}`, fill: 'none', stroke: MUTED, 'stroke-width': 1.2, 'stroke-dasharray': '4 4', opacity: 0.8 * opP }, g);
+  }
+  if (L.S * (mm < 1 ? 1 : 1) < 0.004 && opI < 0.01) return boxes;
+  // fill
+  el('path', { d: `M${x0},${y0} L${xe},${y0} L${xe},${ye} Z`, fill: MAROON, opacity: 0.07, stroke: 'none' }, g);
+  // sides
+  el('line', { x1: x0, y1: y0, x2: xe, y2: y0, stroke: MUSTARD, 'stroke-width': 3.2, 'stroke-linecap': 'round' }, g);
+  el('line', { x1: xe, y1: y0, x2: xe, y2: ye, stroke: FOCUS, 'stroke-width': 3.2, 'stroke-linecap': 'round' }, g);
+  el('line', { x1: x0, y1: y0, x2: xe, y2: ye, stroke: MAROON, 'stroke-width': 3.6, 'stroke-linecap': 'round' }, g);
+  if (ghost && Math.abs(QC) > 0.004){
+    const ya = y0 - sgn * QL * KP, yb = ye, dir = Math.sign(yb - ya) || 1;
+    el('line', { x1: xe + 8, y1: ya, x2: xe + 8, y2: yb - dir * 5, stroke: FOCUS, 'stroke-width': 1.6, 'stroke-dasharray': '3 3', opacity: opP }, g);
+    if (Math.abs(yb - ya) > 8) el('path', { d: `M${xe + 8},${yb} l-4,${-dir * 7} h8 z`, fill: FOCUS, opacity: opP }, g);
+  }
+  // right-angle mark
+  if (Math.abs(vert) > 12 && base > 12){
+    const dy = vert > 0 ? -8 : 8;
+    el('path', { d: `M${xe - 8},${y0} V${y0 + dy} H${xe}`, fill: 'none', stroke: MUTED, 'stroke-width': 1 }, g);
+  }
+  // theta arc
+  const hyp = Math.hypot(base, vert);
+  if (hyp > 36 && base > 20){
+    const ang = Math.atan2(vert, base), r = 26;
+    const ax = x0 + r * Math.cos(ang), ay = y0 - r * Math.sin(ang);
+    el('path', { d: `M${x0 + r},${y0} A${r},${r} 0 0 ${vert > 0 ? 0 : 1} ${ax},${ay}`, fill: 'none', stroke: INK, 'stroke-width': 1.2 }, g);
+    if (Math.abs(ang) > 0.22 && base > 46){
+      const lx = x0 + 37 * Math.cos(ang / 2), ly = y0 - 37 * Math.sin(ang / 2) + 4.5;
+      el('text', { x: lx, y: ly, 'font-size': 12.5, fill: INK, 'text-anchor': 'middle' }, g, 'θ');
+      boxes.push(['theta', lx - 5, ly - 10, lx + 5, ly + 2]);
+    }
+  }
+  // labels: two sets cross-faded. Each label: [name, value]
+  const above = vert >= 0;
+  const sets = [];
+  if (opI > 0.01) sets.push([opI, [['I', { sub: 'R' }], f2(L.IR) + ' A'], QC > 0.004 ? [['I', { sub: 'L' }, '−I', { sub: 'C' }], f2(Math.abs(L.IL - L.IC)) + ' A'] : [['I', { sub: 'L' }], f2(L.IL) + ' A'], [['I'], f2(L.I) + ' A']]);
+  if (opP > 0.01) sets.push([opP, [['P'], f2(P) + ' kW'], [['Q'], (L.Q < -0.0049 ? '−' : '') + f2(Math.abs(L.Q)) + ' kvar'], [['|S|'], f2(L.S) + ' kVA']]);
+  sets.forEach(([o, lb, lq, ls]) => {
+    const gl = el('g', { opacity: o }, g);
+    // base label
+    const bx = Math.max(x0 + base / 2, x0 + 34), by = above ? y0 + 18 : y0 - 9;
+    labelPair(gl, bx, by, lb, MUSTARD, 'middle', boxes, 'base');
+    // vertical label
+    const half = Math.abs(vert) / 2;
+    const qx = xe + (ghost ? 16 : 9), qy = above ? y0 - Math.max(half, 13) + 4 : y0 + Math.max(half, 13) + 4;
+    if (Math.abs(vert) > 0.5) labelPair(gl, qx, qy, lq, FOCUS, 'start', boxes, 'vert');
+    // hypotenuse label
+    if (hyp > 6){
+      let sx, sy, anchor;
+      // unit normal to the hypotenuse pointing away from the right-angle corner (math coords, y up)
+      const nx = (above ? -vert : vert) / hyp, ny = (above ? base : -base) / hyp;
+      const hx = x0 + base / 2 + nx * 12;
+      if (base >= 90 && hx - 80 >= 304){             // beside the middle of the hypotenuse (label about 75 px wide)
+        sx = hx; sy = y0 - vert / 2 - ny * 12 + (above ? 3 : 12);
+        anchor = 'end';
+      } else {
+        // short base or steep triangle: put |S| beyond the tip, clear of the Q label beside the vertical side
+        const qy = above ? y0 - Math.max(Math.abs(vert) / 2, 13) + 4 : y0 + Math.max(Math.abs(vert) / 2, 13) + 4;
+        sx = Math.max(xe - 3, 304 + 78); sy = above ? Math.min(ye - 10, qy - 15) : Math.max(ye + 20, qy + 17); anchor = 'end';
+      }
+      labelPair(gl, sx, sy, ls, MAROON, anchor, boxes, 'hyp');
+    }
+  });
+  return boxes;
+}
+// "name value" on one line
+function labelPair(g, x, y, pair, col, anchor, boxes, id){
+  const parts = pair[0].concat([' ' + pair[1]]);
+  const t = txt(g, { x, y, 'font-size': 12, fill: INK, 'text-anchor': anchor, 'font-weight': 700 }, parts);
+  t.firstChild.setAttribute('fill', col);
+  // width estimate (for overlap tests in the test harness); real bbox used when available
+  let w = 0; try { w = t.getComputedTextLength(); } catch (e) {}
+  if (!w) w = parts.reduce((a, p) => a + (typeof p === 'object' ? p.sub.length * 5 : p.length * 6.6), 0);
+  const x1 = anchor === 'end' ? x - w : anchor === 'middle' ? x - w / 2 : x;
+  boxes.push([id, x1, y - 10, x1 + w, y + 3]);
+}
+
+// =====================================================================================
+// Wave panel
+// =====================================================================================
+const wave = $('wave');
+const WX0 = 48, WX1 = 530, A_MID = 62, A_H = 44, B_TOP = 136, B_BOT = 238, PMIN = -2.5, PMAX = 5;
+const tx = tt => WX0 + (tt / (2 * T)) * (WX1 - WX0);
+const yV = v => A_MID - v / 340 * A_H, yI = i => A_MID - i / 18 * A_H;
+const yP = p => B_BOT - (p - PMIN) / (PMAX - PMIN) * (B_BOT - B_TOP);
+let Wv = {};
+function buildWave(){
+  wave.innerHTML = '';
+  // plot A frame
+  el('line', { x1: WX0, y1: A_MID, x2: WX1, y2: A_MID, stroke: GRID }, wave);
+  el('line', { x1: WX0, y1: A_MID - A_H - 6, x2: WX0, y2: A_MID + A_H + 6, stroke: INK, 'stroke-width': 1.2 }, wave);
+  el('text', { x: WX0 - 8, y: A_MID - 26, 'font-size': 12, fill: FOCUS, 'text-anchor': 'end', 'font-style': 'italic', 'font-weight': 700 }, wave, 'v');
+  el('text', { x: WX0 - 8, y: A_MID + 30, 'font-size': 12, fill: MUSTARD, 'text-anchor': 'end', 'font-style': 'italic', 'font-weight': 700 }, wave, 'i');
+  el('text', { x: WX0 - 8, y: A_MID + 4, 'font-size': 10.5, fill: MUTED, 'text-anchor': 'end' }, wave, '0');
+  // plot B frame
+  for (let p = -2; p <= 4; p += 2){
+    el('line', { x1: WX0, y1: yP(p), x2: WX1, y2: yP(p), stroke: p === 0 ? '#cfc6b8' : GRID, 'stroke-width': p === 0 ? 1.2 : 1 }, wave);
+    el('text', { x: WX0 - 6, y: yP(p) + 3.5, 'font-size': 10.5, fill: MUTED, 'text-anchor': 'end' }, wave, (p > 0 ? '' : p < 0 ? '−' : '') + Math.abs(p));
+  }
+  el('line', { x1: WX0, y1: B_TOP - 4, x2: WX0, y2: B_BOT + 2, stroke: INK, 'stroke-width': 1.2 }, wave);
+  el('text', { x: 6, y: B_TOP - 8, 'font-size': 10.5, fill: MUTED }, wave, 'p (kW)');
+  // cycle marks
+  [1, 2].forEach(k => el('text', { x: tx(k * T) - 2, y: 248, 'font-size': 10.5, fill: MUTED, 'text-anchor': 'end' }, wave, k === 1 ? '1 cycle' : '2 cycles'));
+  el('line', { x1: tx(T), y1: A_MID - A_H - 4, x2: tx(T), y2: B_BOT, stroke: GRID, 'stroke-dasharray': '2 4' }, wave);
+  // curves
+  Wv.shadeP = el('path', { fill: MAROON, opacity: 0.14, stroke: 'none' }, wave);
+  Wv.shadeN = el('path', { fill: FOCUS, opacity: 0.22, stroke: 'none' }, wave);
+  Wv.pP = el('path', { fill: 'none', stroke: MUSTARD, 'stroke-width': 1.8, 'stroke-dasharray': '6 4' }, wave);
+  Wv.pQ = el('path', { fill: 'none', stroke: FOCUS, 'stroke-width': 1.8, 'stroke-dasharray': '6 4' }, wave);
+  Wv.p = el('path', { fill: 'none', stroke: MAROON, 'stroke-width': 2.4, 'stroke-linejoin': 'round' }, wave);
+  Wv.avgG = el('g', {}, wave);
+  Wv.avg = el('line', { x1: WX0, x2: WX1, stroke: INK, 'stroke-width': 1.4, 'stroke-dasharray': '7 4' }, Wv.avgG);
+  Wv.avgT = el('text', { x: WX1 + 5, 'font-size': 12, fill: INK, 'font-weight': 700 }, Wv.avgG, 'P');
+  Wv.iR = el('path', { fill: 'none', stroke: MUSTARD, 'stroke-width': 1.5, 'stroke-dasharray': '2 3' }, wave);
+  Wv.iX = el('path', { fill: 'none', stroke: '#8a6a3a', 'stroke-width': 1.5, 'stroke-dasharray': '7 4' }, wave);
+  Wv.v = el('path', { fill: 'none', stroke: FOCUS, 'stroke-width': 2.2 }, wave);
+  Wv.i = el('path', { fill: 'none', stroke: MUSTARD, 'stroke-width': 2.6 }, wave);
+  Wv.cur = el('line', { y1: A_MID - A_H - 6, y2: B_BOT, stroke: INK, 'stroke-width': 1, opacity: 0.35 }, wave);
+  Wv.dv = el('circle', { r: 3.5, fill: FOCUS }, wave);
+  Wv.di = el('circle', { r: 3.5, fill: MUSTARD }, wave);
+  Wv.dp = el('circle', { r: 4, fill: MAROON }, wave);
+}
+const NPTS = 240;
+function curve(f, yf){
+  let d = '';
+  for (let k = 0; k <= NPTS; k++){ const tt = 2 * T * k / NPTS; d += (k ? 'L' : 'M') + tx(tt).toFixed(1) + ',' + yf(f(tt)).toFixed(1); }
+  return d;
+}
+function area(f, sign){
+  let d = `M${WX0},${yP(0).toFixed(1)}`;
+  for (let k = 0; k <= NPTS; k++){ const tt = 2 * T * k / NPTS; const p = f(tt); const q = sign > 0 ? Math.max(p, 0) : Math.min(p, 0); d += 'L' + tx(tt).toFixed(1) + ',' + yP(q).toFixed(1); }
+  return d + `L${WX1},${yP(0).toFixed(1)}Z`;
+}
+function drawWave(P, QL, QC){
+  const at = tt => inst(tt, P, QL, QC);
+  Wv.v.setAttribute('d', curve(tt => at(tt).v, yV)); Wv.v.setAttribute('opacity', vis.v.toFixed(3));
+  Wv.i.setAttribute('d', curve(tt => at(tt).i, yI)); Wv.i.setAttribute('opacity', vis.i.toFixed(3));
+  Wv.iR.setAttribute('d', curve(tt => at(tt).iR, yI)); Wv.iR.setAttribute('opacity', vis.iParts.toFixed(3));
+  Wv.iX.setAttribute('d', curve(tt => at(tt).iX, yI)); Wv.iX.setAttribute('opacity', vis.iParts.toFixed(3));
+  Wv.p.setAttribute('d', curve(tt => at(tt).p, yP)); Wv.p.setAttribute('opacity', vis.p.toFixed(3));
+  Wv.shadeP.setAttribute('d', area(tt => at(tt).p, 1)); Wv.shadeP.setAttribute('opacity', (0.14 * vis.shade).toFixed(3));
+  Wv.shadeN.setAttribute('d', area(tt => at(tt).p, -1)); Wv.shadeN.setAttribute('opacity', (0.22 * vis.shade).toFixed(3));
+  Wv.pP.setAttribute('d', curve(tt => at(tt).pP, yP)); Wv.pP.setAttribute('opacity', vis.pParts.toFixed(3));
+  Wv.pQ.setAttribute('d', curve(tt => at(tt).pQ, yP)); Wv.pQ.setAttribute('opacity', vis.pParts.toFixed(3));
+  const ya = yP(P);
+  Wv.avg.setAttribute('y1', ya); Wv.avg.setAttribute('y2', ya);
+  Wv.avgT.setAttribute('y', ya + 4);
+  Wv.avgG.setAttribute('opacity', vis.pAvg.toFixed(3));
+  const tc = ((t % (2 * T)) + 2 * T) % (2 * T), now = at(tc), xc = tx(tc);
+  Wv.cur.setAttribute('x1', xc); Wv.cur.setAttribute('x2', xc);
+  Wv.dv.setAttribute('cx', xc); Wv.dv.setAttribute('cy', yV(now.v)); Wv.dv.setAttribute('opacity', vis.v);
+  Wv.di.setAttribute('cx', xc); Wv.di.setAttribute('cy', yI(now.i)); Wv.di.setAttribute('opacity', vis.i);
+  Wv.dp.setAttribute('cx', xc); Wv.dp.setAttribute('cy', yP(now.p)); Wv.dp.setAttribute('opacity', vis.p);
+  Wv.cur.setAttribute('opacity', (0.35 * Math.max(vis.v, vis.p)).toFixed(3));
+}
+let legendKey = '';
+function renderLegend(){
+  const items = [];
+  if (vis.v > 0.5) items.push(['#1c5f7a', '', 'voltage v']);
+  if (vis.i > 0.5) items.push(['#c98a2c', '', 'supply current i']);
+  if (vis.iParts > 0.5){ items.push(['#c98a2c', 'dot', 'i<sub>R</sub> (in phase)']); items.push(['#8a6a3a', 'dash', 'i<sub>L</sub> (lags 90°)']); }
+  if (vis.p > 0.5) items.push(['#7a1730', '', 'power p = v i']);
+  const Lg = load(par.P.v, par.QL.v, par.QC.v);
+  if (vis.shade > 0.5 && Lg.S - Lg.P > 0.01) items.push(['#1c5f7a', 'neg', 'energy flowing back']);
+  if (vis.pAvg > 0.5) items.push(['#1a1512', 'dash', 'average power, P']);
+  if (vis.pParts > 0.5){ items.push(['#c98a2c', 'dash', 'real part']); items.push(['#1c5f7a', 'dash', 'reactive part']); }
+  const key = items.map(x => x[2]).join('|');
+  if (key === legendKey) return; legendKey = key;
+  $('waveLegend').innerHTML = items.map(([c, s, l]) => {
+    const st = s === 'dash' ? `border-color:${c};border-top-style:dashed;border-top-width:2px` : s === 'dot' ? `border-color:${c};border-top-style:dotted;border-top-width:2px` :
+      s === 'neg' ? `width:12px;height:10px;border:none;background:${c};opacity:0.35` : `border-color:${c}`;
+    return `<span><i style="${st}"></i><span>${l}</span></span>`;
+  }).join('');
+}
+
+// =====================================================================================
+// Scene update per frame
+// =====================================================================================
+function drawScene(P, QL, QC, dt){
+  const L = load(P, QL, QC), now = inst(t, P, QL, QC);
+  S.brR.setAttribute('opacity', brOp(P).toFixed(3));
+  S.brL.setAttribute('opacity', brOp(QL).toFixed(3));
+  S.brC.setAttribute('opacity', brOp(QC).toFixed(3));
+  S.glowR.setAttribute('opacity', (0.55 * now.pP / 4).toFixed(3));
+  // moving charge: dash offset integrates the current (px per ampere-second)
+  if (!REDUCED){
+    const k = 9;
+    chargeQ.sup += now.i * dt * k; chargeQ.R += now.iR * dt * k; chargeQ.L += now.iL * dt * k; chargeQ.C += now.iC * dt * k;
+  }
+  S.fSup.setAttribute('stroke-dashoffset', (-chargeQ.sup).toFixed(2));
+  S.fR.setAttribute('stroke-dashoffset', (-chargeQ.R).toFixed(2));
+  S.fL.setAttribute('stroke-dashoffset', (-chargeQ.L).toFixed(2));
+  S.fC.setAttribute('stroke-dashoffset', (-chargeQ.C).toFixed(2));
+  S.fSup.setAttribute('opacity', L.I > 0.05 ? 1 : 0);
+  S.fR.setAttribute('opacity', P > 0.004 ? 1 : 0);
+  S.fL.setAttribute('opacity', QL > 0.004 ? 1 : 0);
+  S.fC.setAttribute('opacity', QC > 0.004 ? 1 : 0);
+  // energy bars (full = 2 kvar worth)
+  const setBar = (b, frac, on) => { const h = 58 * clamp(frac, 0, 1); b.f.setAttribute('y', 199 - h); b.f.setAttribute('height', h); b.g.setAttribute('opacity', (on * vis.bars).toFixed(3)); };
+  setBar(S.barL, now.wL / 2, brOp(QL) > 0.5 ? 1 : 0.3);
+  setBar(S.barC, now.wC / 2, brOp(QC) > 0.5 ? 1 : 0.3);
+  // labels
+  S.labSup.firstChild.textContent = 'I = ' + f2(L.I) + ' A';
+  S.lR.v.textContent = f2(L.IR) + ' A'; S.lR.g.setAttribute('opacity', brOp(P).toFixed(3));
+  S.lL.v.textContent = f2(L.IL) + ' A'; S.lL.g.setAttribute('opacity', brOp(QL).toFixed(3));
+  S.lC.v.textContent = f2(L.IC) + ' A'; S.lC.g.setAttribute('opacity', brOp(QC).toFixed(3));
+  S.triTitle.textContent = par.m.v < 0.5 ? 'CURRENT PHASORS' : 'POWER TRIANGLE';
+  return drawTriangle(P, QL, QC, par.m.v, vis.tri);
+}
+
+// =====================================================================================
+// Text, stats, controls
+// =====================================================================================
+function fmtQ(q){ return (q < -0.0049 ? '−' : '') + f2(Math.abs(q)) + ' kvar'; }
+function renderStats(){
+  const L = load(par.P.v, par.QL.v, par.QC.v);
+  $('stP').textContent = f2(L.P) + ' kW';
+  $('stQ').textContent = fmtQ(L.Q);
+  $('stQsub').innerHTML = L.QC > 0.004 ? 'Q<sub>L</sub> − Q<sub>C</sub>' : 'taken by the inductor';
+  $('stS').textContent = f2(L.S) + ' kVA';
+  $('stSsub').textContent = 'supply current ' + f2(L.I) + ' A';
+  if (!(L.S > 0.0049)){ $('stPF').textContent = '—'; $('stPFsub').textContent = 'no load'; }
+  else {
+    $('stPF').textContent = L.pf.toFixed(2);
+    const deg = Math.abs(L.theta * 180 / Math.PI);
+    $('stPFsub').textContent = Math.abs(L.Q) < 0.0049 ? 'unity (θ = 0°)' : 'θ = ' + deg.toFixed(1) + '°, ' + (L.Q > 0 ? 'lagging' : 'leading');
+  }
+}
+function syncSliders(){
+  $('sP').value = par.P.v; $('sQL').value = par.QL.v; $('sQC').value = par.QC.v;
+  $('valP').textContent = f2(par.P.v) + ' kW';
+  $('valQL').textContent = f2(par.QL.v) + ' kvar';
+  $('valQC').textContent = f2(par.QC.v) + ' kvar';
+}
+function renderCaption(){
+  const cap = $('stepcap');
+  if (mode === 'explore'){ cap.classList.add('idle'); $('capN').textContent = '·'; $('capText').textContent = 'Explore mode: the circuit, waveforms and triangle follow the sliders.'; return; }
+  const c = CH[ch];
+  if (stepIdx < 0){ cap.classList.add('idle'); $('capN').textContent = '·'; $('capText').textContent = 'Press Play to watch this chapter.'; return; }
+  cap.classList.remove('idle');
+  $('capN').textContent = stepIdx + 1;
+  $('capText').textContent = c.steps[stepIdx].cap;
+}
+function renderStory(){
+  if (mode === 'explore'){
+    $('chN').textContent = 'Explore';
+    $('chTitle').textContent = EXPLORE.title; $('chText').innerHTML = EXPLORE.text;
+  } else {
+    $('chN').textContent = 'Chapter ' + (ch + 1) + ' of ' + CH.length;
+    $('chTitle').textContent = CH[ch].title; $('chText').innerHTML = CH[ch].text;
+  }
+  [...$('dots').children].forEach((b, k) => {
+    b.classList.toggle('done', mode === 'story' && k < ch);
+    if (mode === 'story' && k === ch) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+  });
+  $('btnBack').disabled = mode === 'story' && ch === 0;
+  $('btnNext').disabled = mode === 'story' && ch === CH.length - 1;
+  $('btnPlay').textContent = mode === 'explore' ? 'Play chapter 1' : playing ? 'Pause' : ended ? 'Replay' : (chT > 0 ? 'Resume' : 'Play');
+  renderCaption();
+}
+function goExplore(){
+  if (mode !== 'explore'){
+    mode = 'explore'; playing = false; ended = false;
+    for (const k in par) par[k].d = 0;
+    par.m.v = par.m.b = 1;
+    Object.assign(visT, { v: 1, i: 1, iParts: 0, p: 1, shade: 1, pAvg: 1, pParts: 1, bars: 1, tri: 1 });
+    renderStory();
+  }
+}
+function buildUI(){
+  CH.forEach((c, k) => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = k + 1;
+    b.setAttribute('aria-label', 'Chapter ' + (k + 1) + ': ' + c.title);
+    b.addEventListener('click', () => { startChapter(k, true); if (window.innerWidth < 800) $('scene').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+    $('dots').appendChild(b);
+  });
+  $('btnBack').addEventListener('click', () => { if (mode === 'explore') startChapter(CH.length - 1, false); else if (ch > 0) startChapter(ch - 1, true); });
+  $('btnNext').addEventListener('click', () => { if (mode === 'explore') startChapter(0, true); else if (ch < CH.length - 1) startChapter(ch + 1, true); });
+  $('btnPlay').addEventListener('click', () => {
+    if (mode === 'explore') { startChapter(0, true); return; }
+    if (playing){ playing = false; }
+    else if (ended || stepIdx < 0){ startChapter(ch, true); return; }
+    else playing = true;
+    renderStory();
+  });
+  const onSlide = (id, k) => $(id).addEventListener('input', e => { goExplore(); par[k].v = par[k].a = par[k].b = parseFloat(e.target.value); syncSliders(); });
+  onSlide('sP', 'P'); onSlide('sQL', 'QL'); onSlide('sQC', 'QC');
+  $('btnReset').addEventListener('click', () => { goExplore(); for (const k in DEF){ par[k].v = par[k].a = par[k].b = DEF[k]; par[k].d = 0; } syncSliders(); });
+}
+
+// =====================================================================================
+// Main loop
+// =====================================================================================
+let last = null;
+function frame(ts){
+  const dt = last === null ? 0 : Math.min(0.05, (ts - last) / 1000); last = ts;
+  if (!REDUCED) t += dt;
+  tickStory(dt);
+  for (const k in vis){ const d = visT[k] - vis[k]; vis[k] = REDUCED ? visT[k] : vis[k] + d * Math.min(1, dt * 4); if (Math.abs(visT[k] - vis[k]) < 0.003) vis[k] = visT[k]; }
+  drawScene(par.P.v, par.QL.v, par.QC.v, dt);
+  drawWave(par.P.v, par.QL.v, par.QC.v);
+  renderLegend(); renderStats();
+  if (playing){ const b = $('btnPlay'); if (b.textContent !== 'Pause') b.textContent = 'Pause'; }
+  requestAnimationFrame(frame);
+}
+buildScene(); buildWave(); buildUI();
+t = 0.5;
+startChapter(0, false);
+// open on chapter 1 ready to play, at its start
+Object.assign(visT, CH[0].steps[0].show); Object.assign(vis, SHOW0, CH[0].steps[0].show);
+visT.p = visT.shade = visT.pAvg = visT.tri = 0; vis.p = vis.shade = vis.pAvg = vis.tri = 0;
+stepIdx = -1; ended = false; chT = 0; renderStory();
+requestAnimationFrame(frame);
+
+window.__pt = { load, inst, drawTriangle, startChapter, goExplore, par, vis, CH,
+  setLoad(P, QL, QC){ goExplore(); par.P.v = P; par.QL.v = QL; par.QC.v = QC; for (const k in par){ par[k].a = par[k].b = par[k].v; par[k].d = 0; } syncSliders(); },
+  state: () => ({ mode, ch, chT, playing, ended, stepIdx, t }) };
+})();
+</script>
+</body>
+</html>
